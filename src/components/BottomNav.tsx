@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import type { IconType } from 'react-icons';
 import {
   PiHouse,
   PiHouseFill,
@@ -9,7 +10,6 @@ import {
   PiHeartFill,
   PiUserCircle,
   PiUserCircleFill,
-  type IconType,
 } from 'react-icons/pi';
 
 interface NavItem {
