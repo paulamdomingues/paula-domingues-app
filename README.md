@@ -17,6 +17,10 @@ App de catálogo de moda (lojas parceiras, categorias, favoritos), gerado a part
   - `/notificacoes`: lista de notificações ("Novo parceiro no app!" para as lojas recentes) com "Marcar todas como lidas".
 - ✅ Estrutura de rotas e menu inferior (Início, Busca, Lojas, Favoritos, Meu Perfil) — **todas as ~25 telas do Figma "App V1 - User" (mobile) estão implementadas.**
 - ✅ Schema SQL inicial do Supabase (`supabase/schema.sql`): perfis, categorias, lojas, produtos, favoritos, com RLS configurado. O trigger `handle_new_user` já cria a linha em `profiles` a partir do `first_name` enviado no cadastro.
+- ✅ **Versão desktop** (a partir de 1024px de largura, `lg:` do Tailwind): é o mesmo app, com telas que se adaptam pra tela grande — não é um app separado. Cabeçalho ganha o menu de navegação (`TopBar`), o menu inferior de mobile some, e cada tela recebeu o espaçamento/tamanho de fonte do Figma "App V1 - Desktop". Principais decisões:
+  - Login/Criar Conta viram uma tela dividida ao meio (formulário à esquerda, painel de destaque à direita — `AuthShowcasePanel`); o link "Ainda não tem conta? Quero fazer parte" foi **removido** (não existe mais nem no mobile nem no desktop) porque a criação de conta é só via pagamento (Hubla → Make), não auto-cadastro.
+  - Os links de "Termos de Uso" e "Política de Privacidade" no rodapé de Login/Criar Conta agora apontam pra uma **URL externa** (fora do app) em vez da tela interna — ver `src/lib/constants.ts`, ainda com URL placeholder aguardando o link real do seu site. A tela interna `/termos` continua existindo normalmente pra quem acessa pelo menu do Perfil.
+  - "Ver mais lojas" (Lojas, Categoria, Busca) segue uma regra única: carrega 30 lojas de início, depois +20 a cada clique (`src/lib/useLoadMore.ts`).
 
 ## Imagens: Bunny.net + Supabase
 
@@ -26,7 +30,9 @@ App de catálogo de moda (lojas parceiras, categorias, favoritos), gerado a part
 - **Ícones de interface** (sino, coração, envelope, cadeado, olho, seta, WhatsApp, ícones do menu inferior): usam a biblioteca `react-icons` (sets Phosphor e Font Awesome), então já funcionam prontos, sem depender de nenhum arquivo externo.
 - **Responsividade**: a logo e as fotos de loja/categoria usam `clamp()`/`aspect-ratio` via Tailwind (em vez de tamanho fixo em pixels), então escalam suavemente entre mobile e telas maiores.
 
-⚠️ **Achado importante ao configurar o Supabase**: o projeto real (`App Paul Domingues`, `iuqpbozkumebumjdmqfc`) tem uma estrutura de tabelas **diferente** da que está em `supabase/schema.sql` neste repositório — nomes de coluna diferentes (`category_id`, `polo_location`, `code_badge`, `cover_image_url`, etc.), sem tabela `profiles` nem `products`, e com uma tabela nova `allowed_users` (email, is_active, purchased_at — parece controle de acesso ligado à assinatura). **RLS (Row Level Security) está desabilitado nas 4 tabelas** (`categories`, `stores`, `favorites`, `allowed_users`) — qualquer pessoa com a chave pública do projeto consegue ler e **escrever** em todas elas agora. Não apliquei nenhuma correção sozinho porque isso pode travar o acesso do app se as políticas certas não forem criadas junto — mas é importante resolver antes de ir pra produção. Posso cuidar disso quando você quiser.
+⚠️ **Achado importante ao configurar o Supabase**: o projeto real (`App Paul Domingues`, `iuqpbozkumebumjdmqfc`) tem uma estrutura de tabelas **diferente** da que está em `supabase/schema.sql` neste repositório — nomes de coluna diferentes (`category_id`, `polo_location`, `code_badge`, `cover_image_url`, etc.), sem tabela `profiles` nem `products`, e com uma tabela nova `allowed_users` (email, is_active, purchased_at — controle de acesso ligado à assinatura, alimentada pelo Hubla → Make).
+
+✅ **RLS já aplicado** (`supabase/migrations/0001_team_members_and_rls.sql`, rodada em produção): criada a tabela `team_members` (níveis Master Admin, Suporte, Editor de Conteúdo, Convidado — ver comentários no arquivo da migração pra regra de cada um) e ligado o RLS nas 4 tabelas. Resumo: `categories`/`stores` — leitura liberada pra qualquer usuário logado, escrita/edição (inclui "congelar" via `stores.is_active`) só pra Master Admin e Editor de Conteúdo, exclusão definitiva só pra Master Admin. `favorites` — cada usuário só vê/mexe nos próprios. `allowed_users` — fechado por completo pra `anon`/`authenticated` (só a service_role do Make enxerga, de propósito).
 
 ## Rodando localmente
 
@@ -77,10 +83,10 @@ Todas as telas do Figma "App V1 - User" (versão mobile) já estão implementada
 
 O que ainda falta pra ir ao ar de verdade:
 
-- Resolver o RLS desabilitado no Supabase (ver aviso na seção "Imagens: Bunny.net + Supabase" acima) antes de ir pra produção.
+- ~~Resolver o RLS desabilitado no Supabase~~ — feito, ver seção "Imagens: Bunny.net + Supabase" acima.
 - Implementar o upload de imagem de verdade (Edge Function do Supabase → Bunny.net) — hoje só a **leitura/exibição** está pronta (`resolveBunnyImageUrl`).
 - Painel admin completo — plano detalhado já entregue em `painel-admin-plano.md`, aguardando confirmação de algumas perguntas em aberto antes de implementar.
 - Rodar `npm install` e testar o app na sua máquina — nesta sessão não tive acesso à internet pra instalar pacotes nem rodar o app de verdade, só verifiquei a sintaxe de todos os arquivos.
 - Preencher os campos entre colchetes na tela de Termos (`/termos`) com os dados reais do seu negócio (CNPJ/CPF, e-mail de suporte, WhatsApp, data de vigência).
 - Trocar os dados fictícios em `src/data/mockData.ts` pelo catálogo real de lojas — atenção: a estrutura real do Supabase é diferente da de `supabase/schema.sql`, ver aviso acima.
-- Se quiser, dá pra construir a versão desktop do Figma ("App V1 - Desktop") depois — é só pedir.
+- ~~Construir a versão desktop do Figma ("App V1 - Desktop")~~ — feito, ver seção "Status atual" acima. Falta só você me passar a URL real do site pra trocar o placeholder em `src/lib/constants.ts` (`EXTERNAL_TERMS_URL`/`EXTERNAL_PRIVACY_URL`).

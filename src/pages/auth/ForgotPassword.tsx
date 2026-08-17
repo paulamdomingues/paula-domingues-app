@@ -29,7 +29,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center gap-7 bg-screen-bg px-6 pt-[90px]">
+    <div className="flex min-h-screen w-full flex-col items-center gap-7 bg-screen-bg px-6 pt-[90px] lg:mx-auto lg:max-w-[548px] lg:pt-[160px]">
       <div className="flex w-full flex-col items-center gap-8">
         <Logo />
         <button

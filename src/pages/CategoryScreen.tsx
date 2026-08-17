@@ -7,6 +7,7 @@ import CategoryFilterSheet from '../components/search/CategoryFilterSheet';
 import { categories, stores } from '../data/mockData';
 import { useFavorites } from '../context/FavoritesContext';
 import { sortStores } from '../lib/sortStores';
+import { useLoadMore } from '../lib/useLoadMore';
 import type { SortOptionId } from '../data/mockData';
 
 export default function CategoryScreen() {
@@ -19,13 +20,18 @@ export default function CategoryScreen() {
     () => sortStores(stores.filter((s) => s.categoryId === categoryId), sort),
     [categoryId, sort]
   );
+  const {
+    visibleItems: visibleStores,
+    hasMore,
+    loadMore,
+  } = useLoadMore(storesInCategory, `${categoryId}-${sort}`);
 
   if (!category) {
     return <Navigate to="/lojas" replace />;
   }
 
   return (
-    <div className="flex w-full flex-col items-center gap-6 px-6 py-8">
+    <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">
       <ScreenHeader
         title={category.label}
         suffix={`(${storesInCategory.length} ${storesInCategory.length === 1 ? 'loja' : 'lojas'})`}
@@ -49,15 +55,26 @@ export default function CategoryScreen() {
           </p>
         </div>
       ) : (
-        <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8">
-          {storesInCategory.map((store) => (
-            <StoreCard
-              key={store.id}
-              store={{ ...store, isFavorite: isFavorite(store.id) }}
-              onToggleFavorite={() => toggleFavorite(store.id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8">
+            {visibleStores.map((store) => (
+              <StoreCard
+                key={store.id}
+                store={{ ...store, isFavorite: isFavorite(store.id) }}
+                onToggleFavorite={() => toggleFavorite(store.id)}
+              />
+            ))}
+          </div>
+          {hasMore && (
+            <button
+              type="button"
+              onClick={loadMore}
+              className="font-body text-[15px] tracking-[0.75px] text-main-red-800 underline"
+            >
+              Ver mais lojas
+            </button>
+          )}
+        </>
       )}
     </div>
   );

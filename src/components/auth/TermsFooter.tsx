@@ -1,21 +1,27 @@
-import { Link } from 'react-router-dom';
+import { EXTERNAL_PRIVACY_URL, EXTERNAL_TERMS_URL } from '../../lib/constants';
 
 interface TermsFooterProps {
   prefix: string;
 }
 
+/**
+ * Rodapé de "concordo com os Termos..." usado em Login/Criar Conta. Aponta
+ * pra um site EXTERNO (fora do app) — confirmado com a Amanda — diferente
+ * da tela /termos interna, que continua existindo só pra quem acessa via
+ * Perfil, já logado.
+ */
 export default function TermsFooter({ prefix }: TermsFooterProps) {
   return (
     <p className="w-full text-center font-body text-[12px] leading-[1.35] tracking-[0.36px] text-gray-900">
       {prefix}
       <br />
-      <Link to="/termos" className="text-main-red-700">
+      <a href={EXTERNAL_TERMS_URL} target="_blank" rel="noreferrer" className="text-main-red-700">
         Termos de uso
-      </Link>{' '}
+      </a>{' '}
       e{' '}
-      <Link to="/privacidade" className="text-main-red-700">
+      <a href={EXTERNAL_PRIVACY_URL} target="_blank" rel="noreferrer" className="text-main-red-700">
         Política de privacidade
-      </Link>
+      </a>
     </p>
   );
 }

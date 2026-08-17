@@ -30,10 +30,10 @@ export default function Notificacoes() {
   };
 
   return (
-    <div className="flex w-full flex-col items-center gap-6 px-6 py-8">
+    <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">
       <ScreenHeader title="Notificações" suffix={`(${unreadCount} novas)`} />
 
-      <div className="flex w-full flex-col items-end gap-4">
+      <div className="flex w-full flex-col items-end gap-4 lg:mx-auto lg:max-w-[640px]">
         <button
           type="button"
           onClick={markAllAsRead}

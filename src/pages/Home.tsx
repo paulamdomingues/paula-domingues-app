@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import TopBar from '../components/TopBar';
 import HighlightBanner from '../components/HighlightBanner';
 import WhatsappCommunityButton from '../components/WhatsappCommunityButton';
 import CategoryGrid from '../components/CategoryGrid';
@@ -17,17 +18,25 @@ export default function Home() {
   };
 
   return (
-    <div className="flex w-full flex-col items-center gap-8 px-6 py-8">
-      <div className="flex w-full flex-col gap-8">
-        <div className="flex w-full flex-col gap-6">
-          <Header userFirstName="Amanda" />
-          <HighlightBanner />
+    <div className="flex w-full flex-col items-center gap-8 px-6 py-8 lg:gap-10 lg:px-[156px] lg:py-0">
+      <div className="flex w-full flex-col gap-8 lg:gap-10">
+        <div className="flex w-full flex-col gap-6 lg:gap-0">
+          {/* Mobile: saudação "Olá, Amanda!". Desktop: a mesma TopBar/nav das outras telas. */}
+          <div className="lg:hidden">
+            <Header userFirstName="Amanda" />
+          </div>
+          <div className="hidden lg:-mx-[156px] lg:block lg:px-[156px]">
+            <TopBar />
+          </div>
+          <div className="lg:pt-10">
+            <HighlightBanner />
+          </div>
         </div>
         <WhatsappCommunityButton />
       </div>
 
       <section className="flex w-full flex-col items-center gap-3">
-        <h2 className="w-full font-display font-bold text-[26px] tracking-[0.78px] text-main-dark-900">
+        <h2 className="w-full font-display font-bold text-[26px] tracking-[0.78px] text-main-dark-900 lg:text-[48px] lg:font-extrabold lg:tracking-[1.44px]">
           O que você procura hoje?
         </h2>
         <CategoryGrid categories={categories} onSelectCategory={handleSelectCategory} />

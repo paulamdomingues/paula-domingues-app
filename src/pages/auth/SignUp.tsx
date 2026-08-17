@@ -4,6 +4,7 @@ import { PiEnvelopeSimple, PiLockSimple, PiUser } from 'react-icons/pi';
 import Logo from '../../components/Logo';
 import AuthTextField from '../../components/auth/AuthTextField';
 import AuthPrimaryButton from '../../components/auth/AuthPrimaryButton';
+import AuthShowcasePanel from '../../components/auth/AuthShowcasePanel';
 import TermsFooter from '../../components/auth/TermsFooter';
 import { useAuth } from '../../context/AuthContext';
 
@@ -42,10 +43,11 @@ export default function SignUp() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center gap-10 bg-screen-bg px-6 py-10">
-      <Logo />
+    <div className="flex min-h-screen w-full items-stretch bg-screen-bg">
+      <div className="flex w-full flex-col items-center justify-center gap-10 px-6 py-10 lg:w-1/2 lg:max-w-[720px] lg:px-[156px]">
+        <Logo />
 
-      <form onSubmit={handleSubmit} className="flex w-full flex-col items-center gap-[38px]">
+        <form onSubmit={handleSubmit} className="flex w-full flex-col items-center gap-[38px]">
         <div className="flex w-full flex-col items-center gap-[44px]">
           <div className="flex w-full flex-col gap-6">
             <div className="flex w-full flex-col items-start">
@@ -114,7 +116,10 @@ export default function SignUp() {
           </p>
           <TermsFooter prefix="Ao criar uma conta, você concorda com os" />
         </div>
-      </form>
+        </form>
+      </div>
+
+      <AuthShowcasePanel />
     </div>
   );
 }

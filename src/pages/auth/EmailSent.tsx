@@ -19,7 +19,7 @@ export default function EmailSent() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center gap-7 bg-screen-bg px-6 pt-[88px]">
+    <div className="flex min-h-screen w-full flex-col items-center gap-7 bg-screen-bg px-6 pt-[88px] lg:mx-auto lg:max-w-[548px] lg:pt-[160px]">
       <div className="flex w-full flex-col items-center gap-6">
         <Logo />
         <button

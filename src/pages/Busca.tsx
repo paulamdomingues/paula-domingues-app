@@ -6,6 +6,7 @@ import StoreCard from '../components/StoreCard';
 import { recentStores, stores, type SortOptionId } from '../data/mockData';
 import { useFavorites } from '../context/FavoritesContext';
 import { sortStores } from '../lib/sortStores';
+import { useLoadMore } from '../lib/useLoadMore';
 
 export default function Busca() {
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -25,9 +26,14 @@ export default function Busca() {
     );
     return sortStores(matches, sort);
   }, [hasQuery, trimmedQuery, sort]);
+  const {
+    visibleItems: visibleResults,
+    hasMore,
+    loadMore,
+  } = useLoadMore(results, `${trimmedQuery}-${sort}`);
 
   return (
-    <div className="flex w-full flex-col items-center gap-6 px-6 py-8">
+    <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">
       <ScreenHeader title="Encontrar Lojas" />
 
       <SearchInput value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -67,7 +73,7 @@ export default function Busca() {
             <SortDropdown value={sort} onChange={setSort} />
           </div>
           <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8">
-            {results.map((store) => (
+            {visibleResults.map((store) => (
               <StoreCard
                 key={store.id}
                 store={{ ...store, isFavorite: isFavorite(store.id) }}
@@ -75,6 +81,15 @@ export default function Busca() {
               />
             ))}
           </div>
+          {hasMore && (
+            <button
+              type="button"
+              onClick={loadMore}
+              className="font-body text-[15px] tracking-[0.75px] text-main-red-800 underline"
+            >
+              Ver mais lojas
+            </button>
+          )}
         </div>
       )}
     </div>

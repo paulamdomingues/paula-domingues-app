@@ -6,20 +6,17 @@ import CategoryFilterSheet from '../components/search/CategoryFilterSheet';
 import { stores, type SortOptionId } from '../data/mockData';
 import { useFavorites } from '../context/FavoritesContext';
 import { sortStores } from '../lib/sortStores';
-
-const PAGE_SIZE = 12;
+import { useLoadMore } from '../lib/useLoadMore';
 
 export default function Lojas() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [sort, setSort] = useState<SortOptionId>('recentes');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const sortedStores = useMemo(() => sortStores(stores, sort), [sort]);
-  const visibleStores = sortedStores.slice(0, visibleCount);
-  const hasMore = visibleCount < sortedStores.length;
+  const { visibleItems: visibleStores, hasMore, loadMore } = useLoadMore(sortedStores, sort);
 
   return (
-    <div className="flex w-full flex-col items-center gap-6 px-6 py-8">
+    <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">
       <ScreenHeader
         title="Lojas"
         suffix={`(${sortedStores.length})`}
@@ -46,7 +43,7 @@ export default function Lojas() {
       {hasMore && (
         <button
           type="button"
-          onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+          onClick={loadMore}
           className="font-body text-[15px] tracking-[0.75px] text-main-red-800 underline"
         >
           Ver mais lojas

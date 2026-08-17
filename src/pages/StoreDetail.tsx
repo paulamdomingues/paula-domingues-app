@@ -66,105 +66,112 @@ export default function StoreDetail() {
   };
 
   return (
-    <div className="flex w-full flex-col items-center gap-6 px-6 py-8">
+    <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">
       <TopBar />
 
       <div className="flex w-full flex-col gap-4">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-800"
+          className="flex items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-800 lg:font-display lg:text-[32px] lg:font-bold lg:tracking-[0.96px]"
         >
-          <PiArrowLeft className="size-4" />
+          <PiArrowLeft className="size-4 lg:size-6" />
           Voltar
         </button>
 
-        <div className="flex w-full flex-col gap-2">
-          <div className="relative aspect-square w-full overflow-hidden rounded-lg">
-            <ImagePlaceholder src={store.imageUrl} alt={store.name} className="size-full" />
+        {/* Bloco de cima: galeria + info principal (lado a lado no desktop). */}
+        <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
+          <div className="flex w-full flex-col gap-2 lg:w-1/2">
+            <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+              <ImagePlaceholder src={store.imageUrl} alt={store.name} className="size-full" />
 
-            <button
-              type="button"
-              aria-label={favorited ? `Remover ${store.name} dos favoritos` : `Favoritar ${store.name}`}
-              onClick={() => toggleFavorite(store.id)}
-              className="absolute right-[10px] top-[10px] flex size-10 items-center justify-center rounded-full bg-base-white/80"
-            >
-              {favorited ? (
-                <PiHeartFill className="size-5 text-main-red-600" />
-              ) : (
-                <PiHeart className="size-5 text-main-red-900" />
-              )}
-            </button>
+              <button
+                type="button"
+                aria-label={favorited ? `Remover ${store.name} dos favoritos` : `Favoritar ${store.name}`}
+                onClick={() => toggleFavorite(store.id)}
+                className="absolute right-[10px] top-[10px] flex size-10 items-center justify-center rounded-full bg-base-white/80"
+              >
+                {favorited ? (
+                  <PiHeartFill className="size-5 text-main-red-600" />
+                ) : (
+                  <PiHeart className="size-5 text-main-red-900" />
+                )}
+              </button>
 
-            <div className="absolute left-0 top-[10px] flex h-7 items-center justify-center rounded-r-2xl bg-accent-yellow px-3">
-              <span className="font-body text-[13px] leading-[1.35] tracking-[0.39px] text-base-black">
-                {store.code}
-              </span>
+              <div className="absolute left-0 top-[10px] flex h-7 items-center justify-center rounded-r-2xl bg-accent-yellow px-3">
+                <span className="font-body text-[13px] leading-[1.35] tracking-[0.39px] text-base-black">
+                  {store.code}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex w-full items-center justify-center gap-2">
+              {(details.thumbnailImageUrls ?? [null, null, null]).slice(0, 3).map((url, i) => (
+                <ImagePlaceholder
+                  key={i}
+                  src={url}
+                  alt={`Foto ${i + 2} de ${store.name}`}
+                  className="aspect-square w-1/3"
+                />
+              ))}
             </div>
           </div>
 
-          <div className="flex w-full items-center justify-center gap-2">
-            {(details.thumbnailImageUrls ?? [null, null, null]).slice(0, 3).map((url, i) => (
-              <ImagePlaceholder
-                key={i}
-                src={url}
-                alt={`Foto ${i + 2} de ${store.name}`}
-                className="aspect-square w-1/3"
-              />
-            ))}
-          </div>
-        </div>
+          <div className="flex w-full flex-col gap-4 lg:w-1/2 lg:gap-6">
+            <div className="flex w-full flex-col items-center gap-1 lg:items-start lg:text-left">
+              <h1 className="w-full text-center font-display font-bold capitalize text-[32px] tracking-[1.6px] text-base-black lg:text-left lg:text-[48px]">
+                {store.name}
+              </h1>
+              <p className="w-full text-center font-body text-[26px] tracking-[1.3px] text-gray-800 lg:text-left lg:text-[24px]">
+                {store.categoryLabel}
+              </p>
+            </div>
 
-        <div className="flex w-full flex-col items-center gap-1">
-          <h1 className="w-full text-center font-display font-bold capitalize text-[32px] tracking-[1.6px] text-base-black">
-            {store.name}
-          </h1>
-          <p className="w-full text-center font-body text-[26px] tracking-[1.3px] text-gray-800">
-            {store.categoryLabel}
-          </p>
-        </div>
-
-        <div className="flex w-full items-center gap-3">
-          <a
-            href={details.instagramUrl ?? '#'}
-            target="_blank"
-            rel="noreferrer"
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-tr from-[#FEDA75] via-[#D62976] to-[#4F5BD5] p-3"
-          >
-            <FaInstagram className="size-5 text-base-white" />
-            <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">Instagram</span>
-          </a>
-          <a
-            href={details.whatsappUrl ?? '#'}
-            target="_blank"
-            rel="noreferrer"
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#25D366] p-3"
-          >
-            <FaWhatsapp className="size-5 text-base-white" />
-            <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">WhatsApp</span>
-          </a>
-        </div>
-
-        {details.tags && details.tags.length > 0 && (
-          <div className="flex w-full flex-wrap gap-2">
-            {details.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-gray-200 px-3 py-1 font-body text-[13px] tracking-[0.65px] text-main-dark-800"
+            <div className="flex w-full items-center gap-3">
+              <a
+                href={details.instagramUrl ?? '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-tr from-[#FEDA75] via-[#D62976] to-[#4F5BD5] p-3"
               >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+                <FaInstagram className="size-5 text-base-white" />
+                <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">Instagram</span>
+              </a>
+              <a
+                href={details.whatsappUrl ?? '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#25D366] p-3"
+              >
+                <FaWhatsapp className="size-5 text-base-white" />
+                <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">WhatsApp</span>
+              </a>
+            </div>
 
+            {details.tags && details.tags.length > 0 && (
+              <div className="flex w-full flex-wrap gap-2 lg:justify-start">
+                {details.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-gray-200 px-3 py-1 font-body text-[13px] tracking-[0.65px] text-main-dark-800"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bloco de baixo: foto de destaque + cards de informação (lado a lado no desktop). */}
+        <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
         <ImagePlaceholder
           src={details.secondaryImageUrl}
           alt={`Peça em destaque — ${store.name}`}
-          className="aspect-square w-full"
+          className="aspect-square w-full lg:w-1/2"
         />
 
-        <div className="flex w-full flex-col gap-3">
+        <div className="flex w-full flex-col gap-3 lg:w-1/2">
           {details.address && (
             <InfoCard icon={<PiMapPin className="size-6" />} title="Endereço">
               <p>{details.address}</p>
@@ -215,6 +222,7 @@ export default function StoreDetail() {
               <p>{details.retail}</p>
             </InfoCard>
           )}
+        </div>
         </div>
       </div>
     </div>

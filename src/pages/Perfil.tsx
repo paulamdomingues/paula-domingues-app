@@ -75,11 +75,11 @@ export default function Perfil() {
   };
 
   return (
-    <div className="flex w-full flex-col items-center gap-10 px-6 py-8">
+    <div className="flex w-full flex-col items-center gap-10 px-6 py-8 lg:px-[156px] lg:py-10">
       <div className="flex w-full flex-col gap-8">
         <TopBar userFirstName={firstName} />
 
-        <div className="flex w-full flex-col gap-4">
+        <div className="flex w-full flex-col gap-4 lg:mx-auto lg:max-w-[584px]">
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -105,7 +105,7 @@ export default function Perfil() {
         </div>
       </div>
 
-      <div className="flex w-full flex-col gap-4">
+      <div className="flex w-full flex-col gap-4 lg:mx-auto lg:max-w-[584px]">
         <section className="flex w-full flex-col gap-2">
           <h2 className="w-full font-display font-bold text-[22px] tracking-[0.66px] text-base-black">Conta</h2>
           <div className="flex w-full flex-col rounded-lg bg-base-white px-4 py-2">

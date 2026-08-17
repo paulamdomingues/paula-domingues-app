@@ -1,13 +1,13 @@
-import { useNavigate } from 'react-router-dom';
-import { PiArrowLeft } from 'react-icons/pi';
-import Logo from '../components/Logo';
+import ScreenHeader from '../components/ScreenHeader';
 
 /**
  * Termos de Uso + Política de Privacidade (as duas partes do documento do
  * Figma, "Perfil - Termos"). Fica fora do fluxo protegido de propósito —
- * tanto o rodapé de Login/Criar Conta quanto o menu de Perfil apontam pra
- * cá — porque um usuário sem conta também precisa poder ler antes de se
- * cadastrar.
+ * dá pra acessar via Perfil (já logada) ou direto pela URL, sem precisar de
+ * sessão. O rodapé de Login/Criar Conta NÃO aponta mais pra cá — a Amanda
+ * confirmou que aquele link deve ir pra um site externo (ver `TermsFooter`
+ * / `src/lib/constants.ts`); esta tela interna continua existindo só para
+ * quem acessa pelo menu do Perfil.
  *
  * Os campos entre colchetes (ex: [NOME_DO_APLICATIVO], [INSERIR_EMAIL_DE_SUPORTE])
  * vieram assim do texto original no Figma — são dados reais do negócio da
@@ -15,23 +15,11 @@ import Logo from '../components/Logo';
  * que ela preencha; não inventei nenhum desses valores.
  */
 export default function Termos() {
-  const navigate = useNavigate();
-
   return (
-    <div className="flex min-h-screen w-full flex-col items-center gap-8 bg-screen-bg px-6 py-10">
-      <div className="flex w-full flex-col items-center gap-8">
-        <Logo />
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="flex w-full items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-700"
-        >
-          <PiArrowLeft className="size-4" />
-          Voltar
-        </button>
-      </div>
+    <div className="flex min-h-screen w-full flex-col items-center gap-8 bg-screen-bg px-6 py-10 lg:px-[156px] lg:py-10">
+      <ScreenHeader title="Termos de Uso e Privacidade" />
 
-      <div className="flex w-full flex-col gap-4">
+      <div className="flex w-full flex-col gap-4 lg:mx-auto lg:max-w-[1128px]">
         <div className="w-full rounded-lg border border-accent-yellow/60 bg-accent-yellow/10 p-3">
           <p className="font-body text-[13px] leading-[1.4] tracking-[0.65px] text-gray-800">
             Os trechos entre colchetes (como [NOME_DO_APLICATIVO] ou [INSERIR_EMAIL_DE_SUPORTE]) são dados reais

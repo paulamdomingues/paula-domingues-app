@@ -30,10 +30,10 @@ const faqs = [
 
 export default function PerfilDuvidas() {
   return (
-    <div className="flex w-full flex-col items-center gap-6 px-6 py-8">
+    <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">
       <ScreenHeader title="Dúvidas Frequentes" />
 
-      <div className="flex w-full flex-col gap-6">
+      <div className="flex w-full flex-col gap-6 lg:mx-auto lg:max-w-[1128px]">
         {faqs.map((item, index) => (
           <div key={item.question} className="flex w-full flex-col gap-1">
             <p className="font-display font-bold text-[22px] leading-[1.2] tracking-[0.66px] text-base-black">

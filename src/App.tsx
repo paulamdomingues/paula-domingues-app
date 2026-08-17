@@ -22,7 +22,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 function AppShell() {
   return (
     <div className="flex min-h-screen flex-col">
-      <main className="flex-1 pb-4">
+      {/*
+        Em telas largas, o conteúdo fica centralizado numa "tela" de até
+        1440px (a mesma largura de canvas do design desktop no Figma), com
+        o fundo (screen-bg) preenchendo o resto — assim o cabeçalho e o
+        conteúdo de cada página ficam alinhados um com o outro sem precisar
+        de nenhum componente "full-bleed" separado.
+      */}
+      <main className="mx-auto w-full flex-1 pb-4 lg:max-w-[1440px]">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/busca" element={<Busca />} />

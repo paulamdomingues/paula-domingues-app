@@ -10,7 +10,7 @@ export default function Favoritos() {
   const favoriteStores = useMemo(() => stores.filter((store) => isFavorite(store.id)), [isFavorite]);
 
   return (
-    <div className="flex w-full flex-col items-center gap-6 px-6 py-8">
+    <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">
       <ScreenHeader
         title="Meus favoritos"
         suffix={`(${favoriteStores.length} ${favoriteStores.length === 1 ? 'loja' : 'lojas'})`}
@@ -26,7 +26,7 @@ export default function Favoritos() {
           </p>
         </div>
       ) : (
-        <div className="flex w-full flex-col gap-3">
+        <div className="flex w-full flex-col gap-3 lg:mx-auto lg:max-w-[640px]">
           {favoriteStores.map((store) => (
             <FavoriteListCard key={store.id} store={store} onToggleFavorite={() => toggleFavorite(store.id)} />
           ))}

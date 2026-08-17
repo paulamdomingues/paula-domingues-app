@@ -4,6 +4,8 @@ import { PiEnvelopeSimple, PiLockSimple } from 'react-icons/pi';
 import Logo from '../../components/Logo';
 import AuthTextField from '../../components/auth/AuthTextField';
 import AuthPrimaryButton from '../../components/auth/AuthPrimaryButton';
+import AuthShowcasePanel from '../../components/auth/AuthShowcasePanel';
+import TermsFooter from '../../components/auth/TermsFooter';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
@@ -31,10 +33,11 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center gap-8 bg-screen-bg px-6 py-10">
-      <Logo />
+    <div className="flex min-h-screen w-full items-stretch bg-screen-bg lg:mx-auto lg:max-w-[1440px]">
+      <div className="flex w-full flex-col items-center justify-center gap-8 px-6 py-10 lg:w-1/2 lg:max-w-[720px] lg:px-[156px]">
+        <Logo />
 
-      <form onSubmit={handleSubmit} className="flex w-full flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex w-full flex-col gap-6">
         <div className="flex w-full flex-col items-start">
           <h1 className="w-full font-display text-[48px] font-extrabold tracking-[1.44px] text-main-red-600">
             Entrar
@@ -84,20 +87,13 @@ export default function Login() {
 
           <div className="flex w-full flex-col items-center gap-[44px]">
             <AuthPrimaryButton loading={loading}>Entrar</AuthPrimaryButton>
-            <p className="w-full text-center font-body text-[12px] tracking-[0.36px] text-gray-900">
-              Ao continuar voce concorda com os
-              <br />
-              <a href="/termos" className="text-main-red-700">
-                Termos de uso
-              </a>{' '}
-              e{' '}
-              <a href="/privacidade" className="text-main-red-700">
-                Politica de privacidade
-              </a>
-            </p>
+            <TermsFooter prefix="Ao continuar você concorda com os" />
           </div>
         </div>
-      </form>
+        </form>
+      </div>
+
+      <AuthShowcasePanel />
     </div>
   );
 }
