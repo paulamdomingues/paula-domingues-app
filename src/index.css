@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: #e5e5e5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Centraliza o "frame" do app em telas maiores, como um mockup de celular */
+#root {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+.app-shell {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  background-color: #f7f3f3;
+  position: relative;
+  overflow-x: hidden;
+}
