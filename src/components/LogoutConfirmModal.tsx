@@ -45,7 +45,7 @@ export default function LogoutConfirmModal({ onCancel, onConfirm }: LogoutConfir
             <button
               type="button"
               onClick={onCancel}
-              className="flex h-10 flex-1 items-center justify-center rounded-lg bg-[#D97706] font-body font-medium text-[13px] tracking-[0.65px] text-base-white lg:h-[50px] lg:text-[16px]"
+              className="flex h-10 flex-1 items-center justify-center rounded-lg bg-error-500 font-body font-medium text-[13px] tracking-[0.65px] text-base-white lg:h-[50px] lg:text-[16px]"
             >
               Cancelar
             </button>

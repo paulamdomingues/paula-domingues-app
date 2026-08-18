@@ -31,7 +31,7 @@ export default function BottomNav() {
   return (
     <nav className="sticky bottom-0 left-0 flex w-full items-center justify-between border-t-2 border-main-red-700 bg-base-white px-6 pb-8 pt-4 lg:hidden">
       {navItems.map(({ to, label, Icon, ActiveIcon }) => (
-        <NavLink key={to} to={to} end={to === '/'} className="flex w-[62px] flex-col items-center gap-1">
+        <NavLink key={to} to={to} end={to === '/'} className="flex w-[62px] flex-col items-center gap-0">
           {({ isActive }) => (
             <>
               <span
@@ -50,8 +50,8 @@ export default function BottomNav() {
               <span
                 className={
                   isActive
-                    ? 'text-center font-body text-[12px] tracking-[0.36px] text-main-red-400'
-                    : 'text-center font-body text-[12px] tracking-[0.36px] text-main-red-800'
+                    ? 'whitespace-nowrap text-center font-body text-[12px] tracking-[0.36px] text-main-red-400'
+                    : 'whitespace-nowrap text-center font-body text-[12px] tracking-[0.36px] text-main-red-800'
                 }
               >
                 {label}

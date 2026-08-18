@@ -11,7 +11,7 @@ import { useLoadMore } from '../lib/useLoadMore';
 export default function Busca() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<SortOptionId>('recentes');
+  const [sort, setSort] = useState<SortOptionId>('populares');
 
   const trimmedQuery = query.trim().toLowerCase();
   const hasQuery = trimmedQuery.length > 0;
@@ -58,7 +58,7 @@ export default function Busca() {
       {hasQuery && results.length === 0 && (
         <div className="flex w-full flex-col items-center gap-2 py-12">
           <p className="text-center font-display font-semibold text-[18px] tracking-[0.9px] text-base-black">
-            Nenhum Resultado encontrado
+            Nenhum Fornecedor encontrado
           </p>
           <p className="text-center font-body text-[14px] tracking-[0.7px] text-gray-400">
             tente pesquisar novamente
@@ -72,7 +72,7 @@ export default function Busca() {
             <span className="font-body text-[14px] tracking-[0.7px] text-gray-800">Ordem de exibição:</span>
             <SortDropdown value={sort} onChange={setSort} />
           </div>
-          <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8">
+          <div className="grid w-full grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-6">
             {visibleResults.map((store) => (
               <StoreCard
                 key={store.id}

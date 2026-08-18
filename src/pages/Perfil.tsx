@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   PiArrowLeft,
@@ -15,6 +15,8 @@ import {
 import TopBar from '../components/TopBar';
 import LogoutConfirmModal from '../components/LogoutConfirmModal';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
+import { WHATSAPP_GROUP_URL, WHATSAPP_SUPPORT_URL } from '../lib/constants';
 
 interface ProfileMenuItemProps {
   icon: ReactNode;
@@ -22,13 +24,17 @@ interface ProfileMenuItemProps {
   onClick?: () => void;
   href?: string;
   disabled?: boolean;
+  /** Ícone de "Sair da Conta" usa a cor de erro (laranja) em vez do preto padrão da página. */
+  iconClassName?: string;
 }
 
-function ProfileMenuItem({ icon, label, onClick, href, disabled }: ProfileMenuItemProps) {
+function ProfileMenuItem({ icon, label, onClick, href, disabled, iconClassName }: ProfileMenuItemProps) {
   const content = (
     <>
       <span className="flex items-center gap-2">
-        <span className="flex size-6 items-center justify-center text-main-dark-900">{icon}</span>
+        <span className={`flex size-6 items-center justify-center ${iconClassName ?? 'text-main-dark-900'}`}>
+          {icon}
+        </span>
         <span className="font-body text-[15px] tracking-[0.75px] text-main-dark-900">{label}</span>
       </span>
       <PiCaretRight className="size-3 shrink-0 text-gray-400" />
@@ -56,18 +62,32 @@ function ProfileMenuItem({ icon, label, onClick, href, disabled }: ProfileMenuIt
 
 /**
  * Tela Perfil (menu-perfil do Figma). Nome/e-mail vêm da sessão do
- * Supabase; "id #..." é um identificador curto derivado do id do usuário
- * (o app real de assinatura via Kiwify teria um id de assinante próprio —
- * por ora uso os primeiros caracteres do id da conta).
+ * Supabase; "id #00000" vem da tabela `public.user_short_ids` (migração
+ * `0002_user_short_ids.sql`) — um número de 5 dígitos único, gerado
+ * automaticamente no cadastro (trigger em `auth.users`) e populado
+ * retroativamente pros usuários que já existiam antes dessa migração.
  */
 export default function Perfil() {
   const navigate = useNavigate();
   const { session, signOut } = useAuth();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [shortId, setShortId] = useState<string>('—');
 
   const firstName = (session?.user.user_metadata?.first_name as string | undefined) ?? 'Amanda';
   const email = session?.user.email ?? 'amanda@exemplo.com';
-  const shortId = session?.user.id ? session.user.id.slice(0, 8).toUpperCase() : '—';
+
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!userId) return;
+    supabase
+      .from('user_short_ids')
+      .select('short_id')
+      .eq('user_id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.short_id) setShortId(data.short_id);
+      });
+  }, [session?.user.id]);
 
   const handleConfirmLogout = async () => {
     await signOut();
@@ -127,11 +147,15 @@ export default function Perfil() {
             Informações e Suporte
           </h2>
           <div className="flex w-full flex-col rounded-lg bg-base-white px-4 py-2">
-            <ProfileMenuItem icon={<PiChatCircleDots className="size-full" />} label="Entrar no grupo" href="#" />
+            <ProfileMenuItem
+              icon={<PiChatCircleDots className="size-full" />}
+              label="Entrar no grupo"
+              href={WHATSAPP_GROUP_URL}
+            />
             <ProfileMenuItem
               icon={<PiPaperPlaneTilt className="size-full" />}
               label="Falar com o Suporte"
-              href="https://wa.me/5511966046494"
+              href={WHATSAPP_SUPPORT_URL}
             />
             <ProfileMenuItem
               icon={<PiQuestion className="size-full" />}
@@ -160,6 +184,7 @@ export default function Perfil() {
               icon={<PiSignOut className="size-full" />}
               label="Sair da Conta"
               onClick={() => setLogoutOpen(true)}
+              iconClassName="text-error-500"
             />
           </div>
         </section>

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PiEnvelopeSimple, PiLockSimple } from 'react-icons/pi';
+import { PiEnvelopeSimple, PiEye, PiEyeSlash, PiLockSimple } from 'react-icons/pi';
 import Logo from '../../components/Logo';
 import AuthTextField from '../../components/auth/AuthTextField';
 import AuthPrimaryButton from '../../components/auth/AuthPrimaryButton';
@@ -69,14 +69,9 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 icon={<PiLockSimple className="size-full" />}
+                rightIcon={showPassword ? <PiEye className="size-full" /> : <PiEyeSlash className="size-full" />}
+                onRightIconClick={() => setShowPassword((v) => !v)}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="self-end text-[12px] font-body text-gray-500 underline"
-              >
-                {showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-              </button>
             </div>
             <Link to="/esqueci-senha" className="font-body text-[14px] tracking-[0.7px] text-main-red-700">
               Esqueceu sua senha ?

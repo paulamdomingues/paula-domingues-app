@@ -7,3 +7,11 @@
  */
 export const EXTERNAL_TERMS_URL = 'https://SEU-SITE-AQUI.com.br/termos';
 export const EXTERNAL_PRIVACY_URL = 'https://SEU-SITE-AQUI.com.br/privacidade';
+
+/**
+ * Links de WhatsApp usados no Perfil ("Entrar no grupo" / "Falar com o
+ * Suporte"). A Amanda confirmou (18/08/2026) que o número de suporte ainda
+ * é fictício/provisório — trocar assim que tiver o número oficial.
+ */
+export const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/C8k4KPFSafZ4bE36wYkOyG';
+export const WHATSAPP_SUPPORT_URL = 'https://wa.me/5511912345678';

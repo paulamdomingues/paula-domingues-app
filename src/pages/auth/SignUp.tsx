@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PiEnvelopeSimple, PiLockSimple, PiUser } from 'react-icons/pi';
+import { PiEnvelopeSimple, PiEye, PiEyeSlash, PiLockSimple, PiUser } from 'react-icons/pi';
 import Logo from '../../components/Logo';
 import AuthTextField from '../../components/auth/AuthTextField';
 import AuthPrimaryButton from '../../components/auth/AuthPrimaryButton';
@@ -79,26 +79,19 @@ export default function SignUp() {
                 onChange={(e) => setEmail(e.target.value)}
                 icon={<PiEnvelopeSimple className="size-full" />}
               />
-              <div className="flex w-full flex-col gap-1">
-                <AuthTextField
-                  label="Senha"
-                  placeholder="digite sua senha"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  icon={<PiLockSimple className="size-full" />}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="self-end text-[12px] font-body text-gray-500 underline"
-                >
-                  {showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                </button>
-              </div>
+              <AuthTextField
+                label="Senha"
+                placeholder="digite sua senha"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                icon={<PiLockSimple className="size-full" />}
+                rightIcon={showPassword ? <PiEye className="size-full" /> : <PiEyeSlash className="size-full" />}
+                onRightIconClick={() => setShowPassword((v) => !v)}
+              />
             </div>
           </div>
 

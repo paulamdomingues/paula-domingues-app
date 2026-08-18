@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   PiArrowLeft,
+  PiCheckCircle,
   PiClock,
   PiCopy,
   PiHeart,
@@ -81,29 +82,12 @@ export default function StoreDetail() {
 
         {/* Bloco de cima: galeria + info principal (lado a lado no desktop). */}
         <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
-          <div className="flex w-full flex-col gap-2 lg:w-1/2">
-            <div className="relative aspect-square w-full overflow-hidden rounded-lg">
-              <ImagePlaceholder src={store.imageUrl} alt={store.name} className="size-full" />
-
-              <button
-                type="button"
-                aria-label={favorited ? `Remover ${store.name} dos favoritos` : `Favoritar ${store.name}`}
-                onClick={() => toggleFavorite(store.id)}
-                className="absolute right-[10px] top-[10px] flex size-10 items-center justify-center rounded-full bg-base-white/80"
-              >
-                {favorited ? (
-                  <PiHeartFill className="size-5 text-main-red-600" />
-                ) : (
-                  <PiHeart className="size-5 text-main-red-900" />
-                )}
-              </button>
-
-              <div className="absolute left-0 top-[10px] flex h-7 items-center justify-center rounded-r-2xl bg-accent-yellow px-3">
-                <span className="font-body text-[13px] leading-[1.35] tracking-[0.39px] text-base-black">
-                  {store.code}
-                </span>
-              </div>
-            </div>
+          <div className="flex w-full flex-col gap-2 lg:w-[552px] lg:shrink-0">
+            <ImagePlaceholder
+              src={store.imageUrl}
+              alt={store.name}
+              className="aspect-[4/3] w-full lg:aspect-[4/5] lg:h-auto"
+            />
 
             <div className="flex w-full items-center justify-center gap-2">
               {(details.thumbnailImageUrls ?? [null, null, null]).slice(0, 3).map((url, i) => (
@@ -125,6 +109,27 @@ export default function StoreDetail() {
               <p className="w-full text-center font-body text-[26px] tracking-[1.3px] text-gray-800 lg:text-left lg:text-[24px]">
                 {store.categoryLabel}
               </p>
+
+              <div className="mt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  aria-label={favorited ? `Remover ${store.name} dos favoritos` : `Favoritar ${store.name}`}
+                  onClick={() => toggleFavorite(store.id)}
+                  className="flex size-9 items-center justify-center rounded-full border border-gray-200 bg-base-white"
+                >
+                  {favorited ? (
+                    <PiHeartFill className="size-5 text-main-red-600" />
+                  ) : (
+                    <PiHeart className="size-5 text-main-red-900" />
+                  )}
+                </button>
+
+                <div className="flex h-7 items-center justify-center rounded-full bg-accent-yellow px-3">
+                  <span className="font-body text-[13px] leading-[1.35] tracking-[0.39px] text-base-black">
+                    {store.code}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="flex w-full items-center gap-3">
@@ -168,7 +173,8 @@ export default function StoreDetail() {
         <ImagePlaceholder
           src={details.secondaryImageUrl}
           alt={`Peça em destaque — ${store.name}`}
-          className="aspect-square w-full lg:w-1/2"
+          className="-mx-6 aspect-[4/5] w-[calc(100%+48px)] lg:mx-0 lg:aspect-[4/5] lg:h-auto lg:w-1/2"
+          rounded="rounded-none lg:rounded-lg"
         />
 
         <div className="flex w-full flex-col gap-3 lg:w-1/2">
@@ -178,9 +184,11 @@ export default function StoreDetail() {
               <button
                 type="button"
                 onClick={handleCopyAddress}
-                className="mt-1 flex w-fit items-center gap-1 font-body text-[13px] tracking-[0.65px] text-main-red-700 underline"
+                className={`mt-1 flex w-fit items-center gap-1 font-body text-[13px] tracking-[0.65px] underline ${
+                  copied ? 'text-success-800' : 'text-main-red-700'
+                }`}
               >
-                <PiCopy className="size-4" />
+                {copied ? <PiCheckCircle className="size-4" /> : <PiCopy className="size-4" />}
                 {copied ? 'Endereço copiado!' : 'Copiar endereço'}
               </button>
             </InfoCard>

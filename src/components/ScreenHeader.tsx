@@ -6,6 +6,13 @@ interface ScreenHeaderProps {
   title: string;
   suffix?: string;
   userFirstName?: string;
+  /**
+   * Quando true, mantém o título (e sufixo) centralizados também a partir do
+   * breakpoint `lg`. Por padrão o título é centralizado no mobile e alinhado
+   * à esquerda no desktop — usado apenas por telas que pedem título sempre
+   * centralizado (ex.: Lojas).
+   */
+  centerTitleOnDesktop?: boolean;
 }
 
 /**
@@ -13,7 +20,12 @@ interface ScreenHeaderProps {
  * logo pequena + nome do usuário + sino (via <TopBar />), seguido do botão
  * "Voltar" e o título da tela.
  */
-export default function ScreenHeader({ title, suffix, userFirstName = 'Amanda' }: ScreenHeaderProps) {
+export default function ScreenHeader({
+  title,
+  suffix,
+  userFirstName = 'Amanda',
+  centerTitleOnDesktop = false,
+}: ScreenHeaderProps) {
   const navigate = useNavigate();
 
   return (
@@ -29,7 +41,9 @@ export default function ScreenHeader({ title, suffix, userFirstName = 'Amanda' }
           <PiArrowLeft className="size-4 lg:size-6" />
           Voltar
         </button>
-        <div className="flex items-center justify-center gap-3 lg:justify-start">
+        <div
+          className={`flex items-center justify-center gap-3 ${centerTitleOnDesktop ? '' : 'lg:justify-start'}`}
+        >
           <h1 className="font-display font-bold text-[26px] tracking-[0.78px] text-gray-900 lg:text-[48px] lg:font-extrabold lg:tracking-[1.44px]">
             {title}
           </h1>

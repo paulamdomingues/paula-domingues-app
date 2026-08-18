@@ -10,7 +10,7 @@ import { useLoadMore } from '../lib/useLoadMore';
 
 export default function Lojas() {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const [sort, setSort] = useState<SortOptionId>('recentes');
+  const [sort, setSort] = useState<SortOptionId>('populares');
 
   const sortedStores = useMemo(() => sortStores(stores, sort), [sort]);
   const { visibleItems: visibleStores, hasMore, loadMore } = useLoadMore(sortedStores, sort);
@@ -20,14 +20,15 @@ export default function Lojas() {
       <ScreenHeader
         title="Lojas"
         suffix={`(${sortedStores.length})`}
+        centerTitleOnDesktop
       />
 
       <div className="flex w-full items-center justify-between">
-        <CategoryFilterSheet />
         <div className="flex items-center gap-4">
           <span className="font-body text-[14px] tracking-[0.7px] text-gray-800">Ordem de exibição:</span>
           <SortDropdown value={sort} onChange={setSort} />
         </div>
+        <CategoryFilterSheet />
       </div>
 
       <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8">

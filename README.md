@@ -77,6 +77,21 @@ supabase/
   schema.sql        Schema do banco de dados (rodar no SQL Editor do Supabase) — ver aviso acima sobre a diferença com o projeto real
 ```
 
+## Correções e melhorias (18/08/2026)
+
+Rodada de ajustes pedida pela Amanda em cima da versão mobile+desktop já existente (não é tela nova, é refinamento):
+
+- **Inputs de autenticação** (Login, Criar Conta, Esqueci Senha): label flutuante (encolhe no foco), ícone à esquerda, e agora com toggle de mostrar/ocultar senha de verdade (`PiEye`/`PiEyeSlash`) direto no campo — o botão externo antigo foi removido.
+- **Esqueci Senha e Pré-login** ganharam o mesmo tratamento de tela dividida do Login/Criar Conta no desktop (com placeholder de imagem institucional, pronto pra receber a foto real do Bunny.net depois).
+- **Paleta de cores** (`tailwind.config.js`) atualizada com a rampa oficial do StyleGuide do Figma — `main-red`, `main-dark`, `gray`, `success` completos, e `error` (tons de laranja, é a cor usada pra ações destrutivas/de erro no app, ex: botão "Sair da Conta").
+- **ID do Perfil**: agora é um número de 5 dígitos único de verdade (`id #00001` até `#99999`), gerado automaticamente no cadastro via uma tabela nova no Supabase (`public.user_short_ids`, migração `0002_user_short_ids.sql`, já aplicada em produção) — não é mais derivado do UUID da conta.
+- **Categoria**: layout refeito com um filtro de bairro (Brás / 25 de Março / Bom Retiro / Outros — seleção exclusiva, combinável com a ordenação), campo interno `neighborhood` em cada loja no mock (nunca exibido pro usuário).
+- **Toast de favoritos**: primeiro toast do projeto — aparece ao remover uma loja dos favoritos, em qualquer tela.
+- **Player de stories**: nova funcionalidade — overlay de tela cheia com navegação por toque, aberto a partir do mini-player da Início (`src/components/StoryPlayerOverlay.tsx`). Estrutura de dados (`Story`) já prevista pra vídeos vindos do painel admin via Supabase/Bunny.
+- **Ordenação "Mais populares"**: virou o padrão em Busca e Lojas — hoje simulada (mesma ordem do catálogo), até existir dado real de analytics (acessos/cliques/favoritos).
+- Diversos ajustes pontuais: nav inferior (altura/espaçamento), página do fornecedor (fotos sem forçar quadrado), Busca/Lojas (alinhamento de grade, texto de "sem resultados" unificado).
+- **Pendente da sua parte**: a troca dos ~30 ícones de interface do app pelos seus ícones customizados do Figma ainda não entrou nessa rodada (é uma tarefa separada, à parte, porque mexe em quase todo arquivo do projeto) — entra na próxima.
+
 ## Próximos passos
 
 Todas as telas do Figma "App V1 - User" (versão mobile) já estão implementadas: Início, autenticação completa, Busca/Categorias, Loja/Lojas/Favoritos e Perfil completo (Dúvidas, Termos, Trocar Senha, confirmação de logout, Notificações).
@@ -84,9 +99,12 @@ Todas as telas do Figma "App V1 - User" (versão mobile) já estão implementada
 O que ainda falta pra ir ao ar de verdade:
 
 - ~~Resolver o RLS desabilitado no Supabase~~ — feito, ver seção "Imagens: Bunny.net + Supabase" acima.
-- Implementar o upload de imagem de verdade (Edge Function do Supabase → Bunny.net) — hoje só a **leitura/exibição** está pronta (`resolveBunnyImageUrl`).
+- Trocar os ícones de interface pelos ícones customizados da Amanda (próxima rodada).
+- Implementar o upload de imagem/vídeo de verdade (Edge Function do Supabase → Bunny.net) — hoje só a **leitura/exibição** está pronta (`resolveBunnyImageUrl`/`resolveBunnyVideoUrl`).
 - Painel admin completo — plano detalhado já entregue em `painel-admin-plano.md`, aguardando confirmação de algumas perguntas em aberto antes de implementar.
 - Rodar `npm install` e testar o app na sua máquina — nesta sessão não tive acesso à internet pra instalar pacotes nem rodar o app de verdade, só verifiquei a sintaxe de todos os arquivos.
 - Preencher os campos entre colchetes na tela de Termos (`/termos`) com os dados reais do seu negócio (CNPJ/CPF, e-mail de suporte, WhatsApp, data de vigência).
 - Trocar os dados fictícios em `src/data/mockData.ts` pelo catálogo real de lojas — atenção: a estrutura real do Supabase é diferente da de `supabase/schema.sql`, ver aviso acima.
+- Popular a rampa de popularidade real (analytics) pra "Mais populares" deixar de ser simulada.
+- Substituir o número de WhatsApp de suporte fictício (`src/lib/constants.ts`) pelo oficial.
 - ~~Construir a versão desktop do Figma ("App V1 - Desktop")~~ — feito, ver seção "Status atual" acima. Falta só você me passar a URL real do site pra trocar o placeholder em `src/lib/constants.ts` (`EXTERNAL_TERMS_URL`/`EXTERNAL_PRIVACY_URL`).
