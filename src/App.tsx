@@ -29,7 +29,16 @@ function AppShell() {
         conteúdo de cada página ficam alinhados um com o outro sem precisar
         de nenhum componente "full-bleed" separado.
       */}
-      <main className="mx-auto w-full flex-1 pb-4 lg:max-w-[1440px]">
+      {/*
+        BottomNav agora é `fixed` (fica grudado no viewport o tempo todo,
+        independente do scroll — antes era `sticky` e só "aparecia" ao
+        chegar no fim da página, ver conversa 18/08/2026). Como um elemento
+        fixed sai do fluxo normal, o conteúdo do <main> precisa desse
+        padding extra embaixo (só no mobile, onde a nav aparece — no
+        desktop `lg:` ela é `lg:hidden`) pra nada ficar escondido atrás
+        dela.
+      */}
+      <main className="mx-auto w-full flex-1 pb-28 lg:max-w-[1440px] lg:pb-4">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/busca" element={<Busca />} />

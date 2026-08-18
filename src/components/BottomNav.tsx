@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
 
 export default function BottomNav() {
   return (
-    <nav className="sticky bottom-0 left-0 flex w-full items-center justify-between border-t-2 border-main-red-700 bg-base-white px-6 pb-8 pt-4 lg:hidden">
+    <nav className="fixed bottom-0 left-1/2 z-40 flex w-full max-w-[430px] -translate-x-1/2 items-center justify-between border-t-2 border-main-red-700 bg-base-white px-6 pb-8 pt-4 lg:hidden">
       {navItems.map(({ to, label, Icon, ActiveIcon }) => (
         <NavLink key={to} to={to} end={to === '/'} className="flex w-[62px] flex-col items-center gap-0">
           {({ isActive }) => (
