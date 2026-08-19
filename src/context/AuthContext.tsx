@@ -5,6 +5,14 @@ import { supabase } from '../lib/supabaseClient';
 interface AuthContextValue {
   session: Session | null;
   loading: boolean;
+  /**
+   * Primeiro nome de quem está logado (vem de `user_metadata.first_name`,
+   * preenchido no cadastro — ver `signUp` abaixo). Centralizado aqui pra
+   * `Header`/`TopBar` mostrarem sempre o nome real em toda tela — antes só
+   * a página Perfil calculava isso, o resto mostrava "Amanda" fixo no
+   * código, mesmo logada com outra conta (Amanda, 20/08/2026).
+   */
+  firstName: string;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
     email: string,
@@ -21,6 +29,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const firstName = (session?.user.user_metadata?.first_name as string | undefined) ?? 'Amanda';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -78,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, loading, signIn, signUp, signOut, requestPasswordReset, updatePassword }}
+      value={{ session, loading, firstName, signIn, signUp, signOut, requestPasswordReset, updatePassword }}
     >
       {children}
     </AuthContext.Provider>

@@ -19,7 +19,11 @@ export default function HighlightBanner({ onClick }: HighlightBannerProps) {
         <ImagePlaceholder src={null} alt="Prévia de stories" className="absolute inset-0 size-full" />
         {/* Máscara na cor main-red-500 a 60% de opacidade sobre a thumbnail */}
         <span className="absolute inset-0 rounded-lg bg-main-red-500/60" aria-hidden="true" />
-        <PlayIcon className="relative size-10 text-base-white lg:size-14" />
+        {/* Fundo circular atrás do play, pedido pela Amanda (20/08/2026) —
+            antes era só o ícone branco flutuando direto sobre a imagem. */}
+        <span className="relative flex size-10 items-center justify-center rounded-full bg-rose-100 shadow-[0px_4px_4px_0px_rgba(255,255,255,0.25)] lg:size-14">
+          <PlayIcon className="size-5 text-rose-950 lg:size-7" />
+        </span>
       </button>
 
       <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-6">

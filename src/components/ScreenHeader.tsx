@@ -5,7 +5,6 @@ import TopBar from './TopBar';
 interface ScreenHeaderProps {
   title: string;
   suffix?: string;
-  userFirstName?: string;
   /**
    * Quando true, mantém o título (e sufixo) centralizados também a partir do
    * breakpoint `lg`. Por padrão o título é centralizado no mobile e alinhado
@@ -23,14 +22,13 @@ interface ScreenHeaderProps {
 export default function ScreenHeader({
   title,
   suffix,
-  userFirstName = 'Amanda',
   centerTitleOnDesktop = false,
 }: ScreenHeaderProps) {
   const navigate = useNavigate();
 
   return (
     <div className="flex w-full flex-col gap-4 lg:gap-10">
-      <TopBar userFirstName={userFirstName} />
+      <TopBar />
 
       <div className="flex w-full flex-col gap-4">
         {/* `self-start`: sem isso, o botão herda `align-items: stretch` do

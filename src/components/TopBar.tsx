@@ -2,10 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { BellIcon } from './icons';
 import Logo from './Logo';
 import { useNotifications } from '../context/NotificationsContext';
-
-interface TopBarProps {
-  userFirstName?: string;
-}
+import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   { to: '/', label: 'Início', end: true },
@@ -21,10 +18,16 @@ const navItems = [
  * mesma barra vira o cabeçalho desktop completo: ganha o menu de navegação
  * central (Início/Buscar/Lojas/Favoritos/Meu Perfil) — substituindo o
  * `BottomNav`, que fica escondido em telas largas (ver `BottomNav.tsx`).
+ *
+ * O nome exibido vem direto do `AuthContext` (primeiro nome de quem está
+ * logado) — antes cada tela precisava passar isso via prop e a maioria
+ * esquecia, então ficava sempre no valor padrão "Amanda" mesmo logado com
+ * outra conta (Amanda, 20/08/2026).
  */
-export default function TopBar({ userFirstName = 'Amanda' }: TopBarProps) {
+export default function TopBar() {
   const navigate = useNavigate();
   const { hasUnread } = useNotifications();
+  const { firstName } = useAuth();
 
   return (
     <div className="flex h-[57px] w-full items-center justify-between border-b border-[rgba(169,169,169,0.42)] py-2 lg:h-[70px]">
@@ -49,7 +52,7 @@ export default function TopBar({ userFirstName = 'Amanda' }: TopBarProps) {
 
       <div className="flex items-center gap-2">
         <span className="font-display font-semibold text-[18px] tracking-[0.54px] text-base-black underline lg:text-[24px]">
-          {userFirstName}
+          {firstName}
         </span>
         <button
           type="button"

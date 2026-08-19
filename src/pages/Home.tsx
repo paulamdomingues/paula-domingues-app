@@ -9,6 +9,7 @@ import StoreCard from '../components/StoreCard';
 import StoryPlayerOverlay from '../components/StoryPlayerOverlay';
 import { categories, recentStores, stories } from '../data/mockData';
 import { useFavorites } from '../context/FavoritesContext';
+import { WHATSAPP_GROUP_URL } from '../lib/constants';
 import type { Category, Store } from '../types';
 
 export default function Home() {
@@ -26,7 +27,7 @@ export default function Home() {
         <div className="flex w-full flex-col gap-6 lg:gap-0">
           {/* Mobile: saudação "Olá, Amanda!". Desktop: a mesma TopBar/nav das outras telas. */}
           <div className="lg:hidden">
-            <Header userFirstName="Amanda" />
+            <Header />
           </div>
           <div className="hidden lg:-mx-[156px] lg:block lg:px-[156px]">
             <TopBar />
@@ -39,7 +40,7 @@ export default function Home() {
           </div>
         </div>
         <div className="lg:mx-auto lg:w-full lg:max-w-[640px]">
-          <WhatsappCommunityButton />
+          <WhatsappCommunityButton href={WHATSAPP_GROUP_URL} />
         </div>
       </div>
 

@@ -69,11 +69,10 @@ function ProfileMenuItem({ icon, label, onClick, href, disabled, iconClassName }
  */
 export default function Perfil() {
   const navigate = useNavigate();
-  const { session, signOut } = useAuth();
+  const { session, signOut, firstName } = useAuth();
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [shortId, setShortId] = useState<string>('—');
 
-  const firstName = (session?.user.user_metadata?.first_name as string | undefined) ?? 'Amanda';
   const email = session?.user.email ?? 'amanda@exemplo.com';
 
   useEffect(() => {
@@ -97,7 +96,7 @@ export default function Perfil() {
   return (
     <div className="flex w-full flex-col items-center gap-10 px-6 py-8 lg:px-[156px] lg:py-10">
       <div className="flex w-full flex-col gap-8">
-        <TopBar userFirstName={firstName} />
+        <TopBar />
 
         <div className="flex w-full flex-col gap-4 lg:mx-auto lg:max-w-[584px]">
           <button

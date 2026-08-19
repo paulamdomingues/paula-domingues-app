@@ -93,8 +93,15 @@ export function FunnelIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 export function HeartFillIcon(props: SVGProps<SVGSVGElement>) {
+  // O SVG exportado do Figma vem numa prancheta 32x32 com o desenho ocupando
+  // só uma faixa pequena no meio (o `HeartIcon` de contorno já vem numa
+  // prancheta 24x24 quase toda preenchida pelo desenho) — nos dois ícones
+  // renderizados no mesmo tamanho de caixa, o preenchido parecia bem menor.
+  // Recorto aqui o viewBox pra um 24x24 centrado no desenho (mesmo centro
+  // 16,16 da prancheta original), sem precisar de um novo export da Amanda
+  // (Amanda, 20/08/2026).
   return (
-    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg viewBox="4 4 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path d="M26.5 12.8146C26.5 19.3771 16.7697 24.689 16.3553 24.9084C16.2461 24.9671 16.124 24.9979 16 24.9979C15.876 24.9979 15.7539 24.9671 15.6447 24.9084C15.2303 24.689 5.5 19.3771 5.5 12.8146C5.50174 11.2736 6.11468 9.79616 7.20436 8.70648C8.29404 7.6168 9.77146 7.00386 11.3125 7.00212C13.2484 7.00212 14.9434 7.83462 16 9.24181C17.0566 7.83462 18.7516 7.00212 20.6875 7.00212C22.2285 7.00386 23.706 7.6168 24.7956 8.70648C25.8853 9.79616 26.4983 11.2736 26.5 12.8146Z" fill="currentColor"/>
     </svg>
   );

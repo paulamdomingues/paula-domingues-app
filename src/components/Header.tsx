@@ -1,21 +1,23 @@
 import { useNavigate } from 'react-router-dom';
 import { BellIcon } from './icons';
 import { useNotifications } from '../context/NotificationsContext';
-
-interface HeaderProps {
-  userFirstName: string;
-}
+import { useAuth } from '../context/AuthContext';
 
 /**
- * Header mobile da Início (saudação "Olá, Amanda!" + sino). Achado o bug
+ * Header mobile da Início (saudação "Olá, [nome]!" + sino). Achado o bug
  * (Amanda, 19/08/2026): esse sino nunca teve `onClick` — por isso "impossível
  * clicar" a partir da Início — e a bolinha vinha com `hasUnreadNotifications`
  * fixo em `true`, nunca refletindo o que realmente foi lido. Os dois agora
  * usam o `NotificationsContext` de verdade, mesmo estado usado em `/notificacoes`.
+ *
+ * O nome também não vinha mais de prop fixa (`userFirstName="Amanda"`
+ * hardcoded na Início) — agora busca direto do `AuthContext`, então mostra
+ * sempre o primeiro nome de quem está logado de verdade (Amanda, 20/08/2026).
  */
-export default function Header({ userFirstName }: HeaderProps) {
+export default function Header() {
   const navigate = useNavigate();
   const { hasUnread } = useNotifications();
+  const { firstName } = useAuth();
 
   return (
     <div className="flex items-center justify-between border-b border-[rgba(169,169,169,0.42)] py-2 w-full">
@@ -24,7 +26,7 @@ export default function Header({ userFirstName }: HeaderProps) {
           Olá,
         </span>
         <span className="font-display font-bold text-[26px] tracking-[0.78px] text-base-black">
-          {userFirstName} !
+          {firstName} !
         </span>
       </div>
       <button

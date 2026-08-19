@@ -136,8 +136,19 @@ Você exportou os 59 SVGs do frame "all-icons" do Figma (node 1114:5610) direto 
 - Troquei o uso em ~20 arquivos (menu inferior, cabeçalhos, busca, favoritos, cards de loja, telas de login/criar conta/senha, perfil, notificações, página do fornecedor, stories, etc.) — sem alterar tamanho, cor ou posição de nenhum ícone, só a origem do desenho.
 - **Menu inferior (Início/Lojas/Perfil)**: entre os 59 arquivos só veio um glifo por ícone — não veio uma versão "preenchida" separada pra esses três (só Favoritos tem as duas: contorno e preenchido). Então o ícone continua o mesmo nos estados ativo/inativo desses três, e o destaque de "aba selecionada" continua vindo do fundo vermelho atrás do ícone, como já era.
 - **Dois ícones ficaram de fora da troca**, porque não têm equivalente entre os SVGs exportados: o de vídeo cortado (usado só quando um story ainda não tem vídeo cadastrado) e o de imagem genérica (placeholder de foto). Esses dois continuam vindo do `react-icons` normalmente — não afeta nada visível hoje.
-- **Um ponto pra você conferir**: no card "Atacado" da página do fornecedor usei o ícone do saquinho de chá (`TeaBag`) e no card "Varejo" usei o do carrinho de compras (`ShoppingCartSimple`) — não tinha uma indicação explícita de qual ícone era pra qual card nos arquivos exportados, então fiz essa escolha por associação (atacado = compra em quantidade/a granel, varejo = compra individual no carrinho). Se a ideia era o contrário, é só avisar que eu inverto.
+- ~~Um ponto pra você conferir: no card "Atacado"...~~ — era o contrário mesmo, já corrigido: carrinho de compras (`ShoppingCartSimple`) no "Atacado" e saquinho de chá (`TeaBag`) no "Varejo".
 - **Ícones que vieram na exportação mas não entram no app agora**: os do futuro painel administrativo (ainda não construído) e alguns de ação genérica sem uso hoje (lixeira, editar, três pontinhos, upload, "X" avulso). Ficam guardados no arquivo pra quando forem precisos.
+
+## Correções e ajustes (20/08/2026, parte 2)
+
+- **Botões "Ordenar"/"Filtrar" (Lojas, mobile)**: agora com 163px de largura cada e 16px de gap entre eles (342px de largura total), alinhados com a grade de cards embaixo.
+- **"Ordem de exibição" colado no botão (Busca, mobile)**: o texto e o botão "Mais antigos" quebravam em 2 linhas no mobile — ajustei pra ficarem sempre em uma linha só (padding/fonte um pouco menores só nesse contexto) e troquei o alinhamento do bloco de direita pra esquerda, com espaçamento adequado entre os dois.
+- **Coração preenchido (favoritos) menor que o de contorno**: achei a causa — o SVG exportado do coração preenchido veio numa prancheta 32x32 com o desenho pequeno no meio, enquanto o de contorno veio numa 24x24 quase toda preenchida. Recortei o viewBox do preenchido pra ficar do mesmo tamanho visual, sem precisar de um novo export seu.
+- **Botão "Comunidade no WhatsApp" (Início) sem link**: achei um bug de verdade — esse botão não tinha nenhuma URL configurada (`href="#"`). Agora usa o mesmo link do grupo que já era usado corretamente na página Perfil.
+- **Nome no cabeçalho sempre "Amanda"**: outro bug de verdade — em toda tela, exceto a Perfil, o nome mostrado era um texto fixo no código ("Amanda"), não o nome de quem estivesse logado de verdade. Centralizei a busca do primeiro nome no `AuthContext` (a mesma fonte que a Perfil já usava) — agora `Header` e `TopBar` mostram sempre o nome real em qualquer tela, sem depender de cada página lembrar de passar isso.
+- **X da popup "Sair do aplicativo?" pequeno no mobile**: estava com 20px, aumentei pra 24px.
+- **Ícone de play do mini-player de stories (Início)**: ganhou um fundo circular (rosa claro, com sombra suave) atrás do ícone, em vez do ícone branco flutuando direto sobre a imagem.
+- **Nota sobre "Chegaram Recentemente" (Início)**: hoje é uma lista fixa de 8 lojas escolhidas à mão no `mockData.ts`, não baseada em nenhuma data de cadastro real (a store ainda nem tem esse campo). Só vai virar de fato "as últimas cadastradas" quando o catálogo migrar pro Supabase — item já listado abaixo em "Próximos passos".
 
 ## Próximos passos
 
