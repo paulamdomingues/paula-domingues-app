@@ -14,6 +14,13 @@ interface StoryPlayerOverlayProps {
 const FALLBACK_DURATION_MS = 6000;
 /** Intervalo de atualização da barrinha de progresso quando não há vídeo pra guiar o tempo. */
 const PROGRESS_TICK_MS = 100;
+/**
+ * CTA "Ver essa loja": DESATIVADO por enquanto a pedido da Amanda
+ * (19/08/2026) — ela não quer esse botão aparecendo de jeito nenhum por
+ * ora, mesmo que um story tenha `linkUrl` cadastrado. Pra reativar, troca
+ * pra `true`.
+ */
+const STORY_CTA_ENABLED = false;
 
 /**
  * Overlay de tela cheia com os stories/destaques em vídeo, aberto a partir
@@ -49,6 +56,12 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
   const total = stories.length;
   const currentStory = stories[currentIndex];
   const resolvedVideoUrl = resolveBunnyVideoUrl(currentStory?.videoUrl);
+  // Variável local só pra o TS conseguir estreitar `string | null | undefined`
+  // pra `string` de forma confiável dentro do JSX abaixo (o encadeamento de
+  // `&&` direto com `currentStory.linkUrl` não estava sendo aceito pelo
+  // modo `strict` do tsconfig real do projeto — só apareceu no build da
+  // Vercel, não no meu confere manual, 19/08/2026).
+  const currentLinkUrl = currentStory.linkUrl;
 
   const goNext = useCallback(() => {
     setCurrentIndex((prev) => {
@@ -193,16 +206,10 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
           aria-label="Próximo story"
         />
 
-        {/*
-          Call-to-action do link associado à mídia ("Ver essa loja"):
-          DESATIVADO por enquanto a pedido da Amanda (19/08/2026) — ela não
-          quer esse botão aparecendo de jeito nenhum por ora, mesmo que um
-          story tenha `linkUrl` cadastrado. Pra reativar, troca `false &&`
-          pela condição original (`currentStory.linkUrl &&`).
-        */}
-        {false && currentStory.linkUrl && (
+        {/* Call-to-action do link associado à mídia ("Ver essa loja") — ver STORY_CTA_ENABLED acima. */}
+        {STORY_CTA_ENABLED && currentLinkUrl && (
           <a
-            href={currentStory.linkUrl}
+            href={currentLinkUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(event) => event.stopPropagation()}
