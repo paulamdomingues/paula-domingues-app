@@ -2,6 +2,14 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 
+/**
+ * Os 4 níveis de acesso do painel admin (tabela `team_members`, migração
+ * `0001_team_members_and_rls.sql`). Quem não está nessa tabela (todo cliente
+ * final) tem `accessLevel === null` — é a mesma sessão do Supabase Auth,
+ * só que sem nenhum papel de equipe.
+ */
+export type AccessLevel = 'master_admin' | 'suporte' | 'editor_conteudo' | 'convidado';
+
 interface AuthContextValue {
   session: Session | null;
   loading: boolean;
@@ -13,6 +21,14 @@ interface AuthContextValue {
    * código, mesmo logada com outra conta (Amanda, 20/08/2026).
    */
   firstName: string;
+  /**
+   * Papel da pessoa logada dentro da equipe do painel admin (`null` se a
+   * sessão atual não pertence a nenhum membro de equipe — ex: cliente final
+   * do app). Ver `ProtectedAdminRoute` (21/08/2026) para o gate que usa isso.
+   */
+  accessLevel: AccessLevel | null;
+  /** `true` enquanto a checagem de `team_members` ainda não terminou. */
+  accessLevelLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
     email: string,
@@ -29,6 +45,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(null);
+  const [accessLevelLoading, setAccessLevelLoading] = useState(true);
   const firstName = (session?.user.user_metadata?.first_name as string | undefined) ?? 'Amanda';
 
   useEffect(() => {
@@ -43,6 +61,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  // Checa se a pessoa logada é membro de equipe (painel admin) toda vez que
+  // a sessão muda. Roda pra QUALQUER sessão (cliente final incluído) — pra
+  // um cliente comum, a query simplesmente não acha linha nenhuma em
+  // `team_members` (RLS permite cada membro ver só a própria equipe, mas a
+  // busca "sou eu mesmo" sempre é permitida) e `accessLevel` fica `null`,
+  // que é o estado esperado.
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!userId) {
+      setAccessLevel(null);
+      setAccessLevelLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setAccessLevelLoading(true);
+    supabase
+      .from('team_members')
+      .select('access_level')
+      .eq('user_id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setAccessLevel((data?.access_level as AccessLevel | undefined) ?? null);
+        setAccessLevelLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user.id]);
 
   const signIn: AuthContextValue['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -87,7 +137,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, loading, firstName, signIn, signUp, signOut, requestPasswordReset, updatePassword }}
+      value={{
+        session,
+        loading,
+        firstName,
+        accessLevel,
+        accessLevelLoading,
+        signIn,
+        signUp,
+        signOut,
+        requestPasswordReset,
+        updatePassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

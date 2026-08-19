@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import Busca from './pages/Busca';
 import CategoryScreen from './pages/CategoryScreen';
@@ -18,6 +18,12 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import EmailSent from './pages/auth/EmailSent';
 import BottomNav from './components/BottomNav';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedAdminRoute from './components/admin/ProtectedAdminRoute';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminLojas from './pages/admin/AdminLojas';
+import { isAdminHost } from './lib/constants';
 
 function AppShell() {
   return (
@@ -59,6 +65,17 @@ function AppShell() {
 }
 
 export default function App() {
+  // Em `admin.pauladomingues.com`, a raiz "/" deve cair direto no painel
+  // admin em vez da home do app cliente. Feito como um retorno antecipado
+  // (em vez de uma <Route path="/" .../> concorrente lá embaixo) de
+  // propósito: uma rota "/" explícita no nível de cima sempre venceria o
+  // "/*" do app cliente no ranking do React Router, quebrando a home em
+  // `app.pauladomingues.com` — aqui o desvio só acontece nesse domínio
+  // específico, sem tocar em nada da árvore de rotas do cliente.
+  if (isAdminHost() && window.location.pathname === '/') {
+    return <Navigate to="/admin" replace />;
+  }
+
   return (
     <div className="app-shell">
       <Routes>
@@ -71,6 +88,31 @@ export default function App() {
         {/* Termos e Privacidade são públicos: dá pra ler antes de criar conta */}
         <Route path="/termos" element={<Termos />} />
         <Route path="/privacidade" element={<Termos />} />
+
+        {/*
+          Painel admin: área separada do app cliente (sem BottomNav, sem
+          nenhum componente client), mas usando a MESMA sessão do Supabase
+          Auth — ver `ProtectedAdminRoute`. Registrado antes do catch-all
+          "/*" do app cliente; no React Router v6 isso não é estritamente
+          necessário (caminhos explícitos como "/admin/lojas" sempre vencem
+          um splat "/*" na hora de rankear a rota, não importa a ordem),
+          mas deixa a intenção clara na leitura do arquivo.
+        */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/esqueci-senha" element={<ComingSoon title="Esqueci minha senha (Admin)" />} />
+        <Route element={<ProtectedAdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="lojas" element={<AdminLojas />} />
+            <Route path="lojas/nova" element={<ComingSoon title="Cadastrar Loja" />} />
+            <Route path="lojas/:storeId" element={<ComingSoon title="Editar Loja" />} />
+            <Route path="stories" element={<ComingSoon title="Vídeos/Stories" />} />
+            <Route path="usuarios" element={<ComingSoon title="Usuários" />} />
+            <Route path="categorias" element={<ComingSoon title="Categorias" />} />
+            <Route path="relatorios" element={<ComingSoon title="Relatórios" />} />
+            <Route path="configuracoes" element={<ComingSoon title="Configurações" />} />
+          </Route>
+        </Route>
 
         {/* App principal: protegido por sessão do Supabase */}
         <Route element={<ProtectedRoute />}>
