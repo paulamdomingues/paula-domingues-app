@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { PiBell } from 'react-icons/pi';
+import { BellIcon } from './icons';
 import Logo from './Logo';
 import { useNotifications } from '../context/NotificationsContext';
 
@@ -58,7 +58,7 @@ export default function TopBar({ userFirstName = 'Amanda' }: TopBarProps) {
           className="relative flex size-10 items-center justify-center"
         >
           <span className="relative flex items-center justify-center">
-            <PiBell className="size-6 text-gray-900 lg:size-[26px]" />
+            <BellIcon className="size-6 text-gray-900 lg:size-[26px]" />
             {hasUnread && (
               <span className="absolute right-0 top-0 size-[10px] rounded-full bg-main-red-400" />
             )}

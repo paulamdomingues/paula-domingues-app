@@ -1,5 +1,5 @@
 import { useState, type FocusEvent, type InputHTMLAttributes } from 'react';
-import { PiMagnifyingGlass } from 'react-icons/pi';
+import { MagnifyingGlassIcon } from '../icons';
 
 interface SearchInputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
@@ -26,7 +26,7 @@ export default function SearchInput({ className = '', onFocus, onBlur, ...inputP
     <label
       className={`flex w-full items-center gap-2 rounded-lg border-b border-[#413e3e] bg-[#FCFCFC] px-4 py-2 ${className}`}
     >
-      <PiMagnifyingGlass className="size-6 shrink-0 text-[#413e3e]" />
+      <MagnifyingGlassIcon className="size-6 shrink-0 text-[#413e3e]" />
       <input
         type="search"
         placeholder="Buscar por loja, categoria ou código..."

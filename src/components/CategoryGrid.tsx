@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { PiArrowFatLineLeft, PiArrowFatLineRight } from 'react-icons/pi';
+import { ArrowFatLineLeftIcon, ArrowFatLineRightIcon } from './icons';
 import type { Category } from '../types';
 import CategoryBubble from './CategoryBubble';
 
@@ -29,7 +29,7 @@ export default function CategoryGrid({ categories, onSelectCategory }: CategoryG
         onClick={() => scrollByAmount(-DESKTOP_TRACK_WIDTH)}
         className="hidden size-10 shrink-0 items-center justify-center rounded-lg bg-main-red-200 text-main-red-800 lg:flex"
       >
-        <PiArrowFatLineLeft className="size-5" />
+        <ArrowFatLineLeftIcon className="size-5" />
       </button>
 
       {/*
@@ -66,7 +66,7 @@ export default function CategoryGrid({ categories, onSelectCategory }: CategoryG
         onClick={() => scrollByAmount(DESKTOP_TRACK_WIDTH)}
         className="hidden size-10 shrink-0 items-center justify-center rounded-lg bg-main-red-200 text-main-red-800 lg:flex"
       >
-        <PiArrowFatLineRight className="size-5" />
+        <ArrowFatLineRightIcon className="size-5" />
       </button>
     </div>
   );

@@ -1,17 +1,17 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  PiArrowLeft,
-  PiCaretRight,
-  PiChatCircleDots,
-  PiFileText,
-  PiHeart,
-  PiIdentificationCard,
-  PiLockKey,
-  PiPaperPlaneTilt,
-  PiQuestion,
-  PiSignOut,
-} from 'react-icons/pi';
+  ArrowLeftIcon,
+  CaretRightIcon,
+  ChatIcon,
+  FileTextIcon,
+  HeartIcon,
+  IdentificationCardIcon,
+  LockKeyIcon,
+  PaperPlaneIcon,
+  QuestionIcon,
+  SignOutIcon,
+} from '../components/icons';
 import TopBar from '../components/TopBar';
 import LogoutConfirmModal from '../components/LogoutConfirmModal';
 import { useAuth } from '../context/AuthContext';
@@ -37,7 +37,7 @@ function ProfileMenuItem({ icon, label, onClick, href, disabled, iconClassName }
         </span>
         <span className="font-body text-[15px] tracking-[0.75px] text-main-dark-900">{label}</span>
       </span>
-      <PiCaretRight className="size-3 shrink-0 text-gray-400" />
+      <CaretRightIcon className="size-3 shrink-0 text-gray-400" />
     </>
   );
 
@@ -105,7 +105,7 @@ export default function Perfil() {
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-800"
           >
-            <PiArrowLeft className="size-4" />
+            <ArrowLeftIcon className="size-4" />
             Voltar
           </button>
 
@@ -130,12 +130,12 @@ export default function Perfil() {
           <h2 className="w-full font-display font-bold text-[22px] tracking-[0.66px] text-base-black">Conta</h2>
           <div className="flex w-full flex-col rounded-lg bg-base-white px-4 py-2">
             <ProfileMenuItem
-              icon={<PiLockKey className="size-full" />}
+              icon={<LockKeyIcon className="size-full" />}
               label="Alterar Senha"
               onClick={() => navigate('/perfil/trocar-senha')}
             />
             <ProfileMenuItem
-              icon={<PiHeart className="size-full" />}
+              icon={<HeartIcon className="size-full" />}
               label="Meus Favoritos"
               onClick={() => navigate('/favoritos')}
             />
@@ -148,17 +148,17 @@ export default function Perfil() {
           </h2>
           <div className="flex w-full flex-col rounded-lg bg-base-white px-4 py-2">
             <ProfileMenuItem
-              icon={<PiChatCircleDots className="size-full" />}
+              icon={<ChatIcon className="size-full" />}
               label="Entrar no grupo"
               href={WHATSAPP_GROUP_URL}
             />
             <ProfileMenuItem
-              icon={<PiPaperPlaneTilt className="size-full" />}
+              icon={<PaperPlaneIcon className="size-full" />}
               label="Falar com o Suporte"
               href={WHATSAPP_SUPPORT_URL}
             />
             <ProfileMenuItem
-              icon={<PiQuestion className="size-full" />}
+              icon={<QuestionIcon className="size-full" />}
               label="Dúvidas Frequentes"
               onClick={() => navigate('/perfil/duvidas')}
             />
@@ -171,17 +171,17 @@ export default function Perfil() {
           </h2>
           <div className="flex w-full flex-col rounded-lg bg-base-white px-4 py-2">
             <ProfileMenuItem
-              icon={<PiIdentificationCard className="size-full" />}
+              icon={<IdentificationCardIcon className="size-full" />}
               label="Meu Plano - Trimestral"
               disabled
             />
             <ProfileMenuItem
-              icon={<PiFileText className="size-full" />}
+              icon={<FileTextIcon className="size-full" />}
               label="Termos de Uso e Privacidade"
               onClick={() => navigate('/termos')}
             />
             <ProfileMenuItem
-              icon={<PiSignOut className="size-full" />}
+              icon={<SignOutIcon className="size-full" />}
               label="Sair da Conta"
               onClick={() => setLogoutOpen(true)}
               iconClassName="text-error-500"

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PiVideoCameraSlash, PiXCircle } from 'react-icons/pi';
+import { PiVideoCameraSlash } from 'react-icons/pi';
+import { XCircleIcon } from './icons';
 import { resolveBunnyVideoUrl } from '../lib/bunnyStorage';
 import type { Story } from '../types';
 
@@ -189,7 +190,7 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
           className="absolute left-4 top-16 z-10 text-base-white/90 transition-opacity hover:opacity-80 lg:left-10 lg:top-24"
           aria-label="Fechar player de stories"
         >
-          <PiXCircle className="size-10 lg:size-14" />
+          <XCircleIcon className="size-10 lg:size-14" />
         </button>
 
         {/* Zonas de navegação: metade esquerda volta, metade direita avança. */}

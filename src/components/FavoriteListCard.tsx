@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { PiCaretRight, PiHeartFill } from 'react-icons/pi';
+import { CaretRightIcon, HeartFillIcon } from './icons';
 import ImagePlaceholder from './ImagePlaceholder';
 import type { Store } from '../types';
 
@@ -53,9 +53,9 @@ export default function FavoriteListCard({ store, onToggleFavorite }: FavoriteLi
             }}
             className="flex size-9 items-center justify-center rounded-full"
           >
-            <PiHeartFill className="size-5 text-main-red-600" />
+            <HeartFillIcon className="size-5 text-main-red-600" />
           </button>
-          <PiCaretRight className="size-4 text-gray-400" />
+          <CaretRightIcon className="size-4 text-gray-400" />
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PiArrowLeft, PiLockSimple } from 'react-icons/pi';
+import { ArrowLeftIcon, LockIcon } from '../components/icons';
 import TopBar from '../components/TopBar';
 import AuthTextField from '../components/auth/AuthTextField';
 import AuthPrimaryButton from '../components/auth/AuthPrimaryButton';
@@ -56,7 +56,7 @@ export default function PerfilTrocarSenha() {
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-800"
         >
-          <PiArrowLeft className="size-4" />
+          <ArrowLeftIcon className="size-4" />
           Voltar
         </button>
 
@@ -79,7 +79,7 @@ export default function PerfilTrocarSenha() {
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              icon={<PiLockSimple className="size-full" />}
+              icon={<LockIcon className="size-full" />}
             />
             <AuthTextField
               label="Nova Senha"
@@ -90,7 +90,7 @@ export default function PerfilTrocarSenha() {
               minLength={6}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              icon={<PiLockSimple className="size-full" />}
+              icon={<LockIcon className="size-full" />}
             />
             <AuthTextField
               label="Confirme a nova senha"
@@ -101,7 +101,7 @@ export default function PerfilTrocarSenha() {
               minLength={6}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              icon={<PiLockSimple className="size-full" />}
+              icon={<LockIcon className="size-full" />}
             />
           </div>
 

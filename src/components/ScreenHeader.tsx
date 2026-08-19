@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { PiArrowLeft } from 'react-icons/pi';
+import { ArrowLeftIcon } from './icons';
 import TopBar from './TopBar';
 
 interface ScreenHeaderProps {
@@ -44,7 +44,7 @@ export default function ScreenHeader({
           onClick={() => navigate(-1)}
           className="flex w-fit items-center gap-2 self-start font-body text-[16px] tracking-[0.8px] text-main-red-800 lg:font-display lg:text-[32px] lg:font-bold lg:tracking-[0.96px]"
         >
-          <PiArrowLeft className="size-4 lg:size-6" />
+          <ArrowLeftIcon className="size-4 lg:size-6" />
           Voltar
         </button>
         <div

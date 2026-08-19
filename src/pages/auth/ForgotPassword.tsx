@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PiArrowLeft, PiEnvelopeSimple } from 'react-icons/pi';
+import { ArrowLeftIcon, EnvelopeIcon } from '../../components/icons';
 import Logo from '../../components/Logo';
 import AuthTextField from '../../components/auth/AuthTextField';
 import AuthPrimaryButton from '../../components/auth/AuthPrimaryButton';
@@ -39,7 +39,7 @@ export default function ForgotPassword() {
             onClick={() => navigate(-1)}
             className="flex w-full items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-700"
           >
-            <PiArrowLeft className="size-4" />
+            <ArrowLeftIcon className="size-4" />
             Voltar ao login
           </button>
         </div>
@@ -63,7 +63,7 @@ export default function ForgotPassword() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              icon={<PiEnvelopeSimple className="size-full" />}
+              icon={<EnvelopeIcon className="size-full" />}
             />
             {error && <p className="w-full text-center font-body text-[13px] text-main-red-800">{error}</p>}
             <AuthPrimaryButton loading={loading}>Receber Link</AuthPrimaryButton>

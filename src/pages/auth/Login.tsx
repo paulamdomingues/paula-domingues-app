@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PiEnvelopeSimple, PiEye, PiEyeSlash, PiLockSimple } from 'react-icons/pi';
+import { EnvelopeIcon, EyeIcon, EyeSlashIcon, LockIcon } from '../../components/icons';
 import Logo from '../../components/Logo';
 import AuthTextField from '../../components/auth/AuthTextField';
 import AuthPrimaryButton from '../../components/auth/AuthPrimaryButton';
@@ -58,7 +58,7 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                icon={<PiEnvelopeSimple className="size-full" />}
+                icon={<EnvelopeIcon className="size-full" />}
               />
               <AuthTextField
                 label="Senha"
@@ -68,8 +68,8 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                icon={<PiLockSimple className="size-full" />}
-                rightIcon={showPassword ? <PiEye className="size-full" /> : <PiEyeSlash className="size-full" />}
+                icon={<LockIcon className="size-full" />}
+                rightIcon={showPassword ? <EyeIcon className="size-full" /> : <EyeSlashIcon className="size-full" />}
                 onRightIconClick={() => setShowPassword((v) => !v)}
               />
             </div>

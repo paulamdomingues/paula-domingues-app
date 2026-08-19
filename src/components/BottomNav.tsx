@@ -1,30 +1,32 @@
 import { NavLink } from 'react-router-dom';
-import type { IconType } from 'react-icons';
+import type { ComponentType, SVGProps } from 'react';
 import {
-  PiHouse,
-  PiHouseFill,
-  PiMagnifyingGlass,
-  PiStorefront,
-  PiStorefrontFill,
-  PiHeart,
-  PiHeartFill,
-  PiUserCircle,
-  PiUserCircleFill,
-} from 'react-icons/pi';
+  HouseIcon,
+  MagnifyingGlassIcon,
+  StorefrontIcon,
+  HeartIcon,
+  HeartFillIcon,
+  UserIcon,
+} from './icons';
 
 interface NavItem {
   to: string;
   label: string;
-  Icon: IconType;
-  ActiveIcon: IconType;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+  ActiveIcon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
+// Só o de Favoritos tem uma variante "preenchida" exportada do Figma
+// (HeartIcon/HeartFillIcon) — Início, Lojas e Perfil usam o mesmo ícone nos
+// dois estados, já que só existe um glifo pra cada um entre os SVGs que a
+// Amanda exportou; o estado ativo continua se destacando pelo fundo
+// vermelho por trás do ícone (Amanda, 20/08/2026).
 const navItems: NavItem[] = [
-  { to: '/', label: 'Início', Icon: PiHouse, ActiveIcon: PiHouseFill },
-  { to: '/busca', label: 'Busca', Icon: PiMagnifyingGlass, ActiveIcon: PiMagnifyingGlass },
-  { to: '/lojas', label: 'Lojas', Icon: PiStorefront, ActiveIcon: PiStorefrontFill },
-  { to: '/favoritos', label: 'Favoritos', Icon: PiHeart, ActiveIcon: PiHeartFill },
-  { to: '/perfil', label: 'Meu Perfil', Icon: PiUserCircle, ActiveIcon: PiUserCircleFill },
+  { to: '/', label: 'Início', Icon: HouseIcon, ActiveIcon: HouseIcon },
+  { to: '/busca', label: 'Busca', Icon: MagnifyingGlassIcon, ActiveIcon: MagnifyingGlassIcon },
+  { to: '/lojas', label: 'Lojas', Icon: StorefrontIcon, ActiveIcon: StorefrontIcon },
+  { to: '/favoritos', label: 'Favoritos', Icon: HeartIcon, ActiveIcon: HeartFillIcon },
+  { to: '/perfil', label: 'Meu Perfil', Icon: UserIcon, ActiveIcon: UserIcon },
 ];
 
 export default function BottomNav() {

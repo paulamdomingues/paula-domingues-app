@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { PiHeart, PiHeartFill } from 'react-icons/pi';
+import { HeartIcon, HeartFillIcon } from './icons';
 import ImagePlaceholder from './ImagePlaceholder';
 import type { Store } from '../types';
 
@@ -36,9 +36,9 @@ export default function StoreCard({ store, onToggleFavorite }: StoreCardProps) {
           className="absolute left-[8px] top-[8px] flex size-8 items-center justify-center rounded-full bg-base-white/80"
         >
           {store.isFavorite ? (
-            <PiHeartFill className="size-5 text-main-red-600" />
+            <HeartFillIcon className="size-5 text-main-red-600" />
           ) : (
-            <PiHeart className="size-5 text-main-red-900" />
+            <HeartIcon className="size-5 text-main-red-900" />
           )}
         </button>
 

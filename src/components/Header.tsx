@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { PiBell } from 'react-icons/pi';
+import { BellIcon } from './icons';
 import { useNotifications } from '../context/NotificationsContext';
 
 interface HeaderProps {
@@ -34,7 +34,7 @@ export default function Header({ userFirstName }: HeaderProps) {
         className="relative flex size-10 items-center justify-center"
       >
         <span className="relative flex size-6 items-center justify-center">
-          <PiBell className="size-6 text-gray-900" />
+          <BellIcon className="size-6 text-gray-900" />
           {hasUnread && <span className="absolute right-0 top-0 size-[10px] rounded-full bg-main-red-400" />}
         </span>
       </button>

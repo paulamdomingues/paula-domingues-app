@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { PiArrowLeft } from 'react-icons/pi';
+import { ArrowLeftIcon } from '../../components/icons';
 import Logo from '../../components/Logo';
 import { useAuth } from '../../context/AuthContext';
 
@@ -27,7 +27,7 @@ export default function EmailSent() {
           onClick={() => navigate('/login')}
           className="flex w-full items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-700"
         >
-          <PiArrowLeft className="size-4" />
+          <ArrowLeftIcon className="size-4" />
           Voltar ao login
         </button>
       </div>

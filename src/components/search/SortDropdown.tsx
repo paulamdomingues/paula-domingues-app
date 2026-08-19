@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PiArrowsDownUp } from 'react-icons/pi';
+import { SortArrowsIcon } from '../icons';
 import { sortOptions, type SortOptionId } from '../../data/mockData';
 
 interface SortDropdownProps {
@@ -14,21 +14,33 @@ interface SortDropdownProps {
    * (Amanda, 19/08/2026).
    */
   align?: 'left' | 'right';
+  /**
+   * Largura fixa de 163px pro botão + label/ícone espalhados nas pontas —
+   * usado só na tela Lojas (mobile), pra bater exatamente com a largura do
+   * botão "Filtrar" ao lado (163px cada, 16px de gap entre os dois = 342px,
+   * mesma largura de duas colunas da grade de cards embaixo). Some no
+   * desktop (`lg:`), onde esse botão volta a ter largura automática, igual
+   * nos outros lugares que usam esse componente (Busca, Categoria) — Amanda,
+   * 20/08/2026.
+   */
+  fixedWidth?: boolean;
 }
 
-export default function SortDropdown({ value, onChange, align = 'right' }: SortDropdownProps) {
+export default function SortDropdown({ value, onChange, align = 'right', fixedWidth = false }: SortDropdownProps) {
   const [open, setOpen] = useState(false);
   const current = sortOptions.find((option) => option.id === value) ?? sortOptions[0];
 
   return (
-    <div className="relative">
+    <div className={`relative ${fixedWidth ? 'w-[163px] lg:w-auto' : ''}`}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 border-b border-[#929799] px-4 py-2 font-body text-[15px] tracking-[0.75px] text-gray-500"
+        className={`flex items-center gap-2 border-b border-[#929799] px-4 py-2 font-body text-[15px] tracking-[0.75px] text-gray-500 ${
+          fixedWidth ? 'w-full justify-between lg:w-auto lg:justify-start' : ''
+        }`}
       >
         {current.label}
-        <PiArrowsDownUp className="size-[18px]" />
+        <SortArrowsIcon className="size-[18px]" />
       </button>
 
       {open && (
@@ -48,7 +60,7 @@ export default function SortDropdown({ value, onChange, align = 'right' }: SortD
               <span className="font-body text-[15px] tracking-[0.75px] text-base-white">
                 {current.label}
               </span>
-              <PiArrowsDownUp className="size-[18px] text-base-white" />
+              <SortArrowsIcon className="size-[18px] text-base-white" />
             </div>
             {sortOptions.map((option) => (
               <button

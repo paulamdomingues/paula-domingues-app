@@ -1,4 +1,4 @@
-import { PiXCircle } from 'react-icons/pi';
+import { XCircleIcon } from './icons';
 
 interface LogoutConfirmModalProps {
   onCancel: () => void;
@@ -21,7 +21,7 @@ export default function LogoutConfirmModal({ onCancel, onConfirm }: LogoutConfir
           onClick={onCancel}
           className="flex items-center justify-end p-0.5"
         >
-          <PiXCircle className="size-5 text-gray-400 lg:size-[54px]" />
+          <XCircleIcon className="size-5 text-gray-400 lg:size-[54px]" />
         </button>
 
         <div className="flex w-full flex-col items-center gap-7 lg:gap-10">

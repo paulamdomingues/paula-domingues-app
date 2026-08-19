@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PiFunnel } from 'react-icons/pi';
+import { FunnelIcon } from '../icons';
 import { categories } from '../../data/mockData';
 
 /**
@@ -8,19 +8,26 @@ import { categories } from '../../data/mockData';
  * POP-UP: FILTROS do Figma). Selecionar uma categoria navega direto para a
  * página dela.
  */
-export default function CategoryFilterSheet() {
+interface CategoryFilterSheetProps {
+  /** Largura fixa de 163px + label/ícone espalhados nas pontas (mobile, tela Lojas) — ver mesmo prop no `SortDropdown`. */
+  fixedWidth?: boolean;
+}
+
+export default function CategoryFilterSheet({ fixedWidth = false }: CategoryFilterSheetProps) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   return (
-    <div className="relative">
+    <div className={`relative ${fixedWidth ? 'w-[163px] lg:w-auto' : ''}`}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 border-b border-[#929799] px-4 py-2 font-body text-[15px] tracking-[0.75px] text-gray-500 lg:border-b-0 lg:px-0 lg:py-0"
+        className={`flex items-center gap-2 border-b border-[#929799] px-4 py-2 font-body text-[15px] tracking-[0.75px] text-gray-500 lg:border-b-0 lg:px-0 lg:py-0 ${
+          fixedWidth ? 'w-full justify-between lg:w-auto lg:justify-start' : ''
+        }`}
       >
         Filtrar
-        <PiFunnel className="size-[18px]" />
+        <FunnelIcon className="size-[18px]" />
       </button>
 
       {open && (
@@ -37,7 +44,7 @@ export default function CategoryFilterSheet() {
           <div className="absolute right-0 top-full z-20 mt-1 max-h-[320px] w-[220px] overflow-y-auto rounded-lg border border-gray-100 bg-base-white shadow-lg">
             <div className="sticky top-0 flex items-center justify-between bg-gray-800 px-4 py-2">
               <span className="font-body text-[15px] tracking-[0.75px] text-base-white">Filtrar</span>
-              <PiFunnel className="size-[18px] text-base-white" />
+              <FunnelIcon className="size-[18px] text-base-white" />
             </div>
             {categories.map((category) => (
               <button

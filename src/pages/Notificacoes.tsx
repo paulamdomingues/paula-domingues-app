@@ -1,4 +1,4 @@
-import { PiStorefront } from 'react-icons/pi';
+import { StorefrontIcon } from '../components/icons';
 import ScreenHeader from '../components/ScreenHeader';
 import { useNotifications } from '../context/NotificationsContext';
 
@@ -32,7 +32,7 @@ export default function Notificacoes() {
                 notification.read ? 'opacity-60' : ''
               }`}
             >
-              <PiStorefront className="size-[30px] shrink-0 text-main-red-800" />
+              <StorefrontIcon className="size-[30px] shrink-0 text-main-red-800" />
               <div className="flex flex-1 flex-col items-start gap-4">
                 <div className="flex w-full flex-col items-start gap-1">
                   <p className="w-full font-display font-bold text-[22px] leading-[1.2] tracking-[0.66px] text-main-red-800">

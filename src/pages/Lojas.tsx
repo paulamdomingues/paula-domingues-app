@@ -23,7 +23,12 @@ export default function Lojas() {
         centerTitleOnDesktop
       />
 
-      <div className="flex w-full items-center justify-between">
+      {/* Mobile: os dois botões ficam com 163px de largura cada e 16px de gap
+          entre eles (342px de largura total pra linha), pra bater com a
+          largura de duas colunas da grade de cards embaixo. Desktop
+          (`lg:justify-between`): volta a ficar como antes, com o rótulo
+          "Ordem de exibição:" e os botões nas pontas (Amanda, 20/08/2026). */}
+      <div className="flex w-full items-center gap-4 lg:justify-between">
         <div className="flex items-center gap-4">
           {/* No mobile o rótulo some (só o texto "Mais populares" + ícone,
               tipo aba) — no desktop mantém o rótulo, ver print da Amanda
@@ -31,9 +36,9 @@ export default function Lojas() {
           <span className="hidden font-body text-[14px] tracking-[0.7px] text-gray-800 lg:inline">
             Ordem de exibição:
           </span>
-          <SortDropdown value={sort} onChange={setSort} align="left" />
+          <SortDropdown value={sort} onChange={setSort} align="left" fixedWidth />
         </div>
-        <CategoryFilterSheet />
+        <CategoryFilterSheet fixedWidth />
       </div>
 
       <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8">

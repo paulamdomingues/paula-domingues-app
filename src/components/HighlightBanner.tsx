@@ -1,4 +1,4 @@
-import { PiPlayFill } from 'react-icons/pi';
+import { PlayIcon } from './icons';
 import ImagePlaceholder from './ImagePlaceholder';
 import Logo from './Logo';
 
@@ -19,7 +19,7 @@ export default function HighlightBanner({ onClick }: HighlightBannerProps) {
         <ImagePlaceholder src={null} alt="Prévia de stories" className="absolute inset-0 size-full" />
         {/* Máscara na cor main-red-500 a 60% de opacidade sobre a thumbnail */}
         <span className="absolute inset-0 rounded-lg bg-main-red-500/60" aria-hidden="true" />
-        <PiPlayFill className="relative size-10 text-base-white lg:size-14" />
+        <PlayIcon className="relative size-10 text-base-white lg:size-14" />
       </button>
 
       <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-6">

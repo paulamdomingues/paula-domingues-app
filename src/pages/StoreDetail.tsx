@@ -1,19 +1,20 @@
 import { useState, type ReactNode } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
-  PiArrowLeft,
-  PiCheckCircle,
-  PiClock,
-  PiCopy,
-  PiHeart,
-  PiHeartFill,
-  PiMapPin,
-  PiPackage,
-  PiRuler,
-  PiStorefront,
-  PiTruck,
-} from 'react-icons/pi';
-import { FaInstagram, FaWhatsapp } from 'react-icons/fa6';
+  ArrowLeftIcon,
+  CheckFatIcon,
+  ClockIcon,
+  CopyIcon,
+  HeartIcon,
+  HeartFillIcon,
+  InstagramIcon,
+  MapPinIcon,
+  RulerIcon,
+  ShoppingCartIcon,
+  TeaBagIcon,
+  TruckIcon,
+  WhatsappIcon,
+} from '../components/icons';
 import TopBar from '../components/TopBar';
 import ImagePlaceholder from '../components/ImagePlaceholder';
 import { getStoreDetails, stores } from '../data/mockData';
@@ -93,7 +94,7 @@ export default function StoreDetail() {
           onClick={() => navigate(-1)}
           className="flex w-fit items-center gap-2 self-start font-body text-[16px] tracking-[0.8px] text-main-red-800 lg:font-display lg:text-[32px] lg:font-bold lg:tracking-[0.96px]"
         >
-          <PiArrowLeft className="size-4 lg:size-6" />
+          <ArrowLeftIcon className="size-4 lg:size-6" />
           Voltar
         </button>
 
@@ -123,9 +124,9 @@ export default function StoreDetail() {
                 className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full border border-gray-200 bg-base-white/90"
               >
                 {favorited ? (
-                  <PiHeartFill className="size-5 text-main-red-600" />
+                  <HeartFillIcon className="size-5 text-main-red-600" />
                 ) : (
-                  <PiHeart className="size-5 text-main-red-900" />
+                  <HeartIcon className="size-5 text-main-red-900" />
                 )}
               </button>
 
@@ -165,7 +166,7 @@ export default function StoreDetail() {
                 rel="noreferrer"
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-tr from-[#FEDA75] via-[#D62976] to-[#4F5BD5] p-3"
               >
-                <FaInstagram className="size-5 text-base-white" />
+                <InstagramIcon className="size-5 text-base-white" />
                 <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">Instagram</span>
               </a>
               <a
@@ -174,7 +175,7 @@ export default function StoreDetail() {
                 rel="noreferrer"
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#25D366] p-3"
               >
-                <FaWhatsapp className="size-5 text-base-white" />
+                <WhatsappIcon className="size-5 text-base-white" />
                 <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">WhatsApp</span>
               </a>
             </div>
@@ -211,7 +212,7 @@ export default function StoreDetail() {
         <div className="flex w-full flex-col gap-3 lg:w-1/2">
           {details.address && (
             <InfoCard
-              icon={<PiMapPin className="size-6" />}
+              icon={<MapPinIcon className="size-6" />}
               title="Endereço"
               headerAction={
                 <button
@@ -221,7 +222,7 @@ export default function StoreDetail() {
                     copied ? 'text-success-800' : 'text-main-red-700'
                   }`}
                 >
-                  {copied ? <PiCheckCircle className="size-4" /> : <PiCopy className="size-4" />}
+                  {copied ? <CheckFatIcon className="size-4" /> : <CopyIcon className="size-4" />}
                   {copied ? 'Endereço copiado!' : 'Copiar endereço'}
                 </button>
               }
@@ -231,14 +232,14 @@ export default function StoreDetail() {
           )}
 
           {(details.sizesLine || details.plusSizeLine) && (
-            <InfoCard icon={<PiRuler className="size-6" />} title="Tamanhos">
+            <InfoCard icon={<RulerIcon className="size-6" />} title="Tamanhos">
               {details.sizesLine && <p>{details.sizesLine}</p>}
               {details.plusSizeLine && <p>{details.plusSizeLine}</p>}
             </InfoCard>
           )}
 
           {details.hours && details.hours.length > 0 && (
-            <InfoCard icon={<PiClock className="size-6" />} title="Horário">
+            <InfoCard icon={<ClockIcon className="size-6" />} title="Horário">
               {details.hours.map((h) => (
                 <p key={h.label}>
                   {h.label} - {h.value}
@@ -248,21 +249,21 @@ export default function StoreDetail() {
           )}
 
           {(details.shippingFrom || details.shippingMethods) && (
-            <InfoCard icon={<PiTruck className="size-6" />} title="Envio">
+            <InfoCard icon={<TruckIcon className="size-6" />} title="Envio">
               {details.shippingFrom && <p>{details.shippingFrom}</p>}
               {details.shippingMethods && <p>{details.shippingMethods}</p>}
             </InfoCard>
           )}
 
           {(details.wholesaleOnline || details.wholesaleInPerson) && (
-            <InfoCard icon={<PiPackage className="size-6" />} title="Atacado">
+            <InfoCard icon={<ShoppingCartIcon className="size-6" />} title="Atacado">
               {details.wholesaleOnline && <p>{details.wholesaleOnline}</p>}
               {details.wholesaleInPerson && <p>{details.wholesaleInPerson}</p>}
             </InfoCard>
           )}
 
           {details.retail && (
-            <InfoCard icon={<PiStorefront className="size-6" />} title="Varejo">
+            <InfoCard icon={<TeaBagIcon className="size-6" />} title="Varejo">
               <p>{details.retail}</p>
             </InfoCard>
           )}
