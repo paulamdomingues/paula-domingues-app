@@ -22,12 +22,12 @@ export default function CategoryFilterSheet({ fixedWidth = false }: CategoryFilt
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-2 border-b border-[#929799] px-4 py-2 font-body text-[15px] tracking-[0.75px] text-gray-500 lg:border-b-0 lg:px-0 lg:py-0 ${
+        className={`flex items-center gap-2 whitespace-nowrap border-b border-[#929799] px-4 py-2 font-body text-[15px] tracking-[0.75px] text-gray-500 lg:border-b-0 lg:px-0 lg:py-0 ${
           fixedWidth ? 'w-full justify-between lg:w-auto lg:justify-start' : ''
         }`}
       >
         Filtrar
-        <FunnelIcon className="size-[18px]" />
+        <FunnelIcon className="size-[18px] shrink-0" />
       </button>
 
       {open && (

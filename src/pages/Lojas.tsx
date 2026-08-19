@@ -24,11 +24,12 @@ export default function Lojas() {
       />
 
       {/* Mobile: os dois botões ficam com 163px de largura cada e 16px de gap
-          entre eles (342px de largura total pra linha), pra bater com a
-          largura de duas colunas da grade de cards embaixo. Desktop
-          (`lg:justify-between`): volta a ficar como antes, com o rótulo
-          "Ordem de exibição:" e os botões nas pontas (Amanda, 20/08/2026). */}
-      <div className="flex w-full items-center gap-4 lg:justify-between">
+          entre eles (342x40px de caixa pra linha toda), pra bater com a
+          largura de duas colunas da grade de cards embaixo e com a mesma
+          caixa usada na Busca. Desktop (`lg:justify-between`): volta a ficar
+          como antes, com o rótulo "Ordem de exibição:" e os botões nas
+          pontas (Amanda, 20/08/2026). */}
+      <div className="flex h-10 w-full items-center gap-4 lg:h-auto lg:justify-between">
         <div className="flex items-center gap-4">
           {/* No mobile o rótulo some (só o texto "Mais populares" + ícone,
               tipo aba) — no desktop mantém o rótulo, ver print da Amanda

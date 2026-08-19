@@ -68,9 +68,13 @@ export default function Busca() {
 
       {hasQuery && results.length > 0 && (
         <div className="flex w-full flex-col items-center gap-2">
-          <div className="flex w-full items-center justify-end gap-7">
-            <span className="font-body text-[14px] tracking-[0.7px] text-gray-800">Ordem de exibição:</span>
-            <SortDropdown value={sort} onChange={setSort} />
+          {/* Mobile: rótulo + botão em linha única, sem quebrar — caixa de
+              até 342x40px, mesma régua da Lojas (Amanda, 20/08/2026). */}
+          <div className="flex h-10 w-full items-center justify-end gap-2 lg:h-auto lg:gap-7">
+            <span className="whitespace-nowrap font-body text-[13px] tracking-[0.65px] text-gray-800 lg:text-[14px] lg:tracking-[0.7px]">
+              Ordem de exibição:
+            </span>
+            <SortDropdown value={sort} onChange={setSort} compact />
           </div>
           <div className="grid w-full grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-6">
             {visibleResults.map((store) => (
