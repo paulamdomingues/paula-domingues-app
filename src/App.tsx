@@ -23,6 +23,7 @@ import AdminLayout from './components/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLojas from './pages/admin/AdminLojas';
+import AdminLojaForm from './pages/admin/AdminLojaForm';
 import { isAdminHost } from './lib/constants';
 
 function AppShell() {
@@ -104,8 +105,8 @@ export default function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="lojas" element={<AdminLojas />} />
-            <Route path="lojas/nova" element={<ComingSoon title="Cadastrar Loja" />} />
-            <Route path="lojas/:storeId" element={<ComingSoon title="Editar Loja" />} />
+            <Route path="lojas/nova" element={<AdminLojaForm />} />
+            <Route path="lojas/:storeId" element={<AdminLojaForm />} />
             <Route path="stories" element={<ComingSoon title="Vídeos/Stories" />} />
             <Route path="usuarios" element={<ComingSoon title="Usuários" />} />
             <Route path="categorias" element={<ComingSoon title="Categorias" />} />
