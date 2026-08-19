@@ -46,6 +46,7 @@ export default function CategoryScreen() {
             ? `(${storesInCategory.length} ${storesInCategory.length === 1 ? 'loja' : 'lojas'})`
             : undefined
         }
+        centerTitleOnDesktop
       />
 
       {neighborhood !== null && (
@@ -73,7 +74,7 @@ export default function CategoryScreen() {
         </div>
       ) : (
         <>
-          <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8">
+          <div className="grid w-full grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-6">
             {visibleStores.map((store) => (
               <StoreCard
                 key={store.id}

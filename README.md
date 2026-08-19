@@ -92,6 +92,31 @@ Rodada de ajustes pedida pela Amanda em cima da versão mobile+desktop já exist
 - Diversos ajustes pontuais: nav inferior (altura/espaçamento), página do fornecedor (fotos sem forçar quadrado), Busca/Lojas (alinhamento de grade, texto de "sem resultados" unificado).
 - **Pendente da sua parte**: a troca dos ~30 ícones de interface do app pelos seus ícones customizados do Figma ainda não entrou nessa rodada (é uma tarefa separada, à parte, porque mexe em quase todo arquivo do projeto) — entra na próxima.
 
+### Correção adicional: menu inferior não ficava fixo na tela (18/08/2026)
+
+Você reportou (com prints comparando com um app concorrente) que o `BottomNav` só aparecia ao rolar até o fim da página, em vez de ficar sempre visível no mesmo ponto da tela durante a rolagem — principalmente um problema em telas com listas longas, como Lojas (30+ fornecedores).
+
+- **Causa**: o menu usava `position: sticky`, mas por ser o último elemento da página (depois de todo o conteúdo do `<main>`), ele só "gruda" perto do fim do scroll — é um efeito colateral conhecido do `sticky` nesse tipo de estrutura, não um bug isolado de uma tela.
+- **Correção**: troquei pra `position: fixed`, grudado direto na base da janela (viewport), sempre visível, independente de quanto o usuário rolou — sem alterar o visual (mantém o formato quadrado atual, **não** o formato arredondado do app concorrente que você mandou de exemplo, só o comportamento de posicionamento). Ajustei o espaçamento inferior do conteúdo das páginas (`src/App.tsx`) pra nada ficar escondido atrás do menu agora que ele não ocupa mais espaço no fluxo da página.
+- **Arquivos**: `src/components/BottomNav.tsx`, `src/App.tsx`.
+- Recomendo testar especialmente na tela **Lojas**, rolando a lista inteira, pra confirmar que o menu se comporta como esperado.
+
+## Segunda leva de correções (19/08/2026)
+
+Rodada baseada no doc "Instruções Mudanças App V2" (texto + 12 prints anotados). Continua sendo refinamento em cima do que já existe, não telas novas.
+
+- **Carrossel de categorias (Início)**: sumiu a barrinha de rolagem nativa (mobile e desktop, rolagem continua funcionando); as setas do desktop ganharam fundo preenchido arredondado.
+- **Favoritos**: agora existe toast tanto pra adicionar (verde/success) quanto pra remover (laranja/error) — antes só tinha o de remover. Os dois ficam um pouco menos tempo na tela.
+- **Filtro de bairro (Categoria)**: os 4 botões (Brás/25 de Março/Bom Retiro/Outros) agora esticam pra bater exatamente com a margem do título e da grade de cards, em vez de ter largura fixa.
+- **Grade de cards (Categoria)**: alinhada à esquerda (era centralizada) e título passa a ficar centralizado também no desktop.
+- **Sino de notificações**: achei e corrigi dois bugs de verdade — na Início (mobile) o sino não tinha nenhum clique configurado (por isso "impossível clicar"), e a bolinha vermelha estava fixa em "sempre visível" no código, nunca refletindo se as notificações foram lidas. Criei um `NotificationsContext` (mesmo padrão do de favoritos) pra esse estado ser real e compartilhado entre a Início, o cabeçalho e a tela de Notificações.
+- **Página do fornecedor**: as duas fotos do topo trocaram de posição — a foto "cheia" de cima (com as miniaturas, coração e código do fornecedor sobrepostos) agora é a que antes ficava embaixo como "destaque"; título/categoria também passaram a ficar alinhados à esquerda no mobile (antes só no desktop).
+- **Stories (player de tela cheia)**: botão "Ver essa loja" desativado por enquanto (mesmo se um story tiver link cadastrado) — é só descomentar uma condição pra reativar quando você quiser. Corrigi também as barrinhas de progresso sumindo no desktop em telas mais baixas (o player forçava uma altura mínima de 1024px mesmo sem caber na janela).
+- **Lojas (mobile)**: removido o rótulo "Ordem de exibição:" (só desktop mantém) e adicionado o risco/underline embaixo de "Filtrar", igual já tinha em "Mais populares".
+- **Botão "Voltar" (todas as telas)**: achei a causa da área de clique gigante no desktop — um bug de CSS onde o botão "esticava" pra largura inteira do container mesmo com o texto à esquerda. Corrigido em todas as telas.
+- **Inputs (login, criar conta, esqueci senha, trocar senha, busca)**: novo fundo (#FCFCFC), nova cor de placeholder (#747474), e o texto digitado cresce pra 16px ao focar o campo.
+- **Pendente**: o ícone de coração customizado do card de loja (link do Figma que você mandou) ainda não entrou — o servidor de assets do Figma não está acessível deste ambiente pra baixar o SVG. Fica junto com a troca geral de ícones, quando resolvemos isso de uma vez só.
+
 ## Próximos passos
 
 Todas as telas do Figma "App V1 - User" (versão mobile) já estão implementadas: Início, autenticação completa, Busca/Categorias, Loja/Lojas/Favoritos e Perfil completo (Dúvidas, Termos, Trocar Senha, confirmação de logout, Notificações).
@@ -107,4 +132,5 @@ O que ainda falta pra ir ao ar de verdade:
 - Trocar os dados fictícios em `src/data/mockData.ts` pelo catálogo real de lojas — atenção: a estrutura real do Supabase é diferente da de `supabase/schema.sql`, ver aviso acima.
 - Popular a rampa de popularidade real (analytics) pra "Mais populares" deixar de ser simulada.
 - Substituir o número de WhatsApp de suporte fictício (`src/lib/constants.ts`) pelo oficial.
+- Esconder a barra de rolagem nativa do carrossel de categorias no desktop (Início) — hoje aparece a barrinha cinza do navegador embaixo dos círculos; dá pra ocultar visualmente sem perder a rolagem nem quebrar as setas. Amanda pediu pra anotar e revisar depois, sem mexer agora (19/08/2026).
 - ~~Construir a versão desktop do Figma ("App V1 - Desktop")~~ — feito, ver seção "Status atual" acima. Falta só você me passar a URL real do site pra trocar o placeholder em `src/lib/constants.ts` (`EXTERNAL_TERMS_URL`/`EXTERNAL_PRIVACY_URL`).

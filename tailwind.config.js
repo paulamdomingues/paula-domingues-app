@@ -72,6 +72,11 @@ export default {
           300: '#6BBF7C',
           400: '#4EB362',
           800: '#135820',
+          // 900 não veio do StyleGuide (só até o 800) — extrapolei escurecendo
+          // o 800 na mesma proporção usada na rampa "error" (Amanda pediu
+          // "success-200 preenchimento / success-900 texto" pro toast de
+          // "adicionado aos favoritos", 19/08/2026). Ajusta se tiver o tom oficial.
+          900: '#0D3D16',
         },
         base: {
           black: '#0D0101',

@@ -127,7 +127,7 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-base-black via-transparent to-base-black" />
       <div className="pointer-events-none absolute inset-0 bg-base-black/60 lg:bg-base-black/80" />
 
-      <div className="relative flex aspect-[9/16] h-full max-h-screen w-full items-stretch justify-center overflow-hidden bg-base-black lg:h-[1024px] lg:min-h-[1024px] lg:w-[576px] lg:min-w-[576px]">
+      <div className="relative flex aspect-[9/16] h-full max-h-screen w-full items-stretch justify-center overflow-hidden bg-base-black lg:max-h-[1024px] lg:w-[576px] lg:min-w-[576px]">
         {resolvedVideoUrl ? (
           <video
             ref={videoRef}
@@ -193,8 +193,14 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
           aria-label="Próximo story"
         />
 
-        {/* Call-to-action do link associado à mídia (quando cadastrado pelo admin). */}
-        {currentStory.linkUrl && (
+        {/*
+          Call-to-action do link associado à mídia ("Ver essa loja"):
+          DESATIVADO por enquanto a pedido da Amanda (19/08/2026) — ela não
+          quer esse botão aparecendo de jeito nenhum por ora, mesmo que um
+          story tenha `linkUrl` cadastrado. Pra reativar, troca `false &&`
+          pela condição original (`currentStory.linkUrl &&`).
+        */}
+        {false && currentStory.linkUrl && (
           <a
             href={currentStory.linkUrl}
             target="_blank"

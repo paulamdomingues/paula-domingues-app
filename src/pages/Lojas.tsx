@@ -25,7 +25,12 @@ export default function Lojas() {
 
       <div className="flex w-full items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="font-body text-[14px] tracking-[0.7px] text-gray-800">Ordem de exibição:</span>
+          {/* No mobile o rótulo some (só o texto "Mais populares" + ícone,
+              tipo aba) — no desktop mantém o rótulo, ver print da Amanda
+              (19/08/2026). */}
+          <span className="hidden font-body text-[14px] tracking-[0.7px] text-gray-800 lg:inline">
+            Ordem de exibição:
+          </span>
           <SortDropdown value={sort} onChange={setSort} />
         </div>
         <CategoryFilterSheet />

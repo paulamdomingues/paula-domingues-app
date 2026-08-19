@@ -1,11 +1,22 @@
+import { useNavigate } from 'react-router-dom';
 import { PiBell } from 'react-icons/pi';
+import { useNotifications } from '../context/NotificationsContext';
 
 interface HeaderProps {
   userFirstName: string;
-  hasUnreadNotifications?: boolean;
 }
 
-export default function Header({ userFirstName, hasUnreadNotifications = true }: HeaderProps) {
+/**
+ * Header mobile da Início (saudação "Olá, Amanda!" + sino). Achado o bug
+ * (Amanda, 19/08/2026): esse sino nunca teve `onClick` — por isso "impossível
+ * clicar" a partir da Início — e a bolinha vinha com `hasUnreadNotifications`
+ * fixo em `true`, nunca refletindo o que realmente foi lido. Os dois agora
+ * usam o `NotificationsContext` de verdade, mesmo estado usado em `/notificacoes`.
+ */
+export default function Header({ userFirstName }: HeaderProps) {
+  const navigate = useNavigate();
+  const { hasUnread } = useNotifications();
+
   return (
     <div className="flex items-center justify-between border-b border-[rgba(169,169,169,0.42)] py-2 w-full">
       <div className="flex items-end gap-1">
@@ -19,13 +30,12 @@ export default function Header({ userFirstName, hasUnreadNotifications = true }:
       <button
         type="button"
         aria-label="Notificações"
+        onClick={() => navigate('/notificacoes')}
         className="relative flex size-10 items-center justify-center"
       >
         <span className="relative flex size-6 items-center justify-center">
           <PiBell className="size-6 text-gray-900" />
-          {hasUnreadNotifications && (
-            <span className="absolute right-0 top-0 size-[10px] rounded-full bg-main-red-400" />
-          )}
+          {hasUnread && <span className="absolute right-0 top-0 size-[10px] rounded-full bg-main-red-400" />}
         </span>
       </button>
     </div>

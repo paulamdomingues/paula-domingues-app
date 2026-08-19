@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { PiBell } from 'react-icons/pi';
 import Logo from './Logo';
+import { useNotifications } from '../context/NotificationsContext';
 
 interface TopBarProps {
   userFirstName?: string;
@@ -23,6 +24,7 @@ const navItems = [
  */
 export default function TopBar({ userFirstName = 'Amanda' }: TopBarProps) {
   const navigate = useNavigate();
+  const { hasUnread } = useNotifications();
 
   return (
     <div className="flex h-[57px] w-full items-center justify-between border-b border-[rgba(169,169,169,0.42)] py-2 lg:h-[70px]">
@@ -53,9 +55,14 @@ export default function TopBar({ userFirstName = 'Amanda' }: TopBarProps) {
           type="button"
           aria-label="Notificações"
           onClick={() => navigate('/notificacoes')}
-          className="flex size-10 items-center justify-center"
+          className="relative flex size-10 items-center justify-center"
         >
-          <PiBell className="size-6 text-gray-900 lg:size-[26px]" />
+          <span className="relative flex items-center justify-center">
+            <PiBell className="size-6 text-gray-900 lg:size-[26px]" />
+            {hasUnread && (
+              <span className="absolute right-0 top-0 size-[10px] rounded-full bg-main-red-400" />
+            )}
+          </span>
         </button>
       </div>
     </div>

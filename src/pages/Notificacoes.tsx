@@ -1,33 +1,15 @@
-import { useState } from 'react';
 import { PiStorefront } from 'react-icons/pi';
 import ScreenHeader from '../components/ScreenHeader';
-import { recentStores } from '../data/mockData';
+import { useNotifications } from '../context/NotificationsContext';
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  timeAgo: string;
-  read: boolean;
-}
-
-// "Novo parceiro no app!" para cada loja recém-chegada — mesma lista usada
-// em "Chegaram Recentemente" na Início, só que aqui como notificação.
-const initialNotifications: NotificationItem[] = recentStores.map((store, index) => ({
-  id: store.id,
-  title: 'Novo parceiro no app!',
-  description: `${store.name} foi adicionado.`,
-  timeAgo: `há ${index + 1}d`,
-  read: index >= 2,
-}));
-
+/**
+ * O estado de lidas/não lidas agora mora no `NotificationsContext` (era
+ * `useState` local aqui, então resetava toda vez que saía dessa tela — o
+ * sino da Início/TopBar nunca conseguia refletir o estado real). Ver
+ * `src/context/NotificationsContext.tsx` (Amanda, 19/08/2026).
+ */
 export default function Notificacoes() {
-  const [notifications, setNotifications] = useState(initialNotifications);
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  const { notifications, unreadCount, markAllAsRead } = useNotifications();
 
   return (
     <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">

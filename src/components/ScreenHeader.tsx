@@ -33,10 +33,16 @@ export default function ScreenHeader({
       <TopBar userFirstName={userFirstName} />
 
       <div className="flex w-full flex-col gap-4">
+        {/* `self-start`: sem isso, o botão herda `align-items: stretch` do
+            pai (flex-col sem `items-*` definido) e vira clicável na largura
+            inteira da tela no desktop, mesmo com o texto alinhado à
+            esquerda — toque acidental em qualquer parte da faixa contava
+            como "Voltar". Amanda pegou isso com o inspetor do navegador
+            (19/08/2026). */}
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-800 lg:font-display lg:text-[32px] lg:font-bold lg:tracking-[0.96px]"
+          className="flex w-fit items-center gap-2 self-start font-body text-[16px] tracking-[0.8px] text-main-red-800 lg:font-display lg:text-[32px] lg:font-bold lg:tracking-[0.96px]"
         >
           <PiArrowLeft className="size-4 lg:size-6" />
           Voltar

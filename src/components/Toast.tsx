@@ -3,6 +3,12 @@ import { useEffect, useState } from 'react';
 interface ToastProps {
   /** Texto exibido no toast. `null`/`undefined` faz o componente não renderizar nada. */
   message?: string | null;
+  /**
+   * 'removed' (laranja/error, padrão) ou 'added' (verde/success). Amanda
+   * pediu os dois com cores diferentes, 19/08/2026 — 'removed' continua a
+   * cor original pra não quebrar quem já usa o componente sem passar essa prop.
+   */
+  variant?: 'added' | 'removed';
   /** Chamado depois que a animação de saída termina, pra quem estiver controlando o estado limpar `message`. */
   onDismiss: () => void;
   /** Tempo em ms que o toast fica visível antes de começar a desaparecer. */
@@ -10,6 +16,11 @@ interface ToastProps {
 }
 
 const EXIT_TRANSITION_MS = 300;
+
+const VARIANT_CLASSES: Record<'added' | 'removed', string> = {
+  removed: 'bg-error-400 text-error-900',
+  added: 'bg-success-200 text-success-900',
+};
 
 /**
  * Toast simples e sem fila: mostra uma mensagem por cima do resto da tela,
@@ -21,7 +32,7 @@ const EXIT_TRANSITION_MS = 300;
  * este componente deve trocar a `key` (ex: um contador incrementado a cada
  * disparo) — ver uso em `FavoritesContext.tsx`.
  */
-export default function Toast({ message, onDismiss, duration = 3000 }: ToastProps) {
+export default function Toast({ message, variant = 'removed', onDismiss, duration = 2200 }: ToastProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -49,13 +60,11 @@ export default function Toast({ message, onDismiss, duration = 3000 }: ToastProp
       className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-6 lg:bottom-8"
     >
       <div
-        className={`rounded-full bg-error-400 px-5 py-3 shadow-lg transition-all duration-300 ease-out ${
+        className={`rounded-full px-5 py-3 shadow-lg transition-all duration-300 ease-out ${VARIANT_CLASSES[variant]} ${
           visible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
         }`}
       >
-        <p className="text-center font-body text-[14px] font-semibold tracking-[0.7px] text-error-900">
-          {message}
-        </p>
+        <p className="text-center font-body text-[14px] font-semibold tracking-[0.7px]">{message}</p>
       </div>
     </div>
   );

@@ -38,3 +38,15 @@ body {
     max-width: 1440px;
   }
 }
+
+/* Esconde a barrinha de rolagem nativa (usado no carrossel de categorias,
+   Início — mobile e desktop) sem tirar a rolagem em si, só o indicador
+   visual do navegador. Amanda pediu pra remover, 19/08/2026. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

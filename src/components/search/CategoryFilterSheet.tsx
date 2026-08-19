@@ -17,7 +17,7 @@ export default function CategoryFilterSheet() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 font-body text-[15px] tracking-[0.75px] text-gray-500"
+        className="flex items-center gap-2 border-b border-[#929799] px-4 py-2 font-body text-[15px] tracking-[0.75px] text-gray-500 lg:border-b-0 lg:px-0 lg:py-0"
       >
         Filtrar
         <PiFunnel className="size-[18px]" />

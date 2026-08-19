@@ -27,19 +27,22 @@ export default function CategoryGrid({ categories, onSelectCategory }: CategoryG
         type="button"
         aria-label="Categorias anteriores"
         onClick={() => scrollByAmount(-DESKTOP_TRACK_WIDTH)}
-        className="hidden shrink-0 text-main-red-800 lg:block"
+        className="hidden size-10 shrink-0 items-center justify-center rounded-lg bg-main-red-200 text-main-red-800 lg:flex"
       >
-        <PiArrowFatLineLeft className="size-9" />
+        <PiArrowFatLineLeft className="size-5" />
       </button>
 
       {/*
         Mobile: agrupa em blocos de 6 (grade 3x2), reproduzindo o layout mobile do Figma.
         Desktop: uma única linha (carrossel horizontal) dentro de uma trilha de 939px,
         com scroll (`overflow-x-auto`) e 24px de gap entre os itens.
+        `no-scrollbar`: some com a barrinha de rolagem nativa nos dois breakpoints
+        (mobile também rola horizontalmente quando há mais de 1 bloco de 6) —
+        Amanda pediu pra remover, deixa o layout mais fluido (19/08/2026).
       */}
       <div
         ref={scrollRef}
-        className="flex w-full gap-4 overflow-x-auto pb-1 scroll-smooth lg:w-[939px] lg:gap-0"
+        className="no-scrollbar flex w-full gap-4 overflow-x-auto pb-1 scroll-smooth lg:w-[939px] lg:gap-0"
       >
         <div className="flex shrink-0 gap-4 lg:hidden">
           {Array.from({ length: Math.ceil(categories.length / 6) }, (_, blockIndex) => (
@@ -61,9 +64,9 @@ export default function CategoryGrid({ categories, onSelectCategory }: CategoryG
         type="button"
         aria-label="Próximas categorias"
         onClick={() => scrollByAmount(DESKTOP_TRACK_WIDTH)}
-        className="hidden shrink-0 text-main-red-800 lg:block"
+        className="hidden size-10 shrink-0 items-center justify-center rounded-lg bg-main-red-200 text-main-red-800 lg:flex"
       >
-        <PiArrowFatLineRight className="size-9" />
+        <PiArrowFatLineRight className="size-5" />
       </button>
     </div>
   );

@@ -45,7 +45,7 @@ export default function AuthTextField({
 
   return (
     <div
-      className={`flex h-[63px] w-full items-center gap-2 rounded-lg border bg-base-white px-4 py-2 transition-colors duration-150 ${
+      className={`flex h-[63px] w-full items-center gap-2 rounded-lg border bg-[#FCFCFC] px-4 py-2 transition-colors duration-150 ${
         isFloating ? 'border-main-dark-900' : 'border-gray-900'
       }`}
     >
@@ -66,7 +66,9 @@ export default function AuthTextField({
           defaultValue={defaultValue}
           onFocus={handleFocus}
           onBlur={handleBlur}
-          className="w-full border-0 bg-transparent p-0 font-body text-[14px] tracking-[0.7px] text-gray-900 placeholder:text-gray-500 focus:outline-none"
+          className={`w-full border-0 bg-transparent p-0 font-body tracking-[0.7px] text-gray-900 placeholder:text-[#747474] focus:outline-none ${
+            isFloating ? 'text-[16px]' : 'text-[14px]'
+          }`}
           {...inputProps}
         />
       </div>

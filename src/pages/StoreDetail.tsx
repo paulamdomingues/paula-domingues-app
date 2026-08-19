@@ -71,23 +71,56 @@ export default function StoreDetail() {
       <TopBar />
 
       <div className="flex w-full flex-col gap-4">
+        {/* `self-start`: sem isso, o botão herda `align-items: stretch` do
+            pai e vira clicável na largura inteira da tela no desktop —
+            mesmo bug/ajuste do `ScreenHeader`, ver comentário lá (19/08/2026). */}
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 font-body text-[16px] tracking-[0.8px] text-main-red-800 lg:font-display lg:text-[32px] lg:font-bold lg:tracking-[0.96px]"
+          className="flex w-fit items-center gap-2 self-start font-body text-[16px] tracking-[0.8px] text-main-red-800 lg:font-display lg:text-[32px] lg:font-bold lg:tracking-[0.96px]"
         >
           <PiArrowLeft className="size-4 lg:size-6" />
           Voltar
         </button>
 
-        {/* Bloco de cima: galeria + info principal (lado a lado no desktop). */}
+        {/*
+          Bloco de cima: galeria + info principal (lado a lado no desktop).
+
+          Amanda pediu pra inverter as fotos (19/08/2026): a foto "cheia" do
+          topo (com as miniaturas embaixo, coração e código sobrepostos)
+          agora é `details.secondaryImageUrl` (a foto "de destaque", em pé,
+          já com o enquadramento certo) — e `store.imageUrl` desce pra virar
+          a foto de destaque lá embaixo, perto dos cards de informação.
+        */}
         <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
           <div className="flex w-full flex-col gap-2 lg:w-[552px] lg:shrink-0">
-            <ImagePlaceholder
-              src={store.imageUrl}
-              alt={store.name}
-              className="aspect-[4/3] w-full lg:aspect-[4/5] lg:h-auto"
-            />
+            <div className="relative">
+              <ImagePlaceholder
+                src={details.secondaryImageUrl}
+                alt={store.name}
+                className="-mx-6 aspect-[4/5] w-[calc(100%+48px)] lg:mx-0 lg:aspect-[4/5] lg:h-auto lg:w-full"
+                rounded="rounded-none lg:rounded-lg"
+              />
+
+              <button
+                type="button"
+                aria-label={favorited ? `Remover ${store.name} dos favoritos` : `Favoritar ${store.name}`}
+                onClick={() => toggleFavorite(store.id)}
+                className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full border border-gray-200 bg-base-white/90"
+              >
+                {favorited ? (
+                  <PiHeartFill className="size-5 text-main-red-600" />
+                ) : (
+                  <PiHeart className="size-5 text-main-red-900" />
+                )}
+              </button>
+
+              <div className="absolute right-3 top-3 flex h-7 items-center justify-center rounded-full bg-accent-yellow px-3">
+                <span className="font-body text-[13px] leading-[1.35] tracking-[0.39px] text-base-black">
+                  {store.code}
+                </span>
+              </div>
+            </div>
 
             <div className="flex w-full items-center justify-center gap-2">
               {(details.thumbnailImageUrls ?? [null, null, null]).slice(0, 3).map((url, i) => (
@@ -102,34 +135,13 @@ export default function StoreDetail() {
           </div>
 
           <div className="flex w-full flex-col gap-4 lg:w-1/2 lg:gap-6">
-            <div className="flex w-full flex-col items-center gap-1 lg:items-start lg:text-left">
-              <h1 className="w-full text-center font-display font-bold capitalize text-[32px] tracking-[1.6px] text-base-black lg:text-left lg:text-[48px]">
+            <div className="flex w-full flex-col items-start text-left">
+              <h1 className="w-full font-display font-bold capitalize text-[32px] tracking-[1.6px] text-base-black lg:text-[48px]">
                 {store.name}
               </h1>
-              <p className="w-full text-center font-body text-[26px] tracking-[1.3px] text-gray-800 lg:text-left lg:text-[24px]">
+              <p className="w-full font-body text-[26px] tracking-[1.3px] text-gray-800 lg:text-[24px]">
                 {store.categoryLabel}
               </p>
-
-              <div className="mt-2 flex items-center gap-3">
-                <button
-                  type="button"
-                  aria-label={favorited ? `Remover ${store.name} dos favoritos` : `Favoritar ${store.name}`}
-                  onClick={() => toggleFavorite(store.id)}
-                  className="flex size-9 items-center justify-center rounded-full border border-gray-200 bg-base-white"
-                >
-                  {favorited ? (
-                    <PiHeartFill className="size-5 text-main-red-600" />
-                  ) : (
-                    <PiHeart className="size-5 text-main-red-900" />
-                  )}
-                </button>
-
-                <div className="flex h-7 items-center justify-center rounded-full bg-accent-yellow px-3">
-                  <span className="font-body text-[13px] leading-[1.35] tracking-[0.39px] text-base-black">
-                    {store.code}
-                  </span>
-                </div>
-              </div>
             </div>
 
             <div className="flex w-full items-center gap-3">
@@ -168,13 +180,18 @@ export default function StoreDetail() {
           </div>
         </div>
 
-        {/* Bloco de baixo: foto de destaque + cards de informação (lado a lado no desktop). */}
+        {/*
+          Bloco de baixo: foto secundária (agora `store.imageUrl` — trocou
+          de lugar com a de cima, ver comentário acima) + cards de
+          informação (lado a lado no desktop). Aqui a foto fica contida
+          dentro da margem da página (sem full-bleed), como a de cima
+          ficava antes da troca.
+        */}
         <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
         <ImagePlaceholder
-          src={details.secondaryImageUrl}
+          src={store.imageUrl}
           alt={`Peça em destaque — ${store.name}`}
-          className="-mx-6 aspect-[4/5] w-[calc(100%+48px)] lg:mx-0 lg:aspect-[4/5] lg:h-auto lg:w-1/2"
-          rounded="rounded-none lg:rounded-lg"
+          className="aspect-[4/3] w-full lg:aspect-[4/5] lg:h-auto lg:w-1/2"
         />
 
         <div className="flex w-full flex-col gap-3 lg:w-1/2">
