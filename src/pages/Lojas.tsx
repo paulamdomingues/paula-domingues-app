@@ -31,7 +31,7 @@ export default function Lojas() {
           <span className="hidden font-body text-[14px] tracking-[0.7px] text-gray-800 lg:inline">
             Ordem de exibição:
           </span>
-          <SortDropdown value={sort} onChange={setSort} />
+          <SortDropdown value={sort} onChange={setSort} align="left" />
         </div>
         <CategoryFilterSheet />
       </div>

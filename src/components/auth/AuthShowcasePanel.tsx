@@ -11,7 +11,7 @@ export default function AuthShowcasePanel() {
   return (
     <div className="relative hidden h-full overflow-hidden bg-gradient-to-br from-main-dark-900 via-main-red-900 to-main-red-700 lg:block lg:w-1/2">
       <div className="absolute inset-x-8 top-[73px] rounded-lg bg-main-dark-900/90 px-8 py-6">
-        <p className="font-display text-[28px] font-bold leading-[1.2] tracking-[0.84px] text-base-white">
+        <p className="font-display text-[26px] font-bold leading-[1.2] tracking-[0.78px] text-base-white">
           A inteligência de compras que o seu negócio precisa.
         </p>
       </div>

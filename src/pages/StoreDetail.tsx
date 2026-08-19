@@ -19,12 +19,26 @@ import ImagePlaceholder from '../components/ImagePlaceholder';
 import { getStoreDetails, stores } from '../data/mockData';
 import { useFavorites } from '../context/FavoritesContext';
 
-function InfoCard({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
+function InfoCard({
+  icon,
+  title,
+  headerAction,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  /** Ação opcional alinhada ao título, na mesma linha (ex: "Copiar endereço" no card de Endereço). */
+  headerAction?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <div className="flex w-full items-start gap-3 rounded-lg border border-[#B1B1B1] bg-base-white p-4 shadow-sm">
       <div className="flex size-9 shrink-0 items-center justify-center text-main-red-700">{icon}</div>
       <div className="flex flex-1 flex-col gap-1">
-        <p className="font-display font-bold text-[22px] tracking-[0.66px] text-main-red-700">{title}</p>
+        <div className="flex w-full items-center justify-between gap-2">
+          <p className="font-display font-bold text-[22px] tracking-[0.66px] text-main-red-700">{title}</p>
+          {headerAction}
+        </div>
         <div className="flex flex-col gap-0.5 font-body text-[14px] leading-[1.4] tracking-[0.7px] text-gray-800">
           {children}
         </div>
@@ -98,7 +112,7 @@ export default function StoreDetail() {
               <ImagePlaceholder
                 src={details.secondaryImageUrl}
                 alt={store.name}
-                className="-mx-6 aspect-[4/5] w-[calc(100%+48px)] lg:mx-0 lg:aspect-[4/5] lg:h-auto lg:w-full"
+                className="-mx-6 aspect-square w-[calc(100%+48px)] lg:mx-0 lg:aspect-square lg:h-auto lg:w-full"
                 rounded="rounded-none lg:rounded-lg"
               />
 
@@ -139,7 +153,7 @@ export default function StoreDetail() {
               <h1 className="w-full font-display font-bold capitalize text-[32px] tracking-[1.6px] text-base-black lg:text-[48px]">
                 {store.name}
               </h1>
-              <p className="w-full font-body text-[26px] tracking-[1.3px] text-gray-800 lg:text-[24px]">
+              <p className="w-full font-body text-[24px] tracking-[1.3px] text-gray-800">
                 {store.categoryLabel}
               </p>
             </div>
@@ -196,18 +210,23 @@ export default function StoreDetail() {
 
         <div className="flex w-full flex-col gap-3 lg:w-1/2">
           {details.address && (
-            <InfoCard icon={<PiMapPin className="size-6" />} title="Endereço">
+            <InfoCard
+              icon={<PiMapPin className="size-6" />}
+              title="Endereço"
+              headerAction={
+                <button
+                  type="button"
+                  onClick={handleCopyAddress}
+                  className={`flex w-fit shrink-0 items-center gap-1 font-body text-[13px] tracking-[0.65px] underline ${
+                    copied ? 'text-success-800' : 'text-main-red-700'
+                  }`}
+                >
+                  {copied ? <PiCheckCircle className="size-4" /> : <PiCopy className="size-4" />}
+                  {copied ? 'Endereço copiado!' : 'Copiar endereço'}
+                </button>
+              }
+            >
               <p>{details.address}</p>
-              <button
-                type="button"
-                onClick={handleCopyAddress}
-                className={`mt-1 flex w-fit items-center gap-1 font-body text-[13px] tracking-[0.65px] underline ${
-                  copied ? 'text-success-800' : 'text-main-red-700'
-                }`}
-              >
-                {copied ? <PiCheckCircle className="size-4" /> : <PiCopy className="size-4" />}
-                {copied ? 'Endereço copiado!' : 'Copiar endereço'}
-              </button>
             </InfoCard>
           )}
 

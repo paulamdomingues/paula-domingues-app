@@ -31,7 +31,10 @@ export default function CategoryFilterSheet() {
             className="fixed inset-0 z-10 cursor-default"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute left-0 top-full z-20 mt-1 max-h-[320px] w-[220px] overflow-y-auto rounded-lg border border-gray-100 bg-base-white shadow-lg">
+          {/* `right-0` (não `left-0`): o botão "Filtrar" fica perto da borda
+              direita da tela (Lojas), então a lista precisa abrir pra
+              esquerda — com `left-0` ela vazava da tela (Amanda, 19/08/2026). */}
+          <div className="absolute right-0 top-full z-20 mt-1 max-h-[320px] w-[220px] overflow-y-auto rounded-lg border border-gray-100 bg-base-white shadow-lg">
             <div className="sticky top-0 flex items-center justify-between bg-gray-800 px-4 py-2">
               <span className="font-body text-[15px] tracking-[0.75px] text-base-white">Filtrar</span>
               <PiFunnel className="size-[18px] text-base-white" />
@@ -44,7 +47,7 @@ export default function CategoryFilterSheet() {
                   setOpen(false);
                   navigate(`/categoria/${category.id}`);
                 }}
-                className="block w-full border-b border-gray-100 px-4 py-2 text-left font-body text-[15px] tracking-[0.75px] text-gray-800 last:border-b-0 hover:bg-screen-bg"
+                className="block w-full break-words border-b border-gray-100 px-4 py-2 text-left font-body text-[15px] tracking-[0.75px] text-gray-800 last:border-b-0 hover:bg-screen-bg"
               >
                 {category.label}
               </button>
