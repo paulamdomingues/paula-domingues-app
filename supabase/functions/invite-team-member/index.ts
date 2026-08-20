@@ -20,7 +20,9 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-const ACCESS_LEVELS = ['master_admin', 'suporte', 'editor_conteudo', 'convidado'];
+// 21/08/2026: 'suporte'/'editor_conteudo' foram renomeados de verdade no
+// banco pra 'editor'/'suporte' (ver `AccessLevel` em `src/context/AuthContext.tsx`).
+const ACCESS_LEVELS = ['master_admin', 'editor', 'suporte', 'convidado'];
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), {

@@ -13,11 +13,9 @@ import type { AccessLevel } from '../context/AuthContext';
  * acessar a URL de uma seção proibida direto, é redirecionado, não só
  * barrado visualmente).
  *
- * IMPORTANTE — os nomes `suporte`/`editor_conteudo` aqui são os valores do
- * banco, NÃO os rótulos exibidos no painel (que estão invertidos por pedido
- * da Amanda — ver comentário completo em `AccessLevel`, `AuthContext.tsx`).
- * `suporte` = quem aparece como "Editor" na tela; `editor_conteudo` = quem
- * aparece como "Suporte" na tela.
+ * 21/08/2026: os nomes `editor`/`suporte` aqui já são os valores reais do
+ * banco (renomeado — antes eram `suporte`/`editor_conteudo` com rótulo
+ * invertido na tela; ver `AccessLevel` em `AuthContext.tsx`).
  *
  * Cada tela continua controlando ela mesma o que é "criar/editar/excluir"
  * dentro da seção (ex: `canDelete` em `AdminLojas.tsx`) — aqui só decide se
@@ -55,29 +53,28 @@ const SECTION_ORDER: AdminSection[] = [
 ];
 
 const SECTION_VIEWERS: Record<AdminSection, AccessLevel[]> = {
-  // Resumo/Relatórios: só quem acompanha o negócio como um todo (enum
-  // `suporte`, que aparece como "Editor" no painel).
-  resumo: ['master_admin', 'suporte'],
-  relatorios: ['master_admin', 'suporte'],
-  // Lojas/Categorias: enum `suporte` (rótulo "Editor") tem CRUD completo;
-  // enum `editor_conteudo` (rótulo "Suporte") cria/edita mas não exclui —
-  // ver `canDelete` em cada tela.
-  lojas: ['master_admin', 'suporte', 'editor_conteudo'],
-  categorias: ['master_admin', 'suporte', 'editor_conteudo'],
-  // Usuários (allowed_users): enum `suporte` (rótulo "Editor") tem CRUD
-  // completo. enum `editor_conteudo` (rótulo "Suporte") só VISUALIZA — sem
-  // criar/editar/excluir — pedido da Amanda 20/08/2026; a página já cuida
-  // disso sozinha porque `canManage` em `AdminUsuarios.tsx`/`UsuarioModal.tsx`
-  // nunca incluiu `editor_conteudo`, só precisou liberar a aba aqui.
-  usuarios: ['master_admin', 'suporte', 'editor_conteudo'],
-  // Stories: função exclusiva de quem aparece como "Convidado", fora o
-  // Master Admin — nem `suporte` nem `editor_conteudo` têm acesso.
+  // Resumo/Relatórios: só quem acompanha o negócio como um todo (`editor`,
+  // rótulo "Editor de Conteúdo" no painel).
+  resumo: ['master_admin', 'editor'],
+  relatorios: ['master_admin', 'editor'],
+  // Lojas/Categorias: `editor` tem CRUD completo; `suporte` cria/edita mas
+  // não exclui — ver `canDelete` em cada tela.
+  lojas: ['master_admin', 'editor', 'suporte'],
+  categorias: ['master_admin', 'editor', 'suporte'],
+  // Usuários (allowed_users): `editor` tem CRUD completo. `suporte` só
+  // VISUALIZA — sem criar/editar/excluir — pedido da Amanda 20/08/2026; a
+  // página já cuida disso sozinha porque `canManage` em
+  // `AdminUsuarios.tsx`/`UsuarioModal.tsx` nunca incluiu `suporte`, só
+  // precisou liberar a aba aqui.
+  usuarios: ['master_admin', 'editor', 'suporte'],
+  // Stories: função exclusiva do Convidado, fora o Master Admin — nem
+  // `editor` nem `suporte` têm acesso.
   stories: ['master_admin', 'convidado'],
   // Configurações fica visível pra TODO mundo — é onde qualquer membro edita
   // o próprio nome/whatsapp ("Meu Perfil"), mesmo quem não gerencia a
   // equipe. A seção "Equipe" dentro da tela continua travada por
   // `canManageTeam` (só master_admin), ver `AdminConfiguracoes.tsx`.
-  configuracoes: ['master_admin', 'suporte', 'editor_conteudo', 'convidado'],
+  configuracoes: ['master_admin', 'editor', 'suporte', 'convidado'],
 };
 
 export function canViewSection(accessLevel: AccessLevel | null, section: AdminSection): boolean {

@@ -19,7 +19,8 @@ type StatusFilter = 'todos' | 'ativos' | 'inativos';
  * dado real do Supabase (as outras rotas de `/admin/*` ainda são
  * placeholders "Em breve"). O toggle de status já grava de verdade
  * (`is_active` em `stores`), porque é uma ação simples e a política de RLS
- * `stores_update_team` já libera isso pra `master_admin`/`editor_conteudo`.
+ * `stores_update_team` (via `can_manage_catalog`) já libera isso pra
+ * `master_admin`/`editor`/`suporte`.
  *
  * "+ Adicionar nova" e o lápis de editar ainda levam pra telas placeholder
  * — o formulário de cadastro (6 cards + upload de fachada/galeria via

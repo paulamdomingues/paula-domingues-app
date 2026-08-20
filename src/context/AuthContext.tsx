@@ -8,25 +8,24 @@ import { supabase } from '../lib/supabaseClient';
  * final) tem `accessLevel === null` — é a mesma sessão do Supabase Auth,
  * só que sem nenhum papel de equipe.
  *
- * ATENÇÃO (Amanda, 20/08/2026) — o valor salvo no banco (`suporte` /
- * `editor_conteudo`) NÃO bate mais com o nome exibido no painel: a pedido
- * dela, os dois nomes foram invertidos na interface porque fazia mais
- * sentido pelo significado (quem mexe em Usuários "edita" o sistema mais a
- * fundo; quem só cuida do catálogo é mais "suporte"). Só o RÓTULO mudou —
- * o valor do banco e toda a lógica de permissão (`adminPermissions.ts` e as
- * checagens `accessLevel === 'suporte'`/`'editor_conteudo'` em cada tela)
- * continuam usando os nomes originais, sem tocar no schema:
- * - enum `suporte` no banco → aparece como **"Editor"** no painel → CRUD
- *   completo em Lojas, Categorias e Usuários.
- * - enum `editor_conteudo` no banco → aparece como **"Suporte"** no
- *   painel → cria/edita Lojas e Categorias (sem excluir) + só visualiza
- *   Usuários (sem editar).
+ * 21/08/2026: os valores do banco foram RENOMEADOS de verdade (antes o
+ * código tinha um "truque" de rótulo invertido — `suporte` no banco
+ * aparecendo como "Editor" na tela, e vice-versa — pra evitar mexer em
+ * schema/RLS; a Amanda pediu pra trocar isso pelo nome de verdade).
+ * Agora o valor salvo bate com o que aparece na tela:
+ * - `master_admin` → Master Admin. Acesso total.
+ * - `editor` → aparece como **"Editor de Conteúdo"** no painel → CRUD
+ *   completo em Lojas, Categorias e Usuários; vê Resumo e Relatórios.
+ * - `suporte` → aparece como **"Suporte"** no painel → cria/edita Lojas e
+ *   Categorias (sem excluir) + só visualiza Usuários (sem editar); não vê
+ *   Resumo/Relatórios/Stories.
+ * - `convidado` → só Stories (sobe e exclui vídeo).
  * Os rótulos ficam em `ACCESS_LEVEL_LABELS`, repetido em três telas
  * (`AdminSidebar.tsx`, `AdminConfiguracoes.tsx`, `NovoMembroModal.tsx`) —
- * se o valor salvo no banco for renomeado de verdade algum dia, é só
- * trocar a migration + esses 3 mapas, não precisa mexer em permissão.
+ * hoje é só uma questão de formatação (ex: "Editor de Conteúdo" em vez de
+ * "editor"), não uma inversão de significado como antes.
  */
-export type AccessLevel = 'master_admin' | 'suporte' | 'editor_conteudo' | 'convidado';
+export type AccessLevel = 'master_admin' | 'editor' | 'suporte' | 'convidado';
 
 interface AuthContextValue {
   session: Session | null;

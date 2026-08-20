@@ -143,12 +143,11 @@ export default function AdminLojaForm() {
   const navigate = useNavigate();
   const { accessLevel } = useAuth();
 
-  // 20/08/2026 (regra de níveis de acesso revisada pela Amanda — nomes
-  // invertidos no painel, ver `AccessLevel` em AuthContext.tsx): enum
-  // `suporte` (rótulo "Editor") tem CRUD completo em Lojas; enum
-  // `editor_conteudo` (rótulo "Suporte") cria/edita mas nunca exclui.
-  const canManage = accessLevel === 'master_admin' || accessLevel === 'suporte' || accessLevel === 'editor_conteudo';
-  const canDelete = accessLevel === 'master_admin' || accessLevel === 'suporte';
+  // 21/08/2026 (valores do banco renomeados de verdade, ver `AccessLevel`
+  // em AuthContext.tsx): `editor` tem CRUD completo em Lojas; `suporte`
+  // cria/edita mas nunca exclui.
+  const canManage = accessLevel === 'master_admin' || accessLevel === 'editor' || accessLevel === 'suporte';
+  const canDelete = accessLevel === 'master_admin' || accessLevel === 'editor';
 
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);

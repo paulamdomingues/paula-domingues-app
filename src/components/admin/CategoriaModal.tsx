@@ -8,7 +8,7 @@ import { uploadCategoryImage } from '../../lib/categoryImages';
 interface CategoriaModalProps {
   /** `null`/`undefined` = criar categoria nova. Um objeto = editar uma existente. */
   category?: { id: number; name: string; icon_url: string | null } | null;
-  /** master_admin/editor_conteudo — quem não tem, só visualiza (RLS bloqueia a escrita mesmo assim). */
+  /** master_admin/editor/suporte — quem não tem, só visualiza (RLS bloqueia a escrita mesmo assim). */
   canManage: boolean;
   onCancel: () => void;
   onSaved: () => void;

@@ -15,13 +15,13 @@ interface TeamMemberRow {
   access_level: AccessLevel;
 }
 
-// Nomes invertidos a pedido da Amanda (20/08/2026) — ver comentário em
-// `AccessLevel` (AuthContext.tsx) pra entender por quê o rótulo não bate
-// com o valor salvo no banco.
+// 21/08/2026: valores do banco renomeados de verdade (`editor`/`suporte`) —
+// ver `AccessLevel` (AuthContext.tsx). Esse mapa só formata o rótulo
+// exibido, não inverte mais nada.
 const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
   master_admin: 'Master/Admin',
-  suporte: 'Editor Conteúdo',
-  editor_conteudo: 'Suporte',
+  editor: 'Editor Conteúdo',
+  suporte: 'Suporte',
   convidado: 'Convidado',
 };
 

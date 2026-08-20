@@ -22,12 +22,11 @@ interface CategoryRow {
  */
 export default function AdminCategorias() {
   const { accessLevel } = useAuth();
-  // 20/08/2026 (regra de níveis de acesso revisada pela Amanda — nomes
-  // invertidos no painel, ver `AccessLevel` em AuthContext.tsx): enum
-  // `suporte` (rótulo "Editor") tem CRUD completo em Categorias; enum
-  // `editor_conteudo` (rótulo "Suporte") cria/edita mas nunca exclui.
-  const canManage = accessLevel === 'master_admin' || accessLevel === 'suporte' || accessLevel === 'editor_conteudo';
-  const canDelete = accessLevel === 'master_admin' || accessLevel === 'suporte';
+  // 21/08/2026 (valores do banco renomeados de verdade, ver `AccessLevel`
+  // em AuthContext.tsx): `editor` tem CRUD completo em Categorias; `suporte`
+  // cria/edita mas nunca exclui.
+  const canManage = accessLevel === 'master_admin' || accessLevel === 'editor' || accessLevel === 'suporte';
+  const canDelete = accessLevel === 'master_admin' || accessLevel === 'editor';
 
   const [categories, setCategories] = useState<CategoryRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);

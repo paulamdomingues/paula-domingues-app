@@ -45,13 +45,13 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/configuracoes', label: 'Configurações', icon: GearIcon, section: 'configuracoes' },
 ];
 
-// Nomes invertidos a pedido da Amanda (20/08/2026) — ver comentário em
-// `AccessLevel` (AuthContext.tsx) pra entender por quê o rótulo não bate
-// com o valor salvo no banco.
+// 21/08/2026: valores do banco renomeados de verdade (`editor`/`suporte`) —
+// ver `AccessLevel` (AuthContext.tsx). Esse mapa só formata o rótulo
+// exibido, não inverte mais nada.
 const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
   master_admin: 'Adm Master',
-  suporte: 'Editor de Conteúdo',
-  editor_conteudo: 'Suporte',
+  editor: 'Editor de Conteúdo',
+  suporte: 'Suporte',
   convidado: 'Convidado',
 };
 

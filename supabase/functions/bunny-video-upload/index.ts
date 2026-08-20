@@ -9,11 +9,12 @@
 // código nem no `.env` do front).
 //
 // Fluxo: recebe o arquivo de vídeo + título (multipart/form-data),
-// confere se quem chamou é master_admin/editor_conteudo/convidado (mesma
-// regra da RLS de insert em `stories`, migration 0003), cria o vídeo na
-// Bunny e sobe os bytes. Devolve só o `videoId` (guid) — o front salva
-// esse guid em `stories.video_path`; a URL de exibição é sempre montada a
-// partir dele (`getBunnyEmbedUrl`), nunca guardamos URL completa.
+// confere se quem chamou é master_admin/convidado (mesma regra do
+// `canUpload` em `AdminStories.tsx` e da RLS de insert em `stories`,
+// migration 0003 já ajustada em 21/08/2026), cria o vídeo na Bunny e sobe
+// os bytes. Devolve só o `videoId` (guid) — o front salva esse guid em
+// `stories.video_path`; a URL de exibição é sempre montada a partir dele
+// (`getBunnyEmbedUrl`), nunca guardamos URL completa.
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -22,7 +23,11 @@ const BUNNY_LIBRARY_ID = Deno.env.get('BUNNY_LIBRARY_ID');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 
-const ALLOWED_ACCESS_LEVELS = ['master_admin', 'editor_conteudo', 'convidado'];
+// 21/08/2026: removido o antigo 'editor_conteudo' (agora renomeado pra
+// 'suporte') dessa lista — ele nunca deveria poder subir vídeo de Stories,
+// só tinha ficado aqui por engano; o front (`AdminStories.tsx`) já não
+// mostra esse botão pra esse nível, isso só fecha a mesma regra no servidor.
+const ALLOWED_ACCESS_LEVELS = ['master_admin', 'convidado'];
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), {
