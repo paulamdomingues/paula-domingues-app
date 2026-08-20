@@ -27,6 +27,7 @@ import AdminLojaForm from './pages/admin/AdminLojaForm';
 import AdminStories from './pages/admin/AdminStories';
 import AdminCategorias from './pages/admin/AdminCategorias';
 import AdminUsuarios from './pages/admin/AdminUsuarios';
+import AdminConfiguracoes from './pages/admin/AdminConfiguracoes';
 import { isAdminHost } from './lib/constants';
 
 function AppShell() {
@@ -114,7 +115,7 @@ export default function App() {
             <Route path="usuarios" element={<AdminUsuarios />} />
             <Route path="categorias" element={<AdminCategorias />} />
             <Route path="relatorios" element={<ComingSoon title="Relatórios" />} />
-            <Route path="configuracoes" element={<ComingSoon title="Configurações" />} />
+            <Route path="configuracoes" element={<AdminConfiguracoes />} />
           </Route>
         </Route>
 
