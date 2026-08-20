@@ -17,7 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { generateNextCodeBadge } from '../../lib/codeBadge';
 import { uploadStoreImage } from '../../lib/storeImages';
-import { neighborhoods } from '../../data/mockData';
+import { NEIGHBORHOODS as neighborhoods } from '../../lib/neighborhoods';
 
 const MAX_GALLERY_IMAGES = 4;
 const MAX_TAGS = 5;

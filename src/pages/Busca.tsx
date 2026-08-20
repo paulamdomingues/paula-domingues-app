@@ -1,17 +1,48 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ScreenHeader from '../components/ScreenHeader';
 import SearchInput from '../components/search/SearchInput';
 import SortDropdown from '../components/search/SortDropdown';
 import StoreCard from '../components/StoreCard';
-import { recentStores, stores, type SortOptionId } from '../data/mockData';
+import type { SortOptionId } from '../lib/sortOptions';
+import { listCategories, listRecentStores, listStores, matchCategoryByTerm } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
 import { sortStores } from '../lib/sortStores';
 import { useLoadMore } from '../lib/useLoadMore';
+import { supabase } from '../lib/supabaseClient';
+import type { Category, StoreWithCategory } from '../types';
+
+// Aguarda a pessoa parar de digitar antes de logar a busca em
+// `search_queries` — sem isso, cada tecla digitada geraria uma linha nova
+// na tabela (Amanda só precisa saber O QUE foi buscado, não cada letra
+// digitada no caminho).
+const SEARCH_LOG_DEBOUNCE_MS = 800;
 
 export default function Busca() {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { session } = useAuth();
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<SortOptionId>('populares');
+  const [stores, setStores] = useState<StoreWithCategory[]>([]);
+  const [recentStores, setRecentStores] = useState<StoreWithCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listStores(), listRecentStores(8), listCategories()])
+      .then(([storesData, recentStoresData, categoriesData]) => {
+        if (cancelled) return;
+        setStores(storesData);
+        setRecentStores(recentStoresData);
+        setCategories(categoriesData);
+      })
+      .catch(() => {
+        // Falha silenciosa: as listas ficam vazias em vez de quebrar a tela.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const trimmedQuery = query.trim().toLowerCase();
   const hasQuery = trimmedQuery.length > 0;
@@ -25,12 +56,39 @@ export default function Busca() {
         store.code.toLowerCase().includes(trimmedQuery)
     );
     return sortStores(matches, sort);
-  }, [hasQuery, trimmedQuery, sort]);
+  }, [hasQuery, trimmedQuery, sort, stores]);
   const {
     visibleItems: visibleResults,
     hasMore,
     loadMore,
   } = useLoadMore(results, `${trimmedQuery}-${sort}`);
+
+  // Loga o termo buscado em `search_queries` (alimenta o card "Termos de
+  // Busca" do Relatórios) — só depois de parar de digitar, e só uma vez por
+  // termo (evita logar de novo se a pessoa só trocar a ordenação).
+  const loggedQueryRef = useRef<string | null>(null);
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!hasQuery || categories.length === 0 || !userId) return;
+    const term = trimmedQuery;
+    const timer = setTimeout(() => {
+      if (loggedQueryRef.current === term) return;
+      loggedQueryRef.current = term;
+      const category = matchCategoryByTerm(term, categories);
+      supabase
+        .from('search_queries')
+        .insert({
+          term,
+          category_id: category ? Number(category.id) : null,
+          user_id: userId,
+        })
+        .then(() => {
+          // Sem tratamento de erro aqui de propósito: logging de busca não
+          // pode travar/atrapalhar a experiência de busca em si.
+        });
+    }, SEARCH_LOG_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [hasQuery, trimmedQuery, categories, session]);
 
   return (
     <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">

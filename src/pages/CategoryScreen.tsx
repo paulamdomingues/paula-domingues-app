@@ -1,20 +1,44 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import ScreenHeader from '../components/ScreenHeader';
 import StoreCard from '../components/StoreCard';
 import SortDropdown from '../components/search/SortDropdown';
 import NeighborhoodFilter from '../components/search/NeighborhoodFilter';
-import { categories, stores } from '../data/mockData';
+import { listCategories, listStores } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
 import { sortStores } from '../lib/sortStores';
 import { useLoadMore } from '../lib/useLoadMore';
-import type { Neighborhood, SortOptionId } from '../data/mockData';
+import type { Neighborhood } from '../lib/neighborhoods';
+import type { SortOptionId } from '../lib/sortOptions';
+import type { Category, StoreWithCategory } from '../types';
 
 export default function CategoryScreen() {
   const { categoryId } = useParams<{ categoryId: string }>();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [sort, setSort] = useState<SortOptionId>('populares');
   const [neighborhood, setNeighborhood] = useState<Neighborhood | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [stores, setStores] = useState<StoreWithCategory[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listCategories(), listStores()])
+      .then(([categoriesData, storesData]) => {
+        if (cancelled) return;
+        setCategories(categoriesData);
+        setStores(storesData);
+      })
+      .catch(() => {
+        // Falha silenciosa: as listas ficam vazias em vez de quebrar a tela.
+      })
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const category = categories.find((c) => c.id === categoryId);
   const storesInCategory = useMemo(
@@ -25,7 +49,7 @@ export default function CategoryScreen() {
         ),
         sort
       ),
-    [categoryId, neighborhood, sort]
+    [categoryId, neighborhood, sort, stores]
   );
   const {
     visibleItems: visibleStores,
@@ -33,8 +57,16 @@ export default function CategoryScreen() {
     loadMore,
   } = useLoadMore(storesInCategory, `${categoryId}-${neighborhood}-${sort}`);
 
-  if (!category) {
+  // Só redireciona depois que o fetch terminou — antes disso `categories`
+  // ainda está vazio e todo `categoryId` pareceria inválido.
+  if (loaded && !category) {
     return <Navigate to="/lojas" replace />;
+  }
+
+  // Ainda carregando (fetch em andamento) — categoria pode não existir por
+  // enquanto sem ser um categoryId inválido de verdade.
+  if (!category) {
+    return null;
   }
 
   return (

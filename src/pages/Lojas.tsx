@@ -1,18 +1,35 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ScreenHeader from '../components/ScreenHeader';
 import StoreCard from '../components/StoreCard';
 import SortDropdown from '../components/search/SortDropdown';
 import CategoryFilterSheet from '../components/search/CategoryFilterSheet';
-import { stores, type SortOptionId } from '../data/mockData';
+import { listStores } from '../lib/catalog';
+import type { SortOptionId } from '../lib/sortOptions';
 import { useFavorites } from '../context/FavoritesContext';
 import { sortStores } from '../lib/sortStores';
 import { useLoadMore } from '../lib/useLoadMore';
+import type { StoreWithCategory } from '../types';
 
 export default function Lojas() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const [sort, setSort] = useState<SortOptionId>('populares');
+  const [stores, setStores] = useState<StoreWithCategory[]>([]);
 
-  const sortedStores = useMemo(() => sortStores(stores, sort), [sort]);
+  useEffect(() => {
+    let cancelled = false;
+    listStores()
+      .then((data) => {
+        if (!cancelled) setStores(data);
+      })
+      .catch(() => {
+        // Falha silenciosa: a lista fica vazia em vez de quebrar a tela.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const sortedStores = useMemo(() => sortStores(stores, sort), [sort, stores]);
   const { visibleItems: visibleStores, hasMore, loadMore } = useLoadMore(sortedStores, sort);
 
   return (

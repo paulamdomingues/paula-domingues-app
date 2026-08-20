@@ -1,5 +1,7 @@
-import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Toast from '../components/Toast';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from './AuthContext';
 
 interface FavoritesContextValue {
   isFavorite: (storeId: string) => boolean;
@@ -12,20 +14,47 @@ const REMOVED_FROM_FAVORITES_MESSAGE = 'Loja removida dos favoritos';
 const ADDED_TO_FAVORITES_MESSAGE = 'Loja adicionada aos favoritos';
 
 /**
- * Guarda os favoritos apenas em memória por enquanto (não persiste ao
- * recarregar a página). Quando a autenticação/backend estiverem
- * totalmente ligados, trocar por leitura/escrita na tabela `favorites`
- * do Supabase (já modelada em supabase/schema.sql).
+ * Favoritos persistidos de verdade na tabela `favorites` do Supabase (RLS:
+ * `favorites_select_own`/`favorites_insert_own`/`favorites_delete_own`,
+ * migração 0001) — antes só vivia em memória (`Set` local), com um
+ * comentário aqui mesmo dizendo pra trocar "quando a autenticação/backend
+ * estiverem totalmente ligados". Essa condição já é verdade agora (Amanda,
+ * 21/08/2026: "pode trazer dados reais").
+ *
+ * Estratégia: busca os favoritos da pessoa logada uma vez (por `user_id`),
+ * guarda os `store_id` num `Set` local pra leitura instantânea (`isFavorite`
+ * não pode depender de round-trip de rede toda hora que um card renderiza),
+ * e cada `toggleFavorite` faz update otimista no estado local + persiste no
+ * Supabase em paralelo — com rollback silencioso se a escrita falhar.
  */
 export function FavoritesProvider({ children }: { children: ReactNode }) {
+  const { session } = useAuth();
+  const userId = session?.user.id;
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!userId) {
+      setFavoriteIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from('favorites')
+      .select('store_id')
+      .eq('user_id', userId)
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) return;
+        setFavoriteIds(new Set(data.map((row) => String(row.store_id)).filter(Boolean)));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   // Toast de favoritar/desfavoritar: fica aqui no Provider (em vez de em
   // cada tela) porque `toggleFavorite` é chamado de vários lugares
   // diferentes (Início, Busca, Categoria, Lojas, StoreDetail, Favoritos) —
-  // assim o aviso funciona em qualquer tela sem duplicar lógica. Antes só
-  // disparava ao remover; agora dispara nos dois casos, com cor diferente
-  // pra cada (Amanda, 19/08/2026).
+  // assim o aviso funciona em qualquer tela sem duplicar lógica.
   const [toast, setToast] = useState<{ id: number; message: string; variant: 'added' | 'removed' } | null>(
     null
   );
@@ -35,12 +64,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     () => ({
       isFavorite: (storeId) => favoriteIds.has(storeId),
       toggleFavorite: (storeId) => {
-        // Decide a DIREÇÃO da mudança fora do updater de `setFavoriteIds`
-        // (lendo o estado atual do closure) — se já estava nos favoritos,
-        // essa chamada é uma remoção. Isso evita disparar um efeito
-        // colateral (setToast) de dentro da função updater do setState, que
-        // o StrictMode pode invocar mais de uma vez.
+        if (!userId) return;
+
         const wasFavorite = favoriteIds.has(storeId);
+        const numericStoreId = Number(storeId);
 
         setFavoriteIds((prev) => {
           const next = new Set(prev);
@@ -58,9 +85,29 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           message: wasFavorite ? REMOVED_FROM_FAVORITES_MESSAGE : ADDED_TO_FAVORITES_MESSAGE,
           variant: wasFavorite ? 'removed' : 'added',
         });
+
+        // Persiste em paralelo — se falhar, desfaz o update otimista em
+        // silêncio (sem travar a UI numa mensagem de erro por um toggle de
+        // favorito, que não é uma ação crítica).
+        const persist = wasFavorite
+          ? supabase.from('favorites').delete().eq('user_id', userId).eq('store_id', numericStoreId)
+          : supabase.from('favorites').insert({ user_id: userId, store_id: numericStoreId });
+
+        persist.then(({ error }) => {
+          if (!error) return;
+          setFavoriteIds((prev) => {
+            const next = new Set(prev);
+            if (wasFavorite) {
+              next.add(storeId);
+            } else {
+              next.delete(storeId);
+            }
+            return next;
+          });
+        });
       },
     }),
-    [favoriteIds]
+    [favoriteIds, userId]
   );
 
   return (

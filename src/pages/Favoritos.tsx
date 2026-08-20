@@ -1,13 +1,29 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ScreenHeader from '../components/ScreenHeader';
 import FavoriteListCard from '../components/FavoriteListCard';
-import { stores } from '../data/mockData';
+import { listStores } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
+import type { StoreWithCategory } from '../types';
 
 export default function Favoritos() {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const [stores, setStores] = useState<StoreWithCategory[]>([]);
 
-  const favoriteStores = useMemo(() => stores.filter((store) => isFavorite(store.id)), [isFavorite]);
+  useEffect(() => {
+    let cancelled = false;
+    listStores()
+      .then((data) => {
+        if (!cancelled) setStores(data);
+      })
+      .catch(() => {
+        // Falha silenciosa: a lista fica vazia em vez de quebrar a tela.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const favoriteStores = useMemo(() => stores.filter((store) => isFavorite(store.id)), [isFavorite, stores]);
 
   return (
     <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">

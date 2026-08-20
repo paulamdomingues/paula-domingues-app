@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import TopBar from '../components/TopBar';
@@ -7,15 +7,34 @@ import WhatsappCommunityButton from '../components/WhatsappCommunityButton';
 import CategoryGrid from '../components/CategoryGrid';
 import StoreCard from '../components/StoreCard';
 import StoryPlayerOverlay from '../components/StoryPlayerOverlay';
-import { categories, recentStores, stories } from '../data/mockData';
+import { stories } from '../data/mockData';
+import { listCategories, listRecentStores } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
 import { WHATSAPP_GROUP_URL } from '../lib/constants';
-import type { Category, Store } from '../types';
+import type { Category, StoreWithCategory } from '../types';
 
 export default function Home() {
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [storyPlayerOpen, setStoryPlayerOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [recentStores, setRecentStores] = useState<StoreWithCategory[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listCategories(), listRecentStores(8)])
+      .then(([categoriesData, recentStoresData]) => {
+        if (cancelled) return;
+        setCategories(categoriesData);
+        setRecentStores(recentStoresData);
+      })
+      .catch(() => {
+        // Falha silenciosa: as seções ficam vazias em vez de quebrar a Home.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSelectCategory = (category: Category) => {
     navigate(`/categoria/${category.id}`);
@@ -61,7 +80,7 @@ export default function Home() {
             Chegaram Recentemente
           </h2>
           <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8 lg:justify-start">
-            {recentStores.map((store: Store) => (
+            {recentStores.map((store) => (
               <StoreCard
                 key={store.id}
                 store={{ ...store, isFavorite: isFavorite(store.id) }}

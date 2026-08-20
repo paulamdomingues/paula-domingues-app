@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeftIcon,
@@ -17,8 +17,11 @@ import {
 } from '../components/icons';
 import TopBar from '../components/TopBar';
 import ImagePlaceholder from '../components/ImagePlaceholder';
-import { getStoreDetails, stores } from '../data/mockData';
+import { getStoreById } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabaseClient';
+import type { StoreWithCategory } from '../types';
 
 function InfoCard({
   icon,
@@ -49,25 +52,45 @@ function InfoCard({
 }
 
 /**
- * Página da loja/fornecedor (V2-PAG-FORNECEDOR). Fotos, tags e cards de
- * informação seguem "cru" — sem imagem real do Figma — mas para a loja de
- * exemplo "Studio Corte Nobre" (AL-0034) já uso o conteúdo real de texto
- * extraído do design. As demais lojas mostram um conteúdo genérico até
- * serem cadastradas de verdade (ver `getStoreDetails` em mockData.ts).
+ * Página da loja/fornecedor (V2-PAG-FORNECEDOR), agora com dado real do
+ * Supabase (`catalog.ts`). Lojas recém-cadastradas sem os campos de
+ * detalhe preenchidos simplesmente não mostram aquele card (sem texto
+ * genérico inventado) — mesmo princípio de honestidade usado no Relatórios.
  */
 export default function StoreDetail() {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { session } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [store, setStore] = useState<StoreWithCategory | null | undefined>(undefined);
 
-  const store = stores.find((s) => s.id === storeId);
+  useEffect(() => {
+    if (!storeId) return;
+    let cancelled = false;
+    setStore(undefined);
+    getStoreById(storeId)
+      .then((data) => {
+        if (!cancelled) setStore(data);
+      })
+      .catch(() => {
+        if (!cancelled) setStore(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [storeId]);
 
-  if (!store) {
+  // `undefined` = ainda buscando (não redireciona ainda); `null` = buscou e
+  // não achou (aí sim redireciona pra Lojas).
+  if (store === null) {
     return <Navigate to="/lojas" replace />;
   }
+  if (store === undefined) {
+    return null;
+  }
 
-  const details = getStoreDetails(store);
+  const details = store.details ?? {};
   const favorited = isFavorite(store.id);
 
   const handleCopyAddress = async () => {
@@ -79,6 +102,21 @@ export default function StoreDetail() {
     } catch {
       // Clipboard indisponível (ex: sem permissão) — ignora silenciosamente.
     }
+  };
+
+  // Loga o clique em Instagram/WhatsApp em `store_contact_clicks` (alimenta
+  // "Cliques em Contatos"/"Top 5 Lojas" no Relatórios) — sem bloquear a
+  // navegação do link (`<a target="_blank">` já abre normalmente).
+  const handleContactClick = (channel: 'whatsapp' | 'instagram') => {
+    const userId = session?.user.id;
+    if (!userId) return;
+    supabase
+      .from('store_contact_clicks')
+      .insert({ store_id: Number(store.id), channel, user_id: userId })
+      .then(() => {
+        // Sem tratamento de erro de propósito: logging não pode atrapalhar
+        // a pessoa que só quer abrir o WhatsApp/Instagram da loja.
+      });
   };
 
   return (
@@ -164,6 +202,7 @@ export default function StoreDetail() {
                 href={details.instagramUrl ?? '#'}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => handleContactClick('instagram')}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-tr from-[#FEDA75] via-[#D62976] to-[#4F5BD5] p-3"
               >
                 <InstagramIcon className="size-5 text-base-white" />
@@ -173,6 +212,7 @@ export default function StoreDetail() {
                 href={details.whatsappUrl ?? '#'}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => handleContactClick('whatsapp')}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#25D366] p-3"
               >
                 <WhatsappIcon className="size-5 text-base-white" />
@@ -231,34 +271,27 @@ export default function StoreDetail() {
             </InfoCard>
           )}
 
-          {(details.sizesLine || details.plusSizeLine) && (
+          {details.sizesLine && (
             <InfoCard icon={<RulerIcon className="size-6" />} title="Tamanhos">
-              {details.sizesLine && <p>{details.sizesLine}</p>}
-              {details.plusSizeLine && <p>{details.plusSizeLine}</p>}
+              <p>{details.sizesLine}</p>
             </InfoCard>
           )}
 
-          {details.hours && details.hours.length > 0 && (
+          {details.hours && (
             <InfoCard icon={<ClockIcon className="size-6" />} title="Horário">
-              {details.hours.map((h) => (
-                <p key={h.label}>
-                  {h.label} - {h.value}
-                </p>
-              ))}
+              <p>{details.hours}</p>
             </InfoCard>
           )}
 
-          {(details.shippingFrom || details.shippingMethods) && (
+          {details.shipping && (
             <InfoCard icon={<TruckIcon className="size-6" />} title="Envio">
-              {details.shippingFrom && <p>{details.shippingFrom}</p>}
-              {details.shippingMethods && <p>{details.shippingMethods}</p>}
+              <p>{details.shipping}</p>
             </InfoCard>
           )}
 
-          {(details.wholesaleOnline || details.wholesaleInPerson) && (
+          {details.wholesale && (
             <InfoCard icon={<ShoppingCartIcon className="size-6" />} title="Atacado">
-              {details.wholesaleOnline && <p>{details.wholesaleOnline}</p>}
-              {details.wholesaleInPerson && <p>{details.wholesaleInPerson}</p>}
+              <p>{details.wholesale}</p>
             </InfoCard>
           )}
 

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FunnelIcon } from '../icons';
-import { categories } from '../../data/mockData';
+import { listCategories } from '../../lib/catalog';
+import type { Category } from '../../types';
 
 /**
  * Botão "Filtrar" que abre a lista de categorias (mesmo conteúdo do
@@ -15,7 +16,23 @@ interface CategoryFilterSheetProps {
 
 export default function CategoryFilterSheet({ fixedWidth = false }: CategoryFilterSheetProps) {
   const [open, setOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    listCategories()
+      .then((data) => {
+        if (!cancelled) setCategories(data);
+      })
+      .catch(() => {
+        // Falha silenciosa: a lista só fica vazia (o botão "Filtrar"
+        // continua funcionando, só sem opções pra listar).
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className={`relative ${fixedWidth ? 'w-[163px] lg:w-auto' : ''}`}>

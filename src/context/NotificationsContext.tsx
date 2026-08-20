@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import { recentStores } from '../data/mockData';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { listRecentStores } from '../lib/catalog';
 
 export interface NotificationItem {
   id: string;
@@ -8,16 +8,6 @@ export interface NotificationItem {
   timeAgo: string;
   read: boolean;
 }
-
-// "Novo parceiro no app!" para cada loja recém-chegada — mesma lista usada
-// em "Chegaram Recentemente" na Início, só que aqui como notificação.
-const initialNotifications: NotificationItem[] = recentStores.map((store, index) => ({
-  id: store.id,
-  title: 'Novo parceiro no app!',
-  description: `${store.name} foi adicionado.`,
-  timeAgo: `há ${index + 1}d`,
-  read: index >= 2,
-}));
 
 interface NotificationsContextValue {
   notifications: NotificationItem[];
@@ -31,14 +21,40 @@ const NotificationsContext = createContext<NotificationsContextValue | undefined
 /**
  * Guarda o estado de lidas/não lidas fora da tela `/notificacoes` (era
  * `useState` local ali, então resetava toda vez que a tela desmontava e o
- * sino nunca conseguia refletir o estado real). Só em memória por
- * enquanto, mesmo padrão do `FavoritesContext` — quando o backend estiver
- * ligado, troca por uma tabela `notifications` no Supabase (Amanda,
- * 19/08/2026: "a bolinha com notificações ativas e sem quando todas foram
- * marcadas como lidas, essa troca não está acontecendo").
+ * sino nunca conseguia refletir o estado real). O CONTEÚDO das notificações
+ * ("Novo parceiro no app!") agora vem de lojas reais (`catalog.ts`) — mas o
+ * mecanismo de lida/não lida continua só em memória por enquanto, mesmo
+ * padrão de antes; quando existir uma tabela `notifications` de verdade no
+ * Supabase, troca por leitura/escrita real (Amanda, 19/08/2026: "a bolinha
+ * com notificações ativas e sem quando todas foram marcadas como lidas,
+ * essa troca não está acontecendo" — isso já está resolvido pelo estado
+ * centralizado aqui, só o backend de notificações em si que segue pendente).
  */
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listRecentStores(8)
+      .then((stores) => {
+        if (cancelled) return;
+        setNotifications(
+          stores.map((store, index) => ({
+            id: store.id,
+            title: 'Novo parceiro no app!',
+            description: `${store.name} foi adicionado.`,
+            timeAgo: `há ${index + 1}d`,
+            read: index >= 2,
+          }))
+        );
+      })
+      .catch(() => {
+        // Falha silenciosa: sino fica sem notificações em vez de quebrar o app.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const value = useMemo<NotificationsContextValue>(() => {
     const unreadCount = notifications.filter((n) => !n.read).length;

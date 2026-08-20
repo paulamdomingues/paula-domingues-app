@@ -1,4 +1,4 @@
-import { neighborhoods, type Neighborhood } from '../../data/mockData';
+import { NEIGHBORHOODS as neighborhoods, type Neighborhood } from '../../lib/neighborhoods';
 
 interface NeighborhoodFilterProps {
   value: Neighborhood | null;

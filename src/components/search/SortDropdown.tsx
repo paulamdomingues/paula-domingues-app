@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SortArrowsIcon } from '../icons';
-import { sortOptions, type SortOptionId } from '../../data/mockData';
+import { sortOptions, type SortOptionId } from '../../lib/sortOptions';
 
 interface SortDropdownProps {
   value: SortOptionId;
