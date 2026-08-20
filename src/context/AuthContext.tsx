@@ -29,6 +29,21 @@ interface AuthContextValue {
   accessLevel: AccessLevel | null;
   /** `true` enquanto a checagem de `team_members` ainda não terminou. */
   accessLevelLoading: boolean;
+  /**
+   * `true` = a pessoa logada está em `allowed_users` com `is_active = true`
+   * (comprou via Hubla e a assinatura está ativa, ou foi liberada
+   * manualmente pelo admin). `false` = criou conta mas ainda não tem acesso
+   * liberado (nunca pagou, ou teve a assinatura cancelada/reembolsada).
+   * `null` enquanto a checagem ainda não rodou. Ver `ProtectedRoute`
+   * (20/08/2026) — quem é da equipe (`accessLevel !== null`) sempre tem
+   * acesso ao app cliente também, mesmo sem estar em `allowed_users`.
+   */
+  hasPurchaseAccess: boolean | null;
+  /** `true` enquanto a checagem de `has_active_access()` ainda não terminou. */
+  purchaseAccessLoading: boolean;
+  /** Roda a checagem de novo sob demanda (usado pelo botão "Verificar
+   * novamente" da tela de espera, sem precisar recarregar a página). */
+  refreshPurchaseAccess: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
     email: string,
@@ -94,6 +109,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [session?.user.id]);
 
+  // Checa se a pessoa logada tem acesso pago ativo (`allowed_users.is_active`
+  // via a função `has_active_access()`, que roda como SECURITY DEFINER pra
+  // driblar o RLS que hoje só libera `team_members` pra ler essa tabela).
+  // Roda pra QUALQUER sessão, igual o effect de `accessLevel` acima.
+  const [hasPurchaseAccess, setHasPurchaseAccess] = useState<boolean | null>(null);
+  const [purchaseAccessLoading, setPurchaseAccessLoading] = useState(true);
+
+  const checkPurchaseAccess = async (userId: string | undefined) => {
+    if (!userId) {
+      setHasPurchaseAccess(null);
+      setPurchaseAccessLoading(false);
+      return;
+    }
+    setPurchaseAccessLoading(true);
+    const { data, error } = await supabase.rpc('has_active_access');
+    setHasPurchaseAccess(error ? false : Boolean(data));
+    setPurchaseAccessLoading(false);
+  };
+
+  useEffect(() => {
+    checkPurchaseAccess(session?.user.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user.id]);
+
+  const refreshPurchaseAccess = async () => {
+    await checkPurchaseAccess(session?.user.id);
+  };
+
   const signIn: AuthContextValue['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error?.message ?? null };
@@ -143,6 +186,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         firstName,
         accessLevel,
         accessLevelLoading,
+        hasPurchaseAccess,
+        purchaseAccessLoading,
+        refreshPurchaseAccess,
         signIn,
         signUp,
         signOut,

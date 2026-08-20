@@ -4,6 +4,11 @@ import { supabase } from '../../lib/supabaseClient';
 
 export interface AllowedUserRow {
   id: number;
+  /** ID de 5 dígitos (00001-99999) unificado com o `user_short_ids` que a
+   * pessoa vê no próprio Perfil quando cria conta — ver migration
+   * `unify_short_id_allowed_users` (20/08/2026). Sempre preenchido pelo
+   * banco (gatilho em `allowed_users`), nunca pelo front. */
+  short_id: string;
   email: string;
   full_name: string | null;
   whatsapp: string | null;
@@ -115,7 +120,7 @@ export default function UsuarioModal({ user, canManage, onCancel, onSaved }: Usu
           <div className="flex items-center gap-8">
             <div className="flex flex-col gap-1">
               <span className="font-body text-[13px] tracking-[0.65px] text-gray-500">iD do usuário</span>
-              <span className="font-body text-[14px] text-gray-900">#{user!.id}</span>
+              <span className="font-body text-[14px] text-gray-900">#{user!.short_id}</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="font-body text-[13px] tracking-[0.65px] text-gray-500">Data do Cadastro</span>

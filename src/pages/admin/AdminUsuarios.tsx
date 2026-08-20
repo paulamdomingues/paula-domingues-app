@@ -43,7 +43,7 @@ export default function AdminUsuarios() {
     supabase
       .from('allowed_users')
       .select(
-        'id, email, full_name, whatsapp, plan, is_active, purchased_at, hubla_transaction_id, hubla_payment_method, hubla_amount_cents'
+        'id, short_id, email, full_name, whatsapp, plan, is_active, purchased_at, hubla_transaction_id, hubla_payment_method, hubla_amount_cents'
       )
       .order('purchased_at', { ascending: false })
       .then(({ data, error: fetchError }) => {
@@ -61,7 +61,7 @@ export default function AdminUsuarios() {
     return rows.filter((row) => {
       const matchesSearch =
         !term ||
-        String(row.id).includes(term) ||
+        row.short_id.includes(term) ||
         row.email.toLowerCase().includes(term) ||
         (row.full_name ?? '').toLowerCase().includes(term) ||
         (row.whatsapp ?? '').toLowerCase().includes(term);
@@ -164,7 +164,7 @@ export default function AdminUsuarios() {
             <tbody>
               {pagedRows.map((row) => (
                 <tr key={row.id} className="bg-base-white font-body text-[14px] text-gray-900">
-                  <td className="rounded-l-lg px-3 py-3">#{row.id}</td>
+                  <td className="rounded-l-lg px-3 py-3">#{row.short_id}</td>
                   <td className="px-3 py-3">{row.full_name ?? '—'}</td>
                   <td className="px-3 py-3">{row.email}</td>
                   <td className="px-3 py-3">{row.whatsapp ?? '—'}</td>
@@ -199,7 +199,7 @@ export default function AdminUsuarios() {
                   <p className="w-full truncate font-body text-[14px] tracking-[0.7px] text-gray-700">{row.email}</p>
                   <div className="flex w-full items-center gap-2">
                     <p className="shrink-0 font-display text-[18px] font-semibold tracking-[0.54px] text-base-black">
-                      #{row.id}
+                      #{row.short_id}
                     </p>
                     <span className="flex shrink-0 items-center justify-center rounded-lg bg-main-dark-800 px-2 py-1 font-body text-[13px] font-bold tracking-[0.65px] text-main-red-50">
                       {row.plan === 'trimestral' ? 'Trimestral' : row.plan === 'anual' ? 'Anual' : '—'}

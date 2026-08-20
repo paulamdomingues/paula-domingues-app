@@ -16,6 +16,7 @@ import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import EmailSent from './pages/auth/EmailSent';
+import AguardandoLiberacao from './pages/auth/AguardandoLiberacao';
 import BottomNav from './components/BottomNav';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedAdminRoute from './components/admin/ProtectedAdminRoute';
@@ -91,6 +92,7 @@ export default function App() {
         <Route path="/criar-conta" element={<SignUp />} />
         <Route path="/esqueci-senha" element={<ForgotPassword />} />
         <Route path="/email-enviado" element={<EmailSent />} />
+        <Route path="/aguardando-liberacao" element={<AguardandoLiberacao />} />
         {/* Termos e Privacidade são públicos: dá pra ler antes de criar conta */}
         <Route path="/termos" element={<Termos />} />
         <Route path="/privacidade" element={<Termos />} />
