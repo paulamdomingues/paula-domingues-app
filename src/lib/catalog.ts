@@ -50,12 +50,23 @@ interface CategoryRow {
  * limpa qualquer caractere não-numérico e monta o link `wa.me`. `null`
  * quando não há número cadastrado (o botão de WhatsApp na página da loja já
  * trata `undefined`/`'#'` como "sem ação").
+ *
+ * BUG corrigido em 21/08/2026: essa função nunca prefixava o código do
+ * país (55) — o campo é cadastrado como número local (ver placeholder
+ * "11 91234-5678" em `AdminLojaForm.tsx`, sem o 55 na frente), mas o
+ * `wa.me` PRECISA do código do país pra montar o link certo. Sem isso, o
+ * WhatsApp tenta adivinhar o país/DDD sozinho e manda pro número errado
+ * (confirmado com dado real: "(11) 93016-8572" abria um contato completamente
+ * diferente). Números locais brasileiros sempre têm 10 (fixo, DDD + 8
+ * dígitos) ou 11 (celular, DDD + 9 dígitos) dígitos — só nesses casos falta
+ * o 55. Se já vier com 12/13 dígitos, presume que o 55 já está incluso.
  */
 export function buildWhatsappUrl(raw?: string | null): string | undefined {
   if (!raw) return undefined;
   const digits = raw.replace(/\D/g, '');
   if (!digits) return undefined;
-  return `https://wa.me/${digits}`;
+  const withCountryCode = digits.length <= 11 ? `55${digits}` : digits;
+  return `https://wa.me/${withCountryCode}`;
 }
 
 /**
