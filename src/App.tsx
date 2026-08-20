@@ -16,12 +16,14 @@ import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import EmailSent from './pages/auth/EmailSent';
+import RedefinirSenha from './pages/auth/RedefinirSenha';
 import AguardandoLiberacao from './pages/auth/AguardandoLiberacao';
 import BottomNav from './components/BottomNav';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedAdminRoute from './components/admin/ProtectedAdminRoute';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
+import AdminForgotPassword from './pages/admin/AdminForgotPassword';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLojas from './pages/admin/AdminLojas';
 import AdminLojaForm from './pages/admin/AdminLojaForm';
@@ -92,6 +94,12 @@ export default function App() {
         <Route path="/criar-conta" element={<SignUp />} />
         <Route path="/esqueci-senha" element={<ForgotPassword />} />
         <Route path="/email-enviado" element={<EmailSent />} />
+        {/* 21/08/2026: essa rota já era usada como `redirectTo` do email de
+            recuperação (`requestPasswordReset`, `AuthContext.tsx`), mas não
+            tinha NENHUMA página registrada aqui — o link do email levava a
+            lugar nenhum. Serve tanto o fluxo cliente quanto o admin (ver
+            `RedefinirSenha.tsx`). */}
+        <Route path="/redefinir-senha" element={<RedefinirSenha />} />
         <Route path="/aguardando-liberacao" element={<AguardandoLiberacao />} />
         {/* Termos e Privacidade são públicos: dá pra ler antes de criar conta */}
         <Route path="/termos" element={<Termos />} />
@@ -107,7 +115,7 @@ export default function App() {
           mas deixa a intenção clara na leitura do arquivo.
         */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/esqueci-senha" element={<ComingSoon title="Esqueci minha senha (Admin)" />} />
+        <Route path="/admin/esqueci-senha" element={<AdminForgotPassword />} />
         <Route element={<ProtectedAdminRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />

@@ -68,8 +68,25 @@ interface AuthContextValue {
     firstName: string
   ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  /**
+   * `fromAdmin`: quando o pedido vem da tela de login do painel admin
+   * (`AdminForgotPassword.tsx`), marca o link do email com `?admin=1` — é
+   * assim que `RedefinirSenha.tsx` sabe mandar a pessoa de volta pro
+   * `/admin/login` (em vez do `/login` do app cliente) depois de trocar a
+   * senha. 21/08/2026: existia só a versão cliente até aqui — o painel
+   * admin usava a MESMA função de auth, mas a tela "Esqueci minha senha"
+   * dele ainda era um placeholder "Em breve".
+   */
+  requestPasswordReset: (email: string, fromAdmin?: boolean) => Promise<{ error: string | null }>;
   updatePassword: (currentPassword: string, newPassword: string) => Promise<{ error: string | null }>;
+  /**
+   * Usado só pela tela `RedefinirSenha.tsx` (o link que chega por email) —
+   * diferente de `updatePassword`, não pede a senha atual porque quem
+   * clicou no link já tem uma sessão de recuperação temporária que o
+   * Supabase cria sozinho ao abrir esse link (não é a mesma coisa que
+   * "estar logado" no app).
+   */
+  completePasswordReset: (newPassword: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -172,9 +189,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const requestPasswordReset: AuthContextValue['requestPasswordReset'] = async (email) => {
+  const requestPasswordReset: AuthContextValue['requestPasswordReset'] = async (email, fromAdmin) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
+      redirectTo: `${window.location.origin}/redefinir-senha${fromAdmin ? '?admin=1' : ''}`,
     });
     return { error: error?.message ?? null };
   };
@@ -195,6 +212,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
+  // Sem reautenticação de propósito: a sessão de recuperação que o Supabase
+  // cria ao abrir o link do email já é prova suficiente de que é a pessoa
+  // dona do email (é exatamente o que esse link representa).
+  const completePasswordReset: AuthContextValue['completePasswordReset'] = async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error: error?.message ?? null };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -211,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         requestPasswordReset,
         updatePassword,
+        completePasswordReset,
       }}
     >
       {children}
