@@ -26,6 +26,11 @@ const PAGE_SIZE = 10;
  */
 export default function AdminUsuarios() {
   const { accessLevel } = useAuth();
+  // 20/08/2026: enum `editor_conteudo` (rótulo "Suporte" no painel, nomes
+  // invertidos — ver `AccessLevel` em AuthContext.tsx) passou a acessar
+  // essa aba, mas só pra VISUALIZAR — de propósito não entra aqui, então
+  // "Cadastrar Usuário" e a edição dentro do modal continuam travados só
+  // pra `master_admin`/`suporte` (rótulo "Editor").
   const canManage = accessLevel === 'master_admin' || accessLevel === 'suporte';
 
   const [rows, setRows] = useState<AllowedUserRow[] | null>(null);

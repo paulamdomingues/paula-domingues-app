@@ -7,8 +7,12 @@ interface ToastProps {
    * 'removed' (laranja/error, padrão) ou 'added' (verde/success). Amanda
    * pediu os dois com cores diferentes, 19/08/2026 — 'removed' continua a
    * cor original pra não quebrar quem já usa o componente sem passar essa prop.
+   * 'denied' (error-500, 20/08/2026): usado pelo painel admin quando alguém
+   * clica numa seção do menu que o nível de acesso dela não alcança — cor
+   * mais forte que 'removed' de propósito, pra ficar claro que é uma
+   * restrição de permissão, não um probleminha reversível.
    */
-  variant?: 'added' | 'removed';
+  variant?: 'added' | 'removed' | 'denied';
   /** Chamado depois que a animação de saída termina, pra quem estiver controlando o estado limpar `message`. */
   onDismiss: () => void;
   /** Tempo em ms que o toast fica visível antes de começar a desaparecer. */
@@ -17,9 +21,10 @@ interface ToastProps {
 
 const EXIT_TRANSITION_MS = 300;
 
-const VARIANT_CLASSES: Record<'added' | 'removed', string> = {
+const VARIANT_CLASSES: Record<'added' | 'removed' | 'denied', string> = {
   removed: 'bg-error-400 text-error-900',
   added: 'bg-success-200 text-success-900',
+  denied: 'bg-error-500 text-base-white',
 };
 
 /**

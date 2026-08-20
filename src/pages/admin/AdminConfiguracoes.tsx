@@ -15,10 +15,13 @@ interface TeamMemberRow {
   access_level: AccessLevel;
 }
 
+// Nomes invertidos a pedido da Amanda (20/08/2026) — ver comentário em
+// `AccessLevel` (AuthContext.tsx) pra entender por quê o rótulo não bate
+// com o valor salvo no banco.
 const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
   master_admin: 'Master/Admin',
-  suporte: 'Suporte',
-  editor_conteudo: 'Editor Conteúdo',
+  suporte: 'Editor Conteúdo',
+  editor_conteudo: 'Suporte',
   convidado: 'Convidado',
 };
 

@@ -32,8 +32,12 @@ interface StoryRow {
  */
 export default function AdminStories() {
   const { accessLevel } = useAuth();
-  const canUpload = accessLevel === 'master_admin' || accessLevel === 'editor_conteudo' || accessLevel === 'convidado';
-  const canDelete = accessLevel === 'master_admin';
+  // 20/08/2026 (regra de níveis de acesso revisada pela Amanda): Stories é
+  // função exclusiva do Convidado (fora o Master Admin) — Editor perdeu o
+  // acesso que tinha antes (ele cuida só de Lojas/Categorias agora), e
+  // Convidado passou a poder excluir também, não só subir vídeo.
+  const canUpload = accessLevel === 'master_admin' || accessLevel === 'convidado';
+  const canDelete = accessLevel === 'master_admin' || accessLevel === 'convidado';
 
   const [stories, setStories] = useState<StoryRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);

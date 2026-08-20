@@ -7,6 +7,24 @@ import { supabase } from '../lib/supabaseClient';
  * `0001_team_members_and_rls.sql`). Quem não está nessa tabela (todo cliente
  * final) tem `accessLevel === null` — é a mesma sessão do Supabase Auth,
  * só que sem nenhum papel de equipe.
+ *
+ * ATENÇÃO (Amanda, 20/08/2026) — o valor salvo no banco (`suporte` /
+ * `editor_conteudo`) NÃO bate mais com o nome exibido no painel: a pedido
+ * dela, os dois nomes foram invertidos na interface porque fazia mais
+ * sentido pelo significado (quem mexe em Usuários "edita" o sistema mais a
+ * fundo; quem só cuida do catálogo é mais "suporte"). Só o RÓTULO mudou —
+ * o valor do banco e toda a lógica de permissão (`adminPermissions.ts` e as
+ * checagens `accessLevel === 'suporte'`/`'editor_conteudo'` em cada tela)
+ * continuam usando os nomes originais, sem tocar no schema:
+ * - enum `suporte` no banco → aparece como **"Editor"** no painel → CRUD
+ *   completo em Lojas, Categorias e Usuários.
+ * - enum `editor_conteudo` no banco → aparece como **"Suporte"** no
+ *   painel → cria/edita Lojas e Categorias (sem excluir) + só visualiza
+ *   Usuários (sem editar).
+ * Os rótulos ficam em `ACCESS_LEVEL_LABELS`, repetido em três telas
+ * (`AdminSidebar.tsx`, `AdminConfiguracoes.tsx`, `NovoMembroModal.tsx`) —
+ * se o valor salvo no banco for renomeado de verdade algum dia, é só
+ * trocar a migration + esses 3 mapas, não precisa mexer em permissão.
  */
 export type AccessLevel = 'master_admin' | 'suporte' | 'editor_conteudo' | 'convidado';
 

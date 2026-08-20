@@ -1,6 +1,8 @@
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import AdminMobileNav from './AdminMobileNav';
+import { useAuth } from '../../context/AuthContext';
+import { canViewSection, firstAccessibleSectionPath, sectionForPath } from '../../lib/adminPermissions';
 
 /**
  * Shell do painel admin: sidebar fixa (desktop) ou menu inferior fixo
@@ -19,8 +21,22 @@ import AdminMobileNav from './AdminMobileNav';
  * `Header`/`TopBar`/`BottomNav`) — o painel admin é uma área visualmente
  * separada, só compartilhando o `AuthContext` (mesma sessão do Supabase) e
  * a paleta de cores do `tailwind.config.js`.
+ *
+ * 20/08/2026: guard de seção por nível de acesso (`adminPermissions.ts`) —
+ * além de `AdminSidebar`/`AdminMobileNav` esconderem a aba de quem não pode
+ * ver aquela seção, esse componente redireciona quem tentar acessar a URL
+ * direto (ex: Convidado digitando `/admin/lojas`) pra primeira seção que
+ * ele realmente pode ver, em vez de só confiar no menu escondido.
  */
 export default function AdminLayout() {
+  const { accessLevel } = useAuth();
+  const location = useLocation();
+  const section = sectionForPath(location.pathname);
+
+  if (section && !canViewSection(accessLevel, section)) {
+    return <Navigate to={firstAccessibleSectionPath(accessLevel)} replace />;
+  }
+
   return (
     <div className="flex min-h-screen w-full bg-screen-bg">
       <div className="hidden lg:block">
