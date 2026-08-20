@@ -20,6 +20,9 @@ const PAGE_SIZE = 10;
  * Paginação: o Figma desenha um paginador numerado completo — simplifiquei
  * pra um prev/next de 10 em 10 (mesmo padrão de simplificação já usado em
  * outras telas desse painel), suficiente pro volume atual de usuários.
+ *
+ * 21/08/2026: layout mobile adicionado (Figma node 666:13915) — tabela vira
+ * lista de cards empilhados abaixo de `lg`, mesmo padrão do `AdminLojas.tsx`.
  */
 export default function AdminUsuarios() {
   const { accessLevel } = useAuth();
@@ -79,10 +82,12 @@ export default function AdminUsuarios() {
   const pagedRows = filteredRows.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col gap-4 lg:gap-6">
       <div className="flex w-full items-center justify-between">
-        <h1 className="font-display text-[32px] font-bold tracking-[0.96px] text-main-dark-900">Usuários</h1>
-        <div className="flex items-center gap-4">
+        <h1 className="font-display text-[26px] font-bold tracking-[0.78px] text-main-dark-900 lg:text-[32px] lg:tracking-[0.96px]">
+          Usuários
+        </h1>
+        <div className="hidden items-center gap-4 lg:flex">
           <BellIcon className="size-6 text-gray-400" />
           <button
             type="button"
@@ -95,16 +100,29 @@ export default function AdminUsuarios() {
             Cadastrar Usuário
           </button>
         </div>
+        <BellIcon className="size-6 shrink-0 text-gray-400 lg:hidden" />
       </div>
 
-      <div className="grid w-full grid-cols-3 gap-4">
+      {/* Mobile: botão "Cadastrar Usuário" em largura cheia, abaixo do título. */}
+      <button
+        type="button"
+        disabled={!canManage}
+        title={canManage ? undefined : 'Sua conta não tem permissão para cadastrar usuários.'}
+        onClick={() => setModalUser(null)}
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-main-red-600 px-4 py-2 font-body text-[15px] font-bold tracking-[0.75px] text-base-white disabled:opacity-60 lg:hidden"
+      >
+        <PiPlus className="size-4" />
+        Cadastrar Usuário
+      </button>
+
+      <div className="grid w-full grid-cols-3 gap-3 lg:gap-4">
         <SummaryCard label="Total de Usuários" value={totalCount} />
         <SummaryCard label="Plano Trimestral" value={trimestralCount} />
         <SummaryCard label="Plano Anual" value={anualCount} />
       </div>
 
-      <div className="flex w-full items-center gap-4">
-        <div className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3">
+      <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+        <div className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 lg:flex-1">
           <MagnifyingGlassIcon className="size-4 shrink-0 text-gray-500" />
           <input
             value={search}
@@ -129,43 +147,80 @@ export default function AdminUsuarios() {
       {rows === null ? (
         <p className="font-body text-[14px] text-gray-600">Carregando usuários...</p>
       ) : (
-        <table className="w-full border-separate border-spacing-y-2">
-          <thead>
-            <tr className="text-left font-body text-[13px] tracking-[0.65px] text-gray-500">
-              <th className="px-3 font-normal">ID Usuário</th>
-              <th className="px-3 font-normal">Nome</th>
-              <th className="px-3 font-normal">Email</th>
-              <th className="px-3 font-normal">WhatsApp</th>
-              <th className="px-3 font-normal">Plano</th>
-              <th className="px-3 font-normal">Membro desde</th>
-              <th className="px-3 font-normal text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pagedRows.map((row) => (
-              <tr key={row.id} className="bg-base-white font-body text-[14px] text-gray-900">
-                <td className="rounded-l-lg px-3 py-3">#{row.id}</td>
-                <td className="px-3 py-3">{row.full_name ?? '—'}</td>
-                <td className="px-3 py-3">{row.email}</td>
-                <td className="px-3 py-3">{row.whatsapp ?? '—'}</td>
-                <td className="px-3 py-3">{row.plan === 'trimestral' ? 'Trimestral' : row.plan === 'anual' ? 'Anual' : '—'}</td>
-                <td className="px-3 py-3">
-                  {new Date(row.purchased_at).toLocaleDateString('pt-BR')}
-                </td>
-                <td className="rounded-r-lg px-3 py-3 text-right">
-                  <button
-                    type="button"
-                    onClick={() => setModalUser(row)}
-                    className="inline-flex size-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-50"
-                    aria-label={`Ver ${row.full_name ?? row.email}`}
-                  >
-                    <EyeIcon className="size-4" />
-                  </button>
-                </td>
+        <>
+          {/* Desktop: tabela. */}
+          <table className="hidden w-full border-separate border-spacing-y-2 lg:table">
+            <thead>
+              <tr className="text-left font-body text-[13px] tracking-[0.65px] text-gray-500">
+                <th className="px-3 font-normal">ID Usuário</th>
+                <th className="px-3 font-normal">Nome</th>
+                <th className="px-3 font-normal">Email</th>
+                <th className="px-3 font-normal">WhatsApp</th>
+                <th className="px-3 font-normal">Plano</th>
+                <th className="px-3 font-normal">Membro desde</th>
+                <th className="px-3 font-normal text-right">Ações</th>
               </tr>
+            </thead>
+            <tbody>
+              {pagedRows.map((row) => (
+                <tr key={row.id} className="bg-base-white font-body text-[14px] text-gray-900">
+                  <td className="rounded-l-lg px-3 py-3">#{row.id}</td>
+                  <td className="px-3 py-3">{row.full_name ?? '—'}</td>
+                  <td className="px-3 py-3">{row.email}</td>
+                  <td className="px-3 py-3">{row.whatsapp ?? '—'}</td>
+                  <td className="px-3 py-3">{row.plan === 'trimestral' ? 'Trimestral' : row.plan === 'anual' ? 'Anual' : '—'}</td>
+                  <td className="px-3 py-3">
+                    {new Date(row.purchased_at).toLocaleDateString('pt-BR')}
+                  </td>
+                  <td className="rounded-r-lg px-3 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setModalUser(row)}
+                      className="inline-flex size-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-50"
+                      aria-label={`Ver ${row.full_name ?? row.email}`}
+                    >
+                      <EyeIcon className="size-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Mobile: lista de cards empilhados (node 666:14241
+              "DASHBOARD-FICHA-RESUMIDA-MOBILE" reaproveitado pra usuário). */}
+          <div className="flex w-full flex-col lg:hidden">
+            {pagedRows.map((row) => (
+              <div key={row.id} className="flex items-center gap-2 border-b border-gray-200 py-2">
+                <div className="flex flex-1 flex-col items-start gap-2">
+                  <p className="w-full truncate font-display text-[22px] font-bold tracking-[0.66px] text-main-dark-900">
+                    {row.full_name ?? '—'}
+                  </p>
+                  <p className="w-full truncate font-body text-[14px] tracking-[0.7px] text-gray-700">{row.email}</p>
+                  <div className="flex w-full items-center gap-2">
+                    <p className="shrink-0 font-display text-[18px] font-semibold tracking-[0.54px] text-base-black">
+                      #{row.id}
+                    </p>
+                    <span className="flex shrink-0 items-center justify-center rounded-lg bg-main-dark-800 px-2 py-1 font-body text-[13px] font-bold tracking-[0.65px] text-main-red-50">
+                      {row.plan === 'trimestral' ? 'Trimestral' : row.plan === 'anual' ? 'Anual' : '—'}
+                    </span>
+                    <p className="truncate font-body text-[11px] text-gray-500">
+                      {new Date(row.purchased_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalUser(row)}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-gray-600"
+                  aria-label={`Ver ${row.full_name ?? row.email}`}
+                >
+                  <EyeIcon className="size-5" />
+                </button>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
 
       {rows !== null && filteredRows.length === 0 && (
@@ -213,9 +268,11 @@ export default function AdminUsuarios() {
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg bg-base-white px-5 py-4">
+    <div className="flex flex-col items-center gap-1 rounded-lg border border-gray-50 bg-base-white px-3 py-4 text-center shadow-sm lg:items-start lg:px-5 lg:text-left">
       <p className="font-body text-[13px] tracking-[0.65px] text-gray-500">{label}</p>
-      <p className="font-display text-[32px] font-bold tracking-[0.96px] text-main-dark-900">{value}</p>
+      <p className="font-display text-[24px] font-bold tracking-[0.72px] text-main-dark-900 lg:text-[32px] lg:tracking-[0.96px]">
+        {value}
+      </p>
     </div>
   );
 }

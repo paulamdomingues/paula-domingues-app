@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { PiCaretDown, PiPlus, PiTrash, PiUploadSimple, PiX } from 'react-icons/pi';
 import {
   ArrowLeftIcon,
+  BellIcon,
   ClockIcon,
   InstagramIcon,
   MapPinIcon,
@@ -123,6 +124,18 @@ function rowToForm(row: StoreRow): FormState {
  * abre/fecha com o toggle (edição). Status, Fachada e Galeria não têm
  * "Editar" no Figma — são sempre "ao vivo" (o próprio toggle/upload já
  * salva na hora, na edição).
+ *
+ * 21/08/2026: layout mobile adicionado (nodes 666:12265 "VAZIO" e 666:12554
+ * "Preenchido") — as 3 colunas viram uma pilha única, na ordem do Figma
+ * (Informações Básicas → iD → Fotos → Contatos → Disponibilidade → Foto da
+ * Fachada → Detalhes Complementares). O botão de ação do topo (Salvar no
+ * cadastro / Excluir na edição) some no mobile e reaparece em largura
+ * cheia no fim da página — os dois frames mobile mostram um botão "+
+ * Salvar Loja" no rodapé; mantive o MESMO modelo de interação do desktop
+ * (cada card salva por conta própria na edição, sem um "Salvar Loja" geral
+ * ali) e só troquei esse botão de rodapé pra "Excluir Loja" quando
+ * `!isCreate`, já que não vi nenhum outro jeito de excluir uma loja pelo
+ * mobile no Figma.
  */
 export default function AdminLojaForm() {
   const { storeId } = useParams<{ storeId?: string }>();
@@ -384,17 +397,20 @@ export default function AdminLojaForm() {
   return (
     <div className="flex w-full flex-col gap-6 pb-16">
       <div className="flex flex-col gap-6">
-        <Link
-          to="/admin/lojas"
-          className="flex w-fit items-center gap-2 font-body text-[15px] tracking-[0.75px] text-gray-600"
-        >
-          <ArrowLeftIcon className="size-[18px]" />
-          Voltar para lojas
-        </Link>
+        <div className="flex w-full items-center justify-between">
+          <Link
+            to="/admin/lojas"
+            className="flex w-fit items-center gap-2 font-body text-[15px] tracking-[0.75px] text-gray-600"
+          >
+            <ArrowLeftIcon className="size-[18px]" />
+            Voltar para lojas
+          </Link>
+          <BellIcon className="size-6 shrink-0 text-gray-400 lg:hidden" />
+        </div>
 
         <div className="flex w-full items-start justify-between">
           <div className="flex flex-col gap-1">
-            <h1 className="font-display text-[32px] font-bold tracking-[0.96px] text-main-dark-900">
+            <h1 className="font-display text-[26px] font-bold tracking-[0.78px] text-main-dark-900 lg:text-[32px] lg:tracking-[0.96px]">
               {isCreate ? 'Cadastrar nova loja' : form.name || '—'}
             </h1>
             <p className="font-body text-[14px] tracking-[0.7px] text-gray-500">
@@ -404,13 +420,15 @@ export default function AdminLojaForm() {
             </p>
           </div>
 
+          {/* Desktop: botão de ação no topo. No mobile ele reaparece em
+              largura cheia no fim da página (ver rodapé mobile abaixo). */}
           {isCreate ? (
             <button
               type="button"
               disabled={saving || !canManage}
               onClick={handleCreate}
               title={canManage ? undefined : 'Sua conta não tem permissão para cadastrar lojas.'}
-              className="flex h-[50px] items-center gap-2 rounded-lg bg-main-red-600 px-6 font-body text-[15px] font-bold tracking-[0.75px] text-base-white transition-opacity disabled:opacity-60"
+              className="hidden h-[50px] items-center gap-2 rounded-lg bg-main-red-600 px-6 font-body text-[15px] font-bold tracking-[0.75px] text-base-white transition-opacity disabled:opacity-60 lg:flex"
             >
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
@@ -419,7 +437,7 @@ export default function AdminLojaForm() {
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                className="flex h-10 items-center gap-2 rounded-lg bg-error-600 px-4 font-body text-[14px] font-bold tracking-[0.7px] text-base-white"
+                className="hidden h-10 items-center gap-2 rounded-lg bg-error-600 px-4 font-body text-[14px] font-bold tracking-[0.7px] text-base-white lg:flex"
               >
                 <PiTrash className="size-4" />
                 Excluir Loja
@@ -436,7 +454,13 @@ export default function AdminLojaForm() {
         )}
       </div>
 
-      <div className="grid w-full grid-cols-3 gap-6">
+      {/* No mobile empilha em coluna única (grid-cols-1) — a ordem segue a
+          do código-fonte (Informações Básicas, depois tudo da coluna 2,
+          depois tudo da coluna 3), que difere um pouco da ordem exata do
+          Figma mobile (lá "Disponibilidade" vem depois de "Contatos", aqui
+          vem antes) — simplificação deliberada pra não duplicar todo esse
+          formulário em dois blocos JSX separados só por causa da ordem. */}
+      <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
         {/* Coluna 1 — Informações Básicas */}
         <SectionCard
           title="Informações Básicas"
@@ -589,7 +613,7 @@ export default function AdminLojaForm() {
         onToggleEdit={() => setEditingComplementares((v) => !v)}
         onSave={handleSaveComplementares}
       >
-        <div className="grid w-full grid-cols-3 gap-4">
+        <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-3">
           <ComplementaryField
             icon={<MapPinIcon className="size-full" />}
             label="Endereço*"
@@ -640,6 +664,35 @@ export default function AdminLojaForm() {
           />
         </div>
       </SectionCard>
+
+      {/* Mobile: botão de ação em largura cheia no fim da página (nodes
+          666:12265/666:12554 mostram "+ Salvar Loja" no rodapé nos dois
+          frames) — mantive o mesmo modelo do desktop (Salvar só no
+          cadastro; na edição vira Excluir Loja, já que cada card já salva
+          sozinho ali em cima). */}
+      {isCreate ? (
+        <button
+          type="button"
+          disabled={saving || !canManage}
+          onClick={handleCreate}
+          title={canManage ? undefined : 'Sua conta não tem permissão para cadastrar lojas.'}
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-lg bg-main-red-600 px-6 font-body text-[15px] font-bold tracking-[0.75px] text-base-white transition-opacity disabled:opacity-60 lg:hidden"
+        >
+          <PiPlus className="size-4" />
+          {saving ? 'Salvando...' : 'Salvar Loja'}
+        </button>
+      ) : (
+        canDelete && (
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="flex h-[50px] w-full items-center justify-center gap-2 rounded-lg bg-error-600 px-6 font-body text-[15px] font-bold tracking-[0.75px] text-base-white lg:hidden"
+          >
+            <PiTrash className="size-4" />
+            Excluir Loja
+          </button>
+        )
+      )}
 
       {showDeleteModal && (
         <DeleteConfirmModal

@@ -36,6 +36,12 @@ const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
  * escolhe a própria senha pelo link do email). Coerente com o mesmo
  * cuidado de segurança já aplicado à Bunny.net: nenhuma credencial de
  * outra pessoa passa por aqui.
+ *
+ * 21/08/2026: layout mobile adicionado (Figma node 666:13191) — os dois
+ * cards de "Meu Perfil" empilham (viravam `grid-cols-1`), e a tabela de
+ * "Equipe" vira lista de cards abaixo de `lg`, mesmo padrão do
+ * `AdminLojas.tsx`/`AdminUsuarios.tsx` (menu de ações do membro reaproveita
+ * o mesmo `MemberMenu` de dropdown, só reposicionado pro card).
  */
 export default function AdminConfiguracoes() {
   const { session, accessLevel, updatePassword } = useAuth();
@@ -171,14 +177,18 @@ export default function AdminConfiguracoes() {
   return (
     <div className="flex w-full flex-col gap-8">
       <div className="flex w-full items-center justify-between">
-        <h1 className="font-display text-[32px] font-bold tracking-[0.96px] text-main-dark-900">Configurações</h1>
-        <BellIcon className="size-6 text-gray-400" />
+        <h1 className="font-display text-[26px] font-bold tracking-[0.78px] text-main-dark-900 lg:text-[32px] lg:tracking-[0.96px]">
+          Configurações
+        </h1>
+        <BellIcon className="size-6 shrink-0 text-gray-400" />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <h2 className="font-display text-[48px] font-extrabold tracking-[1.44px] text-main-dark-900">Meu Perfil</h2>
+        <h2 className="font-display text-[28px] font-extrabold tracking-[0.84px] text-main-dark-900 lg:text-[48px] lg:tracking-[1.44px]">
+          Meu Perfil
+        </h2>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="flex flex-col gap-4 rounded-lg bg-base-white p-6">
             <div className="flex items-center justify-between">
               <p className="font-display text-[18px] font-bold tracking-[0.54px] text-main-dark-900">Informações Básicas</p>
@@ -249,12 +259,14 @@ export default function AdminConfiguracoes() {
 
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-[48px] font-extrabold tracking-[1.44px] text-main-dark-900">Equipe</h2>
+          <h2 className="font-display text-[28px] font-extrabold tracking-[0.84px] text-main-dark-900 lg:text-[48px] lg:tracking-[1.44px]">
+            Equipe
+          </h2>
           {canManageTeam && (
             <button
               type="button"
               onClick={() => setShowNovoMembro(true)}
-              className="flex items-center gap-2 rounded-lg bg-main-red-600 px-4 py-2 font-body text-[15px] font-bold tracking-[0.75px] text-base-white"
+              className="hidden items-center gap-2 rounded-lg bg-main-red-600 px-4 py-2 font-body text-[15px] font-bold tracking-[0.75px] text-base-white lg:flex"
             >
               <PiPlus className="size-4" />
               Adicionar Membro
@@ -262,12 +274,26 @@ export default function AdminConfiguracoes() {
           )}
         </div>
 
+        {/* Mobile: botão "Adicionar Membro" em largura cheia, abaixo do título. */}
+        {canManageTeam && (
+          <button
+            type="button"
+            onClick={() => setShowNovoMembro(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-main-red-600 px-4 py-2 font-body text-[15px] font-bold tracking-[0.75px] text-base-white lg:hidden"
+          >
+            <PiPlus className="size-4" />
+            Adicionar Membro
+          </button>
+        )}
+
         {error && <p className="font-body text-[13px] text-main-red-800">{error}</p>}
 
         {members === null ? (
           <p className="font-body text-[14px] text-gray-600">Carregando equipe...</p>
         ) : (
-          <table className="w-full border-separate border-spacing-y-0">
+          <>
+          {/* Desktop: tabela. */}
+          <table className="hidden w-full border-separate border-spacing-y-0 lg:table">
             <thead>
               <tr className="bg-main-red-50 text-left font-body text-[13px] font-bold tracking-[0.65px] text-gray-600">
                 <th className="px-4 py-2 font-bold">Nome</th>
@@ -334,6 +360,69 @@ export default function AdminConfiguracoes() {
               })}
             </tbody>
           </table>
+
+          {/* Mobile: lista de cards empilhados (mesmo padrão de card usado
+              em `AdminLojas.tsx`/`AdminUsuarios.tsx`; o menu de ações
+              reaproveita o `MemberMenu` já usado na tabela desktop). */}
+          <div className="flex w-full flex-col lg:hidden">
+            {members.map((member) => {
+              const isSelf = member.user_id === myUserId;
+              return (
+                <div key={member.id} className="flex items-center gap-2 border-b border-gray-200 py-3">
+                  <div className="flex flex-1 flex-col items-start gap-1.5">
+                    <p className="w-full truncate font-display text-[18px] font-bold tracking-[0.54px] text-main-dark-900">
+                      {(member.full_name || member.email).toUpperCase()}
+                    </p>
+                    <p className="w-full truncate font-body text-[13px] text-gray-600">{member.email}</p>
+                    <p className="w-full truncate font-body text-[13px] text-gray-500">{member.whatsapp || '—'}</p>
+                    {canManageTeam ? (
+                      <select
+                        value={member.access_level}
+                        disabled={isSelf || roleSavingId === member.id}
+                        title={isSelf ? 'Você não pode alterar sua própria função por aqui.' : undefined}
+                        onChange={(e) => handleRoleChange(member, e.target.value as AccessLevel)}
+                        className="h-9 w-full rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[13px] text-gray-800 disabled:opacity-60"
+                      >
+                        {(Object.keys(ACCESS_LEVEL_LABELS) as AccessLevel[]).map((level) => (
+                          <option key={level} value={level}>
+                            {ACCESS_LEVEL_LABELS[level]}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="font-body text-[13px] font-bold text-gray-700">
+                        {ACCESS_LEVEL_LABELS[member.access_level]}
+                      </span>
+                    )}
+                  </div>
+                  {canManageTeam && (
+                    <div className="relative shrink-0 self-start">
+                      <button
+                        type="button"
+                        onClick={() => setOpenMenuId((prev) => (prev === member.id ? null : member.id))}
+                        className="inline-flex size-8 items-center justify-center rounded-lg text-gray-600"
+                        aria-label="Mais ações"
+                      >
+                        <PiDotsThreeVerticalBold className="size-4" />
+                      </button>
+                      {openMenuId === member.id && (
+                        <MemberMenu
+                          disabled={isSelf}
+                          disabledReason="Você não pode remover a si mesmo."
+                          onClose={() => setOpenMenuId(null)}
+                          onRemove={() => {
+                            setOpenMenuId(null);
+                            setRemoveTarget(member);
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
 
         {members !== null && members.length === 0 && (

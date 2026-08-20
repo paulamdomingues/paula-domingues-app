@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PiPlus } from 'react-icons/pi';
-import { FunnelIcon, MagnifyingGlassIcon, PencilIcon } from '../../components/icons';
+import { BellIcon, FunnelIcon, MagnifyingGlassIcon, PencilIcon } from '../../components/icons';
 import { supabase } from '../../lib/supabaseClient';
 
 interface StoreRow {
@@ -24,6 +24,13 @@ type StatusFilter = 'todos' | 'ativos' | 'inativos';
  * "+ Adicionar nova" e o lápis de editar ainda levam pra telas placeholder
  * — o formulário de cadastro (6 cards + upload de fachada/galeria via
  * Bunny/Supabase Storage) é o próximo passo, combinado com a Amanda.
+ *
+ * 21/08/2026: layout mobile adicionado (Figma node 666:11707) — tabela vira
+ * uma lista de cards empilhados abaixo de `lg` (mesmo padrão de card usado
+ * no "Top 5 Lojas"/"Últimos Usuários" do Resumo). O "Filtrar" do Figma
+ * mobile (um sheet à parte) virou só o mesmo `<select>` de status em largura
+ * cheia — mesma função, sem inventar um componente de sheet novo pra isso
+ * só no mobile.
  */
 export default function AdminLojas() {
   const [rows, setRows] = useState<StoreRow[] | null>(null);
@@ -96,55 +103,74 @@ export default function AdminLojas() {
   };
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col gap-4 lg:gap-6">
       <div className="flex w-full items-center justify-between">
-        <h1 className="font-display text-[32px] font-bold tracking-[0.96px] text-main-dark-900">Lojas</h1>
+        <h1 className="font-display text-[26px] font-bold tracking-[0.78px] text-main-dark-900 lg:text-[32px] lg:tracking-[0.96px]">
+          Lojas
+        </h1>
+        {/* Desktop: botão "Adicionar nova" fica na mesma linha do título. */}
         <Link
           to="/admin/lojas/nova"
-          className="flex items-center gap-2 rounded-lg bg-main-red-600 px-4 py-2 font-body text-[15px] font-bold tracking-[0.75px] text-base-white"
+          className="hidden items-center gap-2 rounded-lg bg-main-red-600 px-4 py-2 font-body text-[15px] font-bold tracking-[0.75px] text-base-white lg:flex"
         >
           <PiPlus className="size-4" />
           Adicionar nova
         </Link>
+        <BellIcon className="size-6 shrink-0 text-gray-400 lg:hidden" />
       </div>
 
-      <div className="grid w-full grid-cols-3 gap-4">
+      {/* Mobile: botão "Adicionar nova" em largura cheia, abaixo do título
+          (node 666:11812). */}
+      <Link
+        to="/admin/lojas/nova"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-main-red-600 px-4 py-2 font-body text-[15px] font-bold tracking-[0.75px] text-base-white lg:hidden"
+      >
+        <PiPlus className="size-4" />
+        Adicionar nova
+      </Link>
+
+      <div className="grid w-full grid-cols-3 gap-3 lg:gap-4">
         <SummaryCard label="Total de lojas" value={totalCount} />
         <SummaryCard label="Ativas" value={activeCount} />
         <SummaryCard label="Inativas" value={inactiveCount} />
       </div>
 
-      <div className="flex w-full items-center gap-4">
-        <div className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3">
+      <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+        <div className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 lg:flex-1">
           <MagnifyingGlassIcon className="size-4 shrink-0 text-gray-500" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome"
+            placeholder="Buscar por nome ou Id da loja..."
             className="w-full border-0 bg-transparent font-body text-[14px] text-gray-900 placeholder:text-gray-500 focus:outline-none"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[14px] text-gray-800"
-        >
-          <option value="todos">Todos os status</option>
-          <option value="ativos">Ativos</option>
-          <option value="inativos">Inativos</option>
-        </select>
-        {/* O Filtrar do Figma (node 1160:10961) também tem um sub-menu de
-            Categoria — deixei só o filtro de status por enquanto pra não
-            atrasar essa entrega; entra junto com a tela de Categorias. */}
-        <button
-          type="button"
-          disabled
-          title="Filtro por categoria — em breve"
-          className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[14px] text-gray-400"
-        >
-          <FunnelIcon className="size-4" />
-          Categoria
-        </button>
+        {/* Mobile: o "Filtrar" do Figma (um sheet à parte) vira só esse
+            mesmo `<select>` de status em largura cheia — mesma função sem
+            precisar de um componente de sheet novo só pra essa tela. */}
+        <div className="flex w-full items-center gap-3 lg:w-auto">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+            className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[14px] text-gray-800 lg:flex-none"
+          >
+            <option value="todos">Todos os status</option>
+            <option value="ativos">Ativos</option>
+            <option value="inativos">Inativos</option>
+          </select>
+          {/* O Filtrar do Figma (node 1160:10961) também tem um sub-menu de
+              Categoria — deixei só o filtro de status por enquanto pra não
+              atrasar essa entrega; entra junto com a tela de Categorias. */}
+          <button
+            type="button"
+            disabled
+            title="Filtro por categoria — em breve"
+            className="hidden h-10 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[14px] text-gray-400 lg:flex"
+          >
+            <FunnelIcon className="size-4" />
+            Categoria
+          </button>
+        </div>
       </div>
 
       {error && <p className="font-body text-[13px] text-main-red-800">{error}</p>}
@@ -152,23 +178,64 @@ export default function AdminLojas() {
       {rows === null ? (
         <p className="font-body text-[14px] text-gray-600">Carregando lojas...</p>
       ) : (
-        <table className="w-full border-separate border-spacing-y-2">
-          <thead>
-            <tr className="text-left font-body text-[13px] tracking-[0.65px] text-gray-500">
-              <th className="px-3 font-normal">Código</th>
-              <th className="px-3 font-normal">Nome</th>
-              <th className="px-3 font-normal">Categoria</th>
-              <th className="px-3 font-normal">Status</th>
-              <th className="px-3 font-normal text-right">Editar</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Desktop: tabela. */}
+          <table className="hidden w-full border-separate border-spacing-y-2 lg:table">
+            <thead>
+              <tr className="text-left font-body text-[13px] tracking-[0.65px] text-gray-500">
+                <th className="px-3 font-normal">Código</th>
+                <th className="px-3 font-normal">Nome</th>
+                <th className="px-3 font-normal">Categoria</th>
+                <th className="px-3 font-normal">Status</th>
+                <th className="px-3 font-normal text-right">Editar</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((row) => (
+                <tr key={row.id} className="bg-base-white font-body text-[14px] text-gray-900">
+                  <td className="rounded-l-lg px-3 py-3">{row.code_badge ?? '—'}</td>
+                  <td className="px-3 py-3">{row.name}</td>
+                  <td className="px-3 py-3">{row.category_name ?? '—'}</td>
+                  <td className="px-3 py-3">
+                    <button
+                      type="button"
+                      disabled={togglingId === row.id}
+                      onClick={() => handleToggleStatus(row)}
+                      className={`rounded-full px-3 py-1 text-[13px] font-bold tracking-[0.65px] transition-opacity disabled:opacity-50 ${
+                        row.is_active ? 'bg-success-100 text-success-800' : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {row.is_active ? 'Ativo' : 'Inativo'}
+                    </button>
+                  </td>
+                  <td className="rounded-r-lg px-3 py-3 text-right">
+                    <Link
+                      to={`/admin/lojas/${row.id}`}
+                      className="inline-flex size-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-50"
+                    >
+                      <PencilIcon className="size-4" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Mobile: lista de cards empilhados (node 666:11891
+              "DASHBOARD-FICHA-RESUMIDA-MOBILE" reaproveitado pra loja). */}
+          <div className="flex w-full flex-col lg:hidden">
             {filteredRows.map((row) => (
-              <tr key={row.id} className="bg-base-white font-body text-[14px] text-gray-900">
-                <td className="rounded-l-lg px-3 py-3">{row.code_badge ?? '—'}</td>
-                <td className="px-3 py-3">{row.name}</td>
-                <td className="px-3 py-3">{row.category_name ?? '—'}</td>
-                <td className="px-3 py-3">
+              <div key={row.id} className="flex items-center gap-2 border-b border-gray-200 py-2">
+                <div className="flex flex-1 flex-col items-start gap-2">
+                  <p className="w-full font-display text-[22px] font-bold tracking-[0.66px] text-main-dark-900">{row.name}</p>
+                  <div className="flex w-full items-center gap-3">
+                    <p className="font-display text-[18px] font-semibold tracking-[0.54px] text-base-black">
+                      {row.code_badge ?? '—'}
+                    </p>
+                    <p className="flex-1 font-body text-[14px] tracking-[0.7px] text-gray-700">
+                      {row.category_name ?? '—'}
+                    </p>
+                  </div>
                   <button
                     type="button"
                     disabled={togglingId === row.id}
@@ -179,19 +246,18 @@ export default function AdminLojas() {
                   >
                     {row.is_active ? 'Ativo' : 'Inativo'}
                   </button>
-                </td>
-                <td className="rounded-r-lg px-3 py-3 text-right">
-                  <Link
-                    to={`/admin/lojas/${row.id}`}
-                    className="inline-flex size-8 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-50"
-                  >
-                    <PencilIcon className="size-4" />
-                  </Link>
-                </td>
-              </tr>
+                </div>
+                <Link
+                  to={`/admin/lojas/${row.id}`}
+                  className="flex w-[80px] shrink-0 flex-col items-center gap-1 text-main-dark-900"
+                >
+                  <PencilIcon className="size-6" />
+                  <span className="font-body text-[12px] text-main-dark-900">Editar</span>
+                </Link>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
 
       {rows !== null && filteredRows.length === 0 && (
@@ -203,9 +269,11 @@ export default function AdminLojas() {
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg bg-base-white px-5 py-4">
+    <div className="flex flex-col items-center gap-1 rounded-lg border border-gray-50 bg-base-white px-3 py-4 text-center shadow-sm lg:items-start lg:px-5 lg:text-left">
       <p className="font-body text-[13px] tracking-[0.65px] text-gray-500">{label}</p>
-      <p className="font-display text-[32px] font-bold tracking-[0.96px] text-main-dark-900">{value}</p>
+      <p className="font-display text-[24px] font-bold tracking-[0.72px] text-main-dark-900 lg:text-[32px] lg:tracking-[0.96px]">
+        {value}
+      </p>
     </div>
   );
 }
