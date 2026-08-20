@@ -28,6 +28,7 @@ import AdminStories from './pages/admin/AdminStories';
 import AdminCategorias from './pages/admin/AdminCategorias';
 import AdminUsuarios from './pages/admin/AdminUsuarios';
 import AdminConfiguracoes from './pages/admin/AdminConfiguracoes';
+import AdminRelatorios from './pages/admin/AdminRelatorios';
 import { isAdminHost } from './lib/constants';
 
 function AppShell() {
@@ -114,7 +115,7 @@ export default function App() {
             <Route path="stories" element={<AdminStories />} />
             <Route path="usuarios" element={<AdminUsuarios />} />
             <Route path="categorias" element={<AdminCategorias />} />
-            <Route path="relatorios" element={<ComingSoon title="Relatórios" />} />
+            <Route path="relatorios" element={<AdminRelatorios />} />
             <Route path="configuracoes" element={<AdminConfiguracoes />} />
           </Route>
         </Route>
