@@ -1,0 +1,192 @@
+import { useEffect, useState } from 'react';
+import { PiPlus, PiTrash } from 'react-icons/pi';
+import { BellIcon } from '../../components/icons';
+import CadastrarStoryModal from '../../components/admin/CadastrarStoryModal';
+import DeleteConfirmModal from '../../components/admin/DeleteConfirmModal';
+import StoryPreviewModal from '../../components/admin/StoryPreviewModal';
+import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
+
+interface StoryRow {
+  id: number;
+  title: string;
+  video_path: string | null;
+  created_at: string;
+  expires_at: string;
+}
+
+/**
+ * Vídeos/Stories (Figma: `Stories-full` node 627:9945 / `Stories-empty` node
+ * 1160:10874). O primeiro card da grade é sempre o tile "Upload Vídeo" (abre
+ * o `CadastrarStoryModal`); os demais são os stories já cadastrados, com
+ * hover revelando o ícone de excluir — igual ao padrão já confirmado no
+ * card publicado do Figma.
+ */
+export default function AdminStories() {
+  const { accessLevel } = useAuth();
+  const canUpload = accessLevel === 'master_admin' || accessLevel === 'editor_conteudo' || accessLevel === 'convidado';
+  const canDelete = accessLevel === 'master_admin';
+
+  const [stories, setStories] = useState<StoryRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showCadastroModal, setShowCadastroModal] = useState(false);
+  const [previewStory, setPreviewStory] = useState<StoryRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<StoryRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    fetchStories();
+  }, []);
+
+  function fetchStories() {
+    supabase
+      .from('stories')
+      .select('id, title, video_path, created_at, expires_at')
+      .order('created_at', { ascending: false })
+      .then(({ data, error: fetchError }) => {
+        if (fetchError) {
+          setError('Não foi possível carregar os stories.');
+          return;
+        }
+        setStories(data ?? []);
+      });
+  }
+
+  async function handleStorySaved({ title, videoId }: { title: string; videoId: string }) {
+    // O vídeo já subiu pra Bunny nesse ponto (o modal só chama isso depois
+    // do upload confirmado) — aqui só falta gravar a linha em `stories`.
+    const { error: insertError } = await supabase.from('stories').insert({ title, video_path: videoId });
+    if (insertError) {
+      setError('O vídeo foi enviado, mas não foi possível salvar o story. Tente de novo.');
+      return;
+    }
+    setShowCadastroModal(false);
+    fetchStories();
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error: deleteError } = await supabase.from('stories').delete().eq('id', deleteTarget.id);
+    setDeleting(false);
+    if (deleteError) {
+      setError('Não foi possível excluir esse story.');
+      setDeleteTarget(null);
+      return;
+    }
+    setDeleteTarget(null);
+    fetchStories();
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <div className="flex w-full items-center justify-between">
+        <h1 className="font-display text-[32px] font-bold tracking-[0.96px] text-main-dark-900">Stories</h1>
+        <BellIcon className="size-6 text-gray-400" />
+      </div>
+
+      {error && <p className="font-body text-[13px] text-main-red-800">{error}</p>}
+
+      {stories === null ? (
+        <p className="font-body text-[14px] text-gray-600">Carregando...</p>
+      ) : (
+        <div className="grid w-full grid-cols-4 gap-6">
+          <button
+            type="button"
+            disabled={!canUpload}
+            onClick={() => setShowCadastroModal(true)}
+            title={canUpload ? undefined : 'Sua conta não tem permissão para subir stories.'}
+            className="flex aspect-[269/342] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50 disabled:opacity-60"
+          >
+            <PiPlus className="size-[30px] text-gray-400" />
+            <div className="flex flex-col items-center gap-1">
+              <span className="font-body text-[15px] font-bold tracking-[0.75px] text-gray-700">Upload Vídeo</span>
+              <span className="font-body text-[12px] text-gray-400">Mov, Mp4, etc</span>
+            </div>
+          </button>
+
+          {stories.map((story) => (
+            <StoryCard
+              key={story.id}
+              story={story}
+              canDelete={canDelete}
+              onOpen={() => setPreviewStory(story)}
+              onDelete={() => setDeleteTarget(story)}
+            />
+          ))}
+        </div>
+      )}
+
+      {stories !== null && stories.length === 0 && (
+        <p className="font-body text-[14px] text-gray-500">Nenhum story publicado ainda.</p>
+      )}
+
+      {showCadastroModal && (
+        <CadastrarStoryModal onCancel={() => setShowCadastroModal(false)} onSaved={handleStorySaved} />
+      )}
+
+      {previewStory && (
+        <StoryPreviewModal title={previewStory.title} videoPath={previewStory.video_path} onClose={() => setPreviewStory(null)} />
+      )}
+
+      {deleteTarget && (
+        <DeleteConfirmModal
+          title="Excluir Storie?"
+          description="Essa ação é irreversível, você não poderá recuperar esse vídeo."
+          loading={deleting}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={handleDelete}
+        />
+      )}
+    </div>
+  );
+}
+
+function StoryCard({
+  story,
+  canDelete,
+  onOpen,
+  onDelete,
+}: {
+  story: StoryRow;
+  canDelete: boolean;
+  onOpen: () => void;
+  onDelete: () => void;
+}) {
+  const isExpired = new Date(story.expires_at).getTime() < Date.now();
+
+  return (
+    <div className="group relative flex aspect-[269/342] flex-col justify-end overflow-hidden rounded-2xl bg-main-dark-100">
+      <button type="button" onClick={onOpen} className="absolute inset-0" aria-label={`Abrir ${story.title}`} />
+
+      {canDelete && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="absolute right-3 top-3 z-10 flex size-8 items-center justify-center rounded-full bg-base-black/50 text-base-white opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <PiTrash className="size-4" />
+        </button>
+      )}
+
+      {isExpired && (
+        <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-base-black/50 px-2 py-0.5 font-body text-[11px] text-base-white">
+          Expirado
+        </span>
+      )}
+
+      <div className="pointer-events-none relative z-10 flex flex-col gap-1 bg-gradient-to-t from-base-black/70 to-transparent p-4 pt-10">
+        <p className="truncate font-body text-[14px] font-bold tracking-[0.7px] text-base-white">{story.title}</p>
+        <p className="font-body text-[11px] tracking-[0.55px] text-base-white/70">
+          {new Date(story.created_at).toLocaleDateString('pt-BR')}
+        </p>
+        <p className="font-body text-[11px] tracking-[0.55px] text-base-white/70">
+          Expira em: {new Date(story.expires_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+        </p>
+      </div>
+    </div>
+  );
+}
