@@ -3,6 +3,7 @@ import { PiMagnifyingGlass, PiUploadSimple, PiX } from 'react-icons/pi';
 import { XCircleIcon } from '../icons';
 import { supabase } from '../../lib/supabaseClient';
 import { generateSlug } from '../../lib/categorySlug';
+import { resolveCategoryPrefix } from '../../lib/codeBadge';
 import { uploadCategoryImage } from '../../lib/categoryImages';
 
 interface CategoriaModalProps {
@@ -141,9 +142,22 @@ export default function CategoriaModal({ category, canManage, onCancel, onSaved 
           return;
         }
       } else {
+        // 21/08/2026: o prefixo de 2 letras do "iD da loja" é decidido
+        // AGORA, uma vez só, e fica gravado pra sempre em `code_prefix` —
+        // por isso busca todos os prefixos já em uso antes de resolver um
+        // novo, garantindo que a categoria nova nunca repita o de outra já
+        // existente (ver doc de `resolveCategoryPrefix` em `codeBadge.ts`).
+        const { data: existing, error: fetchError } = await supabase.from('categories').select('code_prefix');
+        if (fetchError) {
+          setError('Não foi possível criar a categoria.');
+          return;
+        }
+        const usedPrefixes = (existing ?? []).map((c) => c.code_prefix).filter(Boolean) as string[];
+        const codePrefix = resolveCategoryPrefix(name, usedPrefixes);
+
         const { error: insertError } = await supabase
           .from('categories')
-          .insert({ name: name.trim(), slug: generateSlug(name), icon_url: iconUrl });
+          .insert({ name: name.trim(), slug: generateSlug(name), icon_url: iconUrl, code_prefix: codePrefix });
         if (insertError) {
           setError('Não foi possível criar a categoria.');
           return;

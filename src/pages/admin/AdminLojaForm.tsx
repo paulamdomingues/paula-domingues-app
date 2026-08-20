@@ -26,6 +26,9 @@ const MAX_TAGS = 5;
 interface CategoryOption {
   id: number;
   name: string;
+  /** Prefixo de 2 letras do "iD da loja" (ex: "AL"), fixado na criação da
+   * categoria — ver `resolveCategoryPrefix` em `lib/codeBadge.ts`. */
+  code_prefix: string;
 }
 
 interface StoreRow {
@@ -174,7 +177,7 @@ export default function AdminLojaForm() {
     let cancelled = false;
     supabase
       .from('categories')
-      .select('id, name')
+      .select('id, name, code_prefix')
       .order('name', { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return;
@@ -218,7 +221,7 @@ export default function AdminLojaForm() {
     const category = categories.find((c) => c.id === form.category_id);
     if (!category) return;
     let cancelled = false;
-    generateNextCodeBadge(category.name).then((code) => {
+    generateNextCodeBadge(category.code_prefix).then((code) => {
       if (!cancelled) setForm((prev) => ({ ...prev, code_badge: code }));
     });
     return () => {
@@ -229,6 +232,11 @@ export default function AdminLojaForm() {
 
   const categoryName = useMemo(
     () => categories.find((c) => c.id === form.category_id)?.name ?? '',
+    [categories, form.category_id]
+  );
+
+  const categoryPrefix = useMemo(
+    () => categories.find((c) => c.id === form.category_id)?.code_prefix ?? '',
     [categories, form.category_id]
   );
 
@@ -342,7 +350,7 @@ export default function AdminLojaForm() {
     setSaving(true);
     setSaveError(null);
     try {
-      const codeBadge = categoryName ? await generateNextCodeBadge(categoryName) : form.code_badge;
+      const codeBadge = categoryPrefix ? await generateNextCodeBadge(categoryPrefix) : form.code_badge;
       const { data, error } = await supabase
         .from('stores')
         .insert({
