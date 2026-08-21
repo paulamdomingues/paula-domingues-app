@@ -31,7 +31,11 @@ export async function uploadStoreImage(
   });
 
   if (error) {
-    throw new Error('Não foi possível enviar a imagem. Tente novamente.');
+    // Repassa a mensagem real do Supabase Storage (em vez de um texto
+    // genérico) — 22/08/2026, pra dar pra diagnosticar upload que falha sem
+    // acesso aos logs do servidor no momento (ex: RLS, tamanho do arquivo,
+    // rede).
+    throw new Error(`Não foi possível enviar a imagem: ${error.message}`);
   }
 
   const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);

@@ -19,7 +19,10 @@ export async function uploadCategoryImage(file: File, folderKey: string): Promis
   });
 
   if (error) {
-    throw new Error('Não foi possível enviar a capa. Tente novamente.');
+    // Repassa a mensagem real do Supabase Storage — 22/08/2026, mesmo
+    // ajuste feito em `storeImages.ts` (ajudou a achar a política de RLS
+    // que faltava pro upload funcionar).
+    throw new Error(`Não foi possível enviar a capa: ${error.message}`);
   }
 
   const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
