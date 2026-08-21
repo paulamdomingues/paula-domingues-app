@@ -7,7 +7,7 @@ import StoryPreviewModal from '../../components/admin/StoryPreviewModal';
 import ImagePlaceholder from '../../components/ImagePlaceholder';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { getBunnyThumbnailUrl } from '../../lib/bunnyStream';
+import { deleteBunnyVideo, getBunnyThumbnailUrl } from '../../lib/bunnyStream';
 
 interface StoryRow {
   id: number;
@@ -62,8 +62,41 @@ export default function AdminStories() {
           setError('Não foi possível carregar os stories.');
           return;
         }
-        setStories(data ?? []);
+        const rows = data ?? [];
+        setStories(rows);
+        cleanupExpiredStories(rows);
       });
+  }
+
+  /**
+   * Limpeza automática (21/08/2026, a pedido da Amanda): toda vez que o
+   * painel de Stories é aberto (ou recarregado depois de salvar/excluir),
+   * qualquer story já expirado (`expires_at` no passado) é removido de
+   * verdade — apaga o vídeo na Bunny e a linha no Supabase, em vez de só
+   * ficar marcado como "Expirado" pra sempre. Roda em segundo plano sem
+   * travar a tela; se apagar algo, recarrega a lista em seguida.
+   *
+   * Limitação conhecida: só roda quando alguém abre esse painel — não é um
+   * job agendado rodando sozinho no servidor a cada hora. Resolve o
+   * problema de acúmulo de armazenamento na prática, mas não é instantâneo
+   * no segundo exato em que um story completa 24h.
+   */
+  async function cleanupExpiredStories(rows: StoryRow[]) {
+    const now = Date.now();
+    const expired = rows.filter((row) => new Date(row.expires_at).getTime() < now);
+    if (expired.length === 0) return;
+
+    let anyDeleted = false;
+    for (const row of expired) {
+      if (row.video_path) {
+        const { error: bunnyError } = await deleteBunnyVideo(row.video_path);
+        if (bunnyError) continue; // tenta de novo na próxima vez que o painel abrir
+      }
+      const { error: deleteRowError } = await supabase.from('stories').delete().eq('id', row.id);
+      if (!deleteRowError) anyDeleted = true;
+    }
+
+    if (anyDeleted) fetchStories();
   }
 
   async function handleStorySaved({ title, videoId }: { title: string; videoId: string }) {
@@ -81,10 +114,23 @@ export default function AdminStories() {
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
+
+    // Apaga o vídeo na Bunny primeiro — se isso falhar, mantém a linha no
+    // Supabase (não desfaz um exclusão parcial) pra dar pra tentar de novo
+    // depois, em vez de perder a referência do videoId.
+    if (deleteTarget.video_path) {
+      const { error: bunnyError } = await deleteBunnyVideo(deleteTarget.video_path);
+      if (bunnyError) {
+        setDeleting(false);
+        setError(`Não foi possível excluir o vídeo na Bunny: ${bunnyError}`);
+        return;
+      }
+    }
+
     const { error: deleteError } = await supabase.from('stories').delete().eq('id', deleteTarget.id);
     setDeleting(false);
     if (deleteError) {
-      setError('Não foi possível excluir esse story.');
+      setError('O vídeo já foi excluído da Bunny, mas não foi possível remover o story do banco. Tente excluir de novo.');
       setDeleteTarget(null);
       return;
     }

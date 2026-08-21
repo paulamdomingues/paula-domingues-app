@@ -1,3 +1,5 @@
+import { supabase } from './supabaseClient';
+
 /**
  * Bunny Stream (vídeos dos Stories) — diferente do `bunnyStorage.ts` (que é
  * pra Pull Zone de imagem/CDN direta). O Library ID NÃO é segredo (ele
@@ -37,6 +39,33 @@ const BUNNY_STREAM_CDN_HOSTNAME = 'vz-f3b8608e-b55.b-cdn.net';
 export function getBunnyThumbnailUrl(videoId?: string | null): string | null {
   if (!videoId) return null;
   return `https://${BUNNY_STREAM_CDN_HOSTNAME}/${videoId}/thumbnail.jpg`;
+}
+
+/**
+ * BUG corrigido em 21/08/2026: excluir um story no painel admin (ou ele
+ * expirar depois de 24h) só apagava/escondia a linha do Supabase — o vídeo
+ * continuava pra sempre na Bunny Stream, acumulando espaço/custo mesmo sem
+ * nunca mais aparecer em lugar nenhum do app. Esta função chama a Edge
+ * Function `bunny-video-delete` (mesmo padrão de permissão/CORS do
+ * `bunny-video-upload`) pra apagar o vídeo de verdade na Bunny. Usada tanto
+ * na exclusão manual quanto na limpeza automática de expirados, ambas em
+ * `AdminStories.tsx`.
+ */
+export async function deleteBunnyVideo(videoId: string): Promise<{ error: string | null }> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session?.access_token) {
+    return { error: 'Sessão expirada — faça login de novo.' };
+  }
+
+  const { data, error } = await supabase.functions.invoke<{ success?: boolean; error?: string }>(
+    'bunny-video-delete',
+    { body: { videoId } }
+  );
+
+  if (error || !data?.success) {
+    return { error: data?.error || error?.message || 'Não foi possível excluir o vídeo na Bunny.' };
+  }
+  return { error: null };
 }
 
 /**
