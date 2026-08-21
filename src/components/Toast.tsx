@@ -11,8 +11,12 @@ interface ToastProps {
    * clica numa seção do menu que o nível de acesso dela não alcança — cor
    * mais forte que 'removed' de propósito, pra ficar claro que é uma
    * restrição de permissão, não um probleminha reversível.
+   * 'info' (gray-800, 21/08/2026): neutro, sem conotação de erro/sucesso —
+   * usado no app cliente quando não há nada de errado, só nada pra mostrar
+   * ainda (ex: tocar no mini-player de stories sem nenhum vídeo ativo no
+   * momento, ver `HighlightBanner`/`Home.tsx`).
    */
-  variant?: 'added' | 'removed' | 'denied';
+  variant?: 'added' | 'removed' | 'denied' | 'info';
   /** Chamado depois que a animação de saída termina, pra quem estiver controlando o estado limpar `message`. */
   onDismiss: () => void;
   /** Tempo em ms que o toast fica visível antes de começar a desaparecer. */
@@ -21,10 +25,11 @@ interface ToastProps {
 
 const EXIT_TRANSITION_MS = 300;
 
-const VARIANT_CLASSES: Record<'added' | 'removed' | 'denied', string> = {
+const VARIANT_CLASSES: Record<'added' | 'removed' | 'denied' | 'info', string> = {
   removed: 'bg-error-400 text-error-900',
   added: 'bg-success-200 text-success-900',
   denied: 'bg-error-500 text-base-white',
+  info: 'bg-gray-800 text-base-white',
 };
 
 /**

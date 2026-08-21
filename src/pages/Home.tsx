@@ -7,10 +7,14 @@ import WhatsappCommunityButton from '../components/WhatsappCommunityButton';
 import CategoryGrid from '../components/CategoryGrid';
 import StoreCard from '../components/StoreCard';
 import StoryPlayerOverlay from '../components/StoryPlayerOverlay';
+import Toast from '../components/Toast';
 import { listActiveStories, listCategories, listRecentStores } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
 import { WHATSAPP_GROUP_URL } from '../lib/constants';
 import type { Category, Story, StoreWithCategory } from '../types';
+
+/** Mensagem do toast de "sem stories" — ver `handleOpenStoryPlayer` abaixo. */
+const NO_STORIES_MESSAGE = 'Não há vídeos disponíveis no momento.';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -19,6 +23,14 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentStores, setRecentStores] = useState<StoreWithCategory[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
+  // Toast de "sem stories" (21/08/2026, a pedido da Amanda): o mini-player
+  // continua sempre visível na Home (ver `HighlightBanner` abaixo) mesmo sem
+  // nenhum story ativo no momento — em vez de simplesmente não responder ao
+  // toque (o que parece um botão travado), avisa o motivo. `id` incrementado
+  // a cada clique reinicia a animação do `Toast` em cliques repetidos
+  // seguidos, mesmo com a mesma mensagem (mesmo padrão de
+  // `AdminMobileNav.tsx`/`AdminSidebar.tsx` pro toast de permissão negada).
+  const [noStoriesToast, setNoStoriesToast] = useState<{ id: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,6 +53,14 @@ export default function Home() {
     navigate(`/categoria/${category.id}`);
   };
 
+  const handleOpenStoryPlayer = () => {
+    if (stories.length === 0) {
+      setNoStoriesToast({ id: Date.now() });
+      return;
+    }
+    setStoryPlayerOpen(true);
+  };
+
   return (
     <div className="flex w-full flex-col items-center gap-8 px-6 py-8 lg:gap-10 lg:px-[156px] lg:py-10">
       <div className="flex w-full flex-col gap-8 lg:gap-10">
@@ -55,7 +75,7 @@ export default function Home() {
           <div className="lg:pt-10">
             {/* No desktop, o mini-player + texto mede 640px (mesma largura do botão do WhatsApp abaixo). */}
             <div className="lg:mx-auto lg:max-w-[640px]">
-              <HighlightBanner onClick={() => setStoryPlayerOpen(true)} />
+              <HighlightBanner onClick={handleOpenStoryPlayer} />
             </div>
           </div>
         </div>
@@ -95,6 +115,13 @@ export default function Home() {
       {storyPlayerOpen && (
         <StoryPlayerOverlay stories={stories} onClose={() => setStoryPlayerOpen(false)} />
       )}
+
+      <Toast
+        key={noStoriesToast?.id ?? 'none'}
+        message={noStoriesToast ? NO_STORIES_MESSAGE : null}
+        variant="info"
+        onDismiss={() => setNoStoriesToast(null)}
+      />
     </div>
   );
 }
