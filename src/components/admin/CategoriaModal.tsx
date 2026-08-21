@@ -187,7 +187,7 @@ export default function CategoriaModal({ category, canManage, onCancel, onSaved 
               <p className="font-body text-[13px] tracking-[0.65px] text-gray-500">
                 envie um arquivo na proporção 1:1 (quadrada)
               </p>
-              <input ref={capaInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleCapaChange} />
+              <input ref={capaInputRef} type="file" accept="image/*" className="hidden" onChange={handleCapaChange} />
               <button
                 type="button"
                 disabled={uploadingCapa || !canManage}

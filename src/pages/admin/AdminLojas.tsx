@@ -9,7 +9,13 @@ interface StoreRow {
   name: string;
   code_badge: string | null;
   is_active: boolean;
+  category_id: number | null;
   category_name: string | null;
+}
+
+interface CategoryOption {
+  id: number;
+  name: string;
 }
 
 type StatusFilter = 'todos' | 'ativos' | 'inativos';
@@ -35,9 +41,11 @@ type StatusFilter = 'todos' | 'ativos' | 'inativos';
  */
 export default function AdminLojas() {
   const [rows, setRows] = useState<StoreRow[] | null>(null);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('todos');
+  const [categoryFilter, setCategoryFilter] = useState<number | 'todos'>('todos');
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -45,7 +53,7 @@ export default function AdminLojas() {
 
     supabase
       .from('stores')
-      .select('id, name, code_badge, is_active, categories(name)')
+      .select('id, name, code_badge, is_active, category_id, categories(name)')
       .order('created_at', { ascending: false })
       .then(({ data, error: fetchError }) => {
         if (cancelled) return;
@@ -59,6 +67,7 @@ export default function AdminLojas() {
             name: row.name,
             code_badge: row.code_badge,
             is_active: row.is_active,
+            category_id: row.category_id,
             // O client do Supabase tipa relações 1:N como array por padrão;
             // aqui é sempre 0 ou 1 item (fk simples category_id → categories.id).
             category_name: Array.isArray(row.categories) ? (row.categories[0]?.name ?? null) : null,
@@ -66,6 +75,25 @@ export default function AdminLojas() {
         );
       });
 
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 22/08/2026, a pedido da Amanda: filtro de Categoria (o "Filtrar" do
+  // Figma tinha um sub-menu de Categoria que ficou pra depois — entra agora
+  // junto, como um segundo `<select>` ao lado do de Status, mesmo padrão
+  // (sem inventar um componente de sheet novo só pra essa tela).
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('categories')
+      .select('id, name')
+      .order('name', { ascending: true })
+      .then(({ data, error: fetchError }) => {
+        if (cancelled || fetchError || !data) return;
+        setCategories(data);
+      });
     return () => {
       cancelled = true;
     };
@@ -79,9 +107,10 @@ export default function AdminLojas() {
         statusFilter === 'todos' ||
         (statusFilter === 'ativos' && row.is_active) ||
         (statusFilter === 'inativos' && !row.is_active);
-      return matchesSearch && matchesStatus;
+      const matchesCategory = categoryFilter === 'todos' || row.category_id === categoryFilter;
+      return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [rows, search, statusFilter]);
+  }, [rows, search, statusFilter, categoryFilter]);
 
   const totalCount = rows?.length ?? 0;
   const activeCount = rows?.filter((r) => r.is_active).length ?? 0;
@@ -159,18 +188,25 @@ export default function AdminLojas() {
             <option value="ativos">Ativos</option>
             <option value="inativos">Inativos</option>
           </select>
-          {/* O Filtrar do Figma (node 1160:10961) também tem um sub-menu de
-              Categoria — deixei só o filtro de status por enquanto pra não
-              atrasar essa entrega; entra junto com a tela de Categorias. */}
-          <button
-            type="button"
-            disabled
-            title="Filtro por categoria — em breve"
-            className="hidden h-10 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[14px] text-gray-400 lg:flex"
-          >
-            <FunnelIcon className="size-4" />
-            Categoria
-          </button>
+          {/* Filtro de Categoria (22/08/2026) — o "Filtrar" do Figma (node
+              1160:10961) tinha um sub-menu de Categoria que ficou pra depois
+              da primeira entrega; agora funciona igual ao de Status: mesmo
+              `<select>`, sem inventar um componente de sheet novo. */}
+          <div className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 lg:flex-none">
+            <FunnelIcon className="size-4 shrink-0 text-gray-500" />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value === 'todos' ? 'todos' : Number(e.target.value))}
+              className="w-full border-0 bg-transparent font-body text-[14px] text-gray-800 focus:outline-none lg:w-auto"
+            >
+              <option value="todos">Todas as categorias</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

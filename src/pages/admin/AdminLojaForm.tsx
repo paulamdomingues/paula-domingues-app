@@ -933,7 +933,7 @@ function SingleImageUpload({
       onClick={() => inputRef.current?.click()}
       className="relative flex size-[233px] flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border border-dashed border-gray-200 bg-gray-50 disabled:opacity-60"
     >
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleChange} />
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleChange} />
       {image ? (
         <img src={image} alt="Fachada" className="size-full object-cover" />
       ) : (
@@ -980,7 +980,7 @@ function GalleryUpload({
 
   return (
     <div className="flex flex-wrap gap-2">
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleChange} />
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleChange} />
       {slots.map((image, index) => {
         const slotKey = `galeria-${index}`;
         const isUploading = uploadingSlot === slotKey;
