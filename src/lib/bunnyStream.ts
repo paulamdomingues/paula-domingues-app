@@ -52,7 +52,7 @@ export function ensurePlayerJsLoaded(): Promise<void> {
   if (window.playerjs) return Promise.resolve();
   if (playerJsLoadPromise) return playerJsLoadPromise;
 
-  playerJsLoadPromise = new Promise((resolve, reject) => {
+  playerJsLoadPromise = new Promise<void>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>(
       `script[src="${PLAYER_JS_SCRIPT_URL}"]`
     );
