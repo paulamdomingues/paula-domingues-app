@@ -1,12 +1,9 @@
 import { supabase } from './supabaseClient';
-import type { Category, StoreDetails, StoreWithCategory } from '../types';
+import type { Category, Story, StoreDetails, StoreWithCategory } from '../types';
 
 /**
- * Camada de leitura de catálogo (categorias + lojas) pro app CLIENTE, direto
- * do Supabase. Substitui `src/data/mockData.ts` pra tudo que não seja
- * `stories` (o player de stories continua mock por enquanto — ver
- * comentário em `StoryPlayerOverlay.tsx`/`types/index.ts` sobre o formato
- * de vídeo do Bunny Stream ainda não estar pronto pra tocar de verdade).
+ * Camada de leitura de catálogo (categorias + lojas + stories) pro app
+ * CLIENTE, direto do Supabase. Substitui `src/data/mockData.ts`.
  *
  * Só devolve lojas com `is_active = true` — é a mesma flag que o painel
  * admin usa pra "ocultar" uma loja do catálogo sem apagar o cadastro.
@@ -131,6 +128,22 @@ function mapCategory(row: CategoryRow): Category {
   };
 }
 
+interface StoryRow {
+  id: number;
+  video_path: string | null;
+}
+
+function mapStory(row: StoryRow): Story {
+  return {
+    id: String(row.id),
+    videoUrl: row.video_path,
+    // Sem coluna própria no Supabase ainda — ver comentário em `Story`
+    // (`src/types/index.ts`).
+    linkUrl: null,
+    linkLabel: null,
+  };
+}
+
 export async function listCategories(): Promise<Category[]> {
   const { data, error } = await supabase.from('categories').select('id, name, icon_url').order('name');
   if (error) throw error;
@@ -171,6 +184,23 @@ export async function getStoreById(id: string): Promise<StoreWithCategory | null
   if (error) throw error;
   if (!data) return null;
   return mapStore(data as unknown as StoreRow);
+}
+
+/**
+ * Stories ativos (ainda dentro da janela de 24h, `expires_at`) pro player de
+ * tela cheia do app cliente (`StoryPlayerOverlay`). Ordena do mais antigo
+ * pro mais novo — a ordem "cronológica" de visualização faz mais sentido
+ * pro usuário final do que a ordem "mais recente primeiro" usada na lista
+ * de gerenciamento do admin (`AdminStories.tsx`).
+ */
+export async function listActiveStories(): Promise<Story[]> {
+  const { data, error } = await supabase
+    .from('stories')
+    .select('id, video_path')
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return ((data ?? []) as StoryRow[]).map(mapStory);
 }
 
 /**

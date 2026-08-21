@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PiVideoCameraSlash } from 'react-icons/pi';
 import { XCircleIcon } from './icons';
-import { resolveBunnyVideoUrl } from '../lib/bunnyStorage';
+import { ensurePlayerJsLoaded, getBunnyEmbedUrl } from '../lib/bunnyStream';
 import type { Story } from '../types';
 
 interface StoryPlayerOverlayProps {
@@ -15,6 +15,15 @@ interface StoryPlayerOverlayProps {
 const FALLBACK_DURATION_MS = 6000;
 /** Intervalo de atualização da barrinha de progresso quando não há vídeo pra guiar o tempo. */
 const PROGRESS_TICK_MS = 100;
+/**
+ * Failsafe pros stories com vídeo real: se o Player.js da Bunny não
+ * carregar (ex: rede bloqueando o script, extensão de ad-block) ou o evento
+ * `ready`/`timeupdate` nunca disparar, força o avanço depois desse tempo em
+ * vez de travar o overlay parado num vídeo que nunca reporta progresso.
+ * Bem mais longo que `FALLBACK_DURATION_MS` porque aqui existe vídeo de
+ * verdade tocando por trás — só existe pra não travar de vez.
+ */
+const PLAYER_READY_FAILSAFE_MS = 45000;
 /**
  * CTA "Ver essa loja": DESATIVADO por enquanto a pedido da Amanda
  * (19/08/2026) — ela não quer esse botão aparecendo de jeito nenhum por
@@ -30,8 +39,12 @@ const STORY_CTA_ENABLED = false;
  * - Vídeo central, formato vertical estrito 9:16, sem título/descrição.
  * - Barrinhas no topo indicam quantos stories existem e a posição atual.
  * - Toque/clique na metade direita avança, na metade esquerda volta.
- * - Os vídeos vêm do painel admin (mesmo padrão de URL das imagens: o
- *   Supabase guarda só o caminho do arquivo, resolvido pra CDN do Bunny).
+ * - Os vídeos vêm do painel admin, cadastrados na Bunny STREAM (não a
+ *   Storage/CDN comum usada pras imagens) — `videoUrl` guarda o videoId, e
+ *   o player exibe um `<iframe>` de embed via `getBunnyEmbedUrl`
+ *   (`src/lib/bunnyStream.ts`), igual o preview do admin já fazia. BUG
+ *   corrigido em 21/08/2026: antes usava `resolveBunnyVideoUrl` (Storage),
+ *   que montava uma URL que não existe — todo vídeo real dava 404 silencioso.
  *
  * Decisões de UX tomadas aqui (documentando por não estarem 100% explícitas
  * no texto da cliente):
@@ -52,17 +65,22 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
     Math.min(Math.max(initialIndex, 0), Math.max(stories.length - 1, 0))
   );
   const [progress, setProgress] = useState(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const total = stories.length;
   const currentStory = stories[currentIndex];
-  const resolvedVideoUrl = resolveBunnyVideoUrl(currentStory?.videoUrl);
+  const embedUrl = getBunnyEmbedUrl(currentStory?.videoUrl);
   // Variável local só pra o TS conseguir estreitar `string | null | undefined`
   // pra `string` de forma confiável dentro do JSX abaixo (o encadeamento de
   // `&&` direto com `currentStory.linkUrl` não estava sendo aceito pelo
   // modo `strict` do tsconfig real do projeto — só apareceu no build da
   // Vercel, não no meu confere manual, 19/08/2026).
-  const currentLinkUrl = currentStory.linkUrl;
+  // `?.` é necessário aqui (21/08/2026): com `stories` vindo do Supabase de
+  // verdade (em vez do mock, que sempre tinha 5 itens fixos), é totalmente
+  // possível abrir o player com 0 stories ativos (todos expiraram) — nesse
+  // caso `currentStory` é `undefined` e o acesso direto quebrava o player
+  // antes mesmo do `if (total === 0) return null` mais abaixo ser avaliado.
+  const currentLinkUrl = currentStory?.linkUrl;
 
   const goNext = useCallback(() => {
     setCurrentIndex((prev) => {
@@ -104,7 +122,7 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
   useEffect(() => {
     setProgress(0);
 
-    if (resolvedVideoUrl) return undefined;
+    if (embedUrl) return undefined;
 
     const stepMs = PROGRESS_TICK_MS;
     const steps = FALLBACK_DURATION_MS / stepMs;
@@ -120,13 +138,48 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
     }, stepMs);
 
     return () => window.clearInterval(interval);
-  }, [currentIndex, resolvedVideoUrl, goNext]);
+  }, [currentIndex, embedUrl, goNext]);
 
-  const handleVideoTimeUpdate = () => {
-    const video = videoRef.current;
-    if (!video || !video.duration) return;
-    setProgress(Math.min((video.currentTime / video.duration) * 100, 100));
-  };
+  // Quando há vídeo real (embed da Bunny Stream via iframe), a barrinha de
+  // progresso e o avanço automático dependem dos eventos do Player.js
+  // (ver `ensurePlayerJsLoaded` em `lib/bunnyStream.ts`) — o `<iframe>` não
+  // expõe os eventos nativos de `<video>` (`onTimeUpdate`/`onEnded`) que o
+  // player usava antes. Um failsafe garante que o story avança mesmo se o
+  // script da Bunny falhar em carregar ou o vídeo nunca reportar progresso.
+  useEffect(() => {
+    if (!embedUrl) return undefined;
+
+    let cancelled = false;
+    let sawPlayback = false;
+    const failsafe = window.setTimeout(() => {
+      if (!sawPlayback) goNext();
+    }, PLAYER_READY_FAILSAFE_MS);
+
+    ensurePlayerJsLoaded()
+      .then(() => {
+        if (cancelled || !iframeRef.current || !window.playerjs) return;
+        const player = new window.playerjs.Player(iframeRef.current);
+        player.on('timeupdate', (data) => {
+          sawPlayback = true;
+          if (!data.duration) return;
+          setProgress(Math.min((data.seconds / data.duration) * 100, 100));
+        });
+        player.on('ended', () => {
+          sawPlayback = true;
+          goNext();
+        });
+      })
+      .catch(() => {
+        // Sem Player.js, o failsafe acima cuida de não travar o overlay —
+        // o vídeo ainda toca normal dentro do iframe (autoplay=true na
+        // URL de embed), só a barrinha de progresso fica parada em 0%.
+      });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(failsafe);
+    };
+  }, [currentIndex, embedUrl, goNext]);
 
   if (total === 0) return null;
 
@@ -142,17 +195,15 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
       <div className="pointer-events-none absolute inset-0 bg-base-black/60 lg:bg-base-black/80" />
 
       <div className="relative flex aspect-[9/16] h-full max-h-screen w-full items-stretch justify-center overflow-hidden bg-base-black lg:max-h-[1024px] lg:w-[576px] lg:min-w-[576px]">
-        {resolvedVideoUrl ? (
-          <video
-            ref={videoRef}
+        {embedUrl ? (
+          <iframe
+            ref={iframeRef}
             key={currentStory.id}
-            src={resolvedVideoUrl}
-            className="size-full object-cover"
-            autoPlay
-            playsInline
-            muted
-            onTimeUpdate={handleVideoTimeUpdate}
-            onEnded={goNext}
+            src={embedUrl}
+            title="Vídeo do story"
+            className="size-full border-0 object-cover"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen
           />
         ) : (
           <div

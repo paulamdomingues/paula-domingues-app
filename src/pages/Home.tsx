@@ -7,11 +7,10 @@ import WhatsappCommunityButton from '../components/WhatsappCommunityButton';
 import CategoryGrid from '../components/CategoryGrid';
 import StoreCard from '../components/StoreCard';
 import StoryPlayerOverlay from '../components/StoryPlayerOverlay';
-import { stories } from '../data/mockData';
-import { listCategories, listRecentStores } from '../lib/catalog';
+import { listActiveStories, listCategories, listRecentStores } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
 import { WHATSAPP_GROUP_URL } from '../lib/constants';
-import type { Category, StoreWithCategory } from '../types';
+import type { Category, Story, StoreWithCategory } from '../types';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -19,14 +18,16 @@ export default function Home() {
   const [storyPlayerOpen, setStoryPlayerOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentStores, setRecentStores] = useState<StoreWithCategory[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([listCategories(), listRecentStores(8)])
-      .then(([categoriesData, recentStoresData]) => {
+    Promise.all([listCategories(), listRecentStores(8), listActiveStories()])
+      .then(([categoriesData, recentStoresData, storiesData]) => {
         if (cancelled) return;
         setCategories(categoriesData);
         setRecentStores(recentStoresData);
+        setStories(storiesData);
       })
       .catch(() => {
         // Falha silenciosa: as seções ficam vazias em vez de quebrar a Home.

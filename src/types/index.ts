@@ -69,15 +69,25 @@ export interface UserProfile {
 
 /**
  * Item exibido no player de stories (overlay de tela cheia aberto a partir
- * do mini-player em `HighlightBanner`, ver `StoryPlayerOverlay`). Alimentado
- * pela versão do painel administrativo do app — igual às imagens de
- * loja/categoria, o Supabase deve guardar só o caminho/nome do arquivo de
- * vídeo (resolvido pra URL do Bunny CDN via `resolveBunnyVideoUrl` em
- * `src/lib/bunnyStorage.ts`), nunca a URL inteira.
+ * do mini-player em `HighlightBanner`, ver `StoryPlayerOverlay`). Vem de
+ * `listActiveStories` (`src/lib/catalog.ts`), que busca a tabela `stories`
+ * do Supabase filtrando pelas que ainda não expiraram (`expires_at`, janela
+ * de 24h a partir do cadastro).
+ *
+ * `linkUrl`/`linkLabel` não têm coluna própria no Supabase ainda — ficam
+ * sempre `null` vindos do banco (feature planejada, não implementada; e o
+ * CTA que os usaria está desativado por enquanto, ver `STORY_CTA_ENABLED`
+ * em `StoryPlayerOverlay.tsx`).
  */
 export interface Story {
   id: string;
-  /** Caminho/nome do arquivo de vídeo salvo no Supabase, OU já uma URL completa. `null`/`undefined` mostra um estado neutro em vez de player quebrado. */
+  /**
+   * `videoId` (guid) da Bunny STREAM, salvo em `stories.video_path` — NÃO é
+   * um caminho de arquivo na Bunny Storage/CDN (diferente das imagens de
+   * loja/categoria). Resolvido pra URL de embed via `getBunnyEmbedUrl`
+   * (`src/lib/bunnyStream.ts`). `null`/`undefined` mostra um estado neutro
+   * em vez de player quebrado.
+   */
   videoUrl?: string | null;
   /**
    * Link opcional associado à mídia (ex: "ver essa loja"/oferta). Quando

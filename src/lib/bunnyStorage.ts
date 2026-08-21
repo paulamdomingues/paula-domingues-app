@@ -45,14 +45,3 @@ export function resolveBunnyImageUrls(paths?: (string | null)[] | null): string[
     .map((path) => resolveBunnyImageUrl(path))
     .filter((url): url is string => Boolean(url));
 }
-
-/**
- * Mesma resolução de `resolveBunnyImageUrl`, mas pros vídeos do player de
- * stories (`Story.videoUrl`, cadastrado pelo painel admin). Vídeo é só uma
- * extensão diferente de arquivo no mesmo bucket/CDN — a lógica de resolução
- * é idêntica, mas mantida como função própria pra deixar a intenção clara
- * nos componentes que exibem vídeo.
- */
-export function resolveBunnyVideoUrl(path?: string | null): string | null {
-  return resolveBunnyImageUrl(path);
-}
