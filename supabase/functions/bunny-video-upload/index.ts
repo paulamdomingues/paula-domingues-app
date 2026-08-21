@@ -29,14 +29,36 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 // mostra esse botão pra esse nível, isso só fecha a mesma regra no servidor.
 const ALLOWED_ACCESS_LEVELS = ['master_admin', 'convidado'];
 
+/**
+ * BUG corrigido em 21/08/2026: essa função nunca respondia à requisição
+ * `OPTIONS` de preflight que o navegador manda antes de qualquer chamada
+ * com o header `Authorization` (é o caso de toda chamada via
+ * `supabase.functions.invoke`) — caía no `if (req.method !== 'POST')` e
+ * devolvia 405 sem nenhum header de CORS. O navegador bloqueava a
+ * requisição de verdade antes até de tentar mandar, e o
+ * `supabase-js` reportava isso como "Failed to send a request to the Edge
+ * Function" (confirmado nos logs: `OPTIONS | 405 | .../bunny-video-upload`
+ * — ou seja, o vídeo nunca chegava a ser enviado). Mesma causa-raiz do
+ * `invite-team-member`, corrigida lá também.
+ */
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Método não permitido.' }, 405);
   }

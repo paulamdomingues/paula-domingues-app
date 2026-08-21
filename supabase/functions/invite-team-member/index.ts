@@ -24,14 +24,35 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 // banco pra 'editor'/'suporte' (ver `AccessLevel` em `src/context/AuthContext.tsx`).
 const ACCESS_LEVELS = ['master_admin', 'editor', 'suporte', 'convidado'];
 
+/**
+ * BUG corrigido em 21/08/2026: mesma causa-raiz do `bunny-video-upload`
+ * (corrigido primeiro, lá tem o relato completo) — essa função nunca
+ * respondia ao preflight `OPTIONS` que o navegador manda antes de qualquer
+ * chamada via `supabase.functions.invoke` (por causa do header
+ * `Authorization`), caindo no `if (req.method !== 'POST')` e devolvendo 405
+ * sem headers de CORS. Ainda não tinha travado ninguém porque, até onde sei,
+ * ninguém testou convidar um membro da equipe pelo navegador desde a troca
+ * dos níveis de acesso — mas ia dar o mesmo "Failed to send a request to the
+ * Edge Function" na primeira tentativa.
+ */
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Método não permitido.' }, 405);
   }
