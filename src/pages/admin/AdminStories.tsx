@@ -4,8 +4,10 @@ import { BellIcon } from '../../components/icons';
 import CadastrarStoryModal from '../../components/admin/CadastrarStoryModal';
 import DeleteConfirmModal from '../../components/admin/DeleteConfirmModal';
 import StoryPreviewModal from '../../components/admin/StoryPreviewModal';
+import ImagePlaceholder from '../../components/ImagePlaceholder';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
+import { getBunnyThumbnailUrl } from '../../lib/bunnyStream';
 
 interface StoryRow {
   id: number;
@@ -213,16 +215,24 @@ function StoryCard({
   variant?: 'desktop' | 'mobile';
 }) {
   const isExpired = new Date(story.expires_at).getTime() < Date.now();
+  // Thumbnail (21/08/2026, a pedido da Amanda): a Bunny Stream já gera uma
+  // miniatura sozinha pra todo vídeo — ver `getBunnyThumbnailUrl`.
+  const thumbnailUrl = getBunnyThumbnailUrl(story.video_path);
 
   if (variant === 'mobile') {
     return (
       <div className="flex w-[269px] shrink-0 flex-col overflow-hidden rounded-lg bg-base-white">
         <div className="relative h-[232px] w-full shrink-0">
+          <ImagePlaceholder
+            src={thumbnailUrl}
+            alt={story.title}
+            className="absolute inset-0 size-full rounded-tl-lg rounded-tr-lg"
+          />
           <button
             type="button"
             onClick={onOpen}
             aria-label={`Abrir ${story.title}`}
-            className="flex size-full items-center justify-center rounded-tl-lg rounded-tr-lg bg-main-dark-100"
+            className="absolute inset-0 flex size-full items-center justify-center"
           >
             {isExpired && (
               <span className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-base-black/50 px-2 py-0.5 font-body text-[11px] text-base-white">
@@ -263,6 +273,7 @@ function StoryCard({
 
   return (
     <div className="group relative flex aspect-[269/342] flex-col justify-end overflow-hidden rounded-2xl bg-main-dark-100">
+      <ImagePlaceholder src={thumbnailUrl} alt={story.title} className="absolute inset-0 size-full rounded-2xl" />
       <button type="button" onClick={onOpen} className="absolute inset-0" aria-label={`Abrir ${story.title}`} />
 
       {canDelete && (

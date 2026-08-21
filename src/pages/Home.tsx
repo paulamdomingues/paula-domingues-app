@@ -10,6 +10,7 @@ import StoryPlayerOverlay from '../components/StoryPlayerOverlay';
 import Toast from '../components/Toast';
 import { listActiveStories, listCategories, listRecentStores } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
+import { getBunnyThumbnailUrl } from '../lib/bunnyStream';
 import { WHATSAPP_GROUP_URL } from '../lib/constants';
 import type { Category, Story, StoreWithCategory } from '../types';
 
@@ -75,7 +76,10 @@ export default function Home() {
           <div className="lg:pt-10">
             {/* No desktop, o mini-player + texto mede 640px (mesma largura do botão do WhatsApp abaixo). */}
             <div className="lg:mx-auto lg:max-w-[640px]">
-              <HighlightBanner onClick={handleOpenStoryPlayer} />
+              <HighlightBanner
+                onClick={handleOpenStoryPlayer}
+                thumbnailUrl={getBunnyThumbnailUrl(stories[0]?.videoUrl)}
+              />
             </div>
           </div>
         </div>

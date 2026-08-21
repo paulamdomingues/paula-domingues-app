@@ -5,9 +5,16 @@ import Logo from './Logo';
 interface HighlightBannerProps {
   /** Abre o player de stories (overlay em tela cheia, ver `StoryPlayerOverlay` em `Home.tsx`). */
   onClick?: () => void;
+  /**
+   * Thumbnail do primeiro story ativo (21/08/2026, a pedido da Amanda) — vem
+   * já pronta de `getBunnyThumbnailUrl` em `Home.tsx`. `null`/`undefined`
+   * (sem stories ativos, ou vídeo ainda sem thumbnail gerada pela Bunny)
+   * mantém o placeholder neutro de sempre.
+   */
+  thumbnailUrl?: string | null;
 }
 
-export default function HighlightBanner({ onClick }: HighlightBannerProps) {
+export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBannerProps) {
   return (
     <div className="flex w-full items-center gap-6 lg:gap-9">
       <button
@@ -16,7 +23,7 @@ export default function HighlightBanner({ onClick }: HighlightBannerProps) {
         className="relative flex h-[178px] w-[100px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg p-0.5 shadow-[3px_4px_7.8px_2px_rgba(69,16,18,0.28)] lg:h-[320px] lg:w-[262px]"
         aria-label="Ver stories de destaques"
       >
-        <ImagePlaceholder src={null} alt="Prévia de stories" className="absolute inset-0 size-full" />
+        <ImagePlaceholder src={thumbnailUrl} alt="Prévia de stories" className="absolute inset-0 size-full" />
         {/* Máscara na cor main-red-500 a 60% de opacidade sobre a thumbnail */}
         <span className="absolute inset-0 rounded-lg bg-main-red-500/60" aria-hidden="true" />
         {/* Fundo circular atrás do play, pedido pela Amanda (20/08/2026) —

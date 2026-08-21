@@ -19,6 +19,27 @@ export function getBunnyEmbedUrl(videoId?: string | null): string | null {
 }
 
 /**
+ * CDN hostname (Pull Zone) da library de Stream — visível em
+ * dash.bunny.net/stream/{libraryId}/api, campo "CDN hostname". Diferente do
+ * `BUNNY_CDN_BASE_URL` de `bunnyStorage.ts` (aquele é a Pull Zone de
+ * imagem/CDN comum, essa aqui é específica da library de vídeo). Não é
+ * segredo — aparece publicamente em qualquer URL de vídeo/thumbnail.
+ */
+const BUNNY_STREAM_CDN_HOSTNAME = 'vz-f3b8608e-b55.b-cdn.net';
+
+/**
+ * Thumbnail (21/08/2026, a pedido da Amanda): a Bunny Stream já gera uma
+ * miniatura automaticamente pra todo vídeo enviado (`thumbnail.jpg`), sem
+ * precisar configurar nada — só montar a URL a partir do `videoId`. Usada no
+ * mini-player da Home (`HighlightBanner`) e nos cards de story do painel
+ * admin (`AdminStories.tsx`), no lugar do placeholder neutro que tinha antes.
+ */
+export function getBunnyThumbnailUrl(videoId?: string | null): string | null {
+  if (!videoId) return null;
+  return `https://${BUNNY_STREAM_CDN_HOSTNAME}/${videoId}/thumbnail.jpg`;
+}
+
+/**
  * BUG corrigido em 21/08/2026: o player de stories do app CLIENTE
  * (`StoryPlayerOverlay.tsx`) tocava vídeo com uma tag `<video src=...>`
  * apontando pra Bunny Storage/CDN (`resolveBunnyVideoUrl`), tratando
