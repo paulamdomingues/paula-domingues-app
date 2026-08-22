@@ -6,7 +6,7 @@ import { useFavorites } from '../context/FavoritesContext';
 import type { StoreWithCategory } from '../types';
 
 export default function Favoritos() {
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite, favoritedAt } = useFavorites();
   const [stores, setStores] = useState<StoreWithCategory[]>([]);
 
   useEffect(() => {
@@ -23,7 +23,21 @@ export default function Favoritos() {
     };
   }, []);
 
-  const favoriteStores = useMemo(() => stores.filter((store) => isFavorite(store.id)), [isFavorite, stores]);
+  // 22/08/2026: Amanda pediu pra ordenar por quem foi favoritado mais
+  // recentemente primeiro — antes a lista só herdava a ordem alfabética de
+  // `listStores()`, sem nenhuma relação com quando a pessoa favoritou.
+  const favoriteStores = useMemo(
+    () =>
+      stores
+        .filter((store) => isFavorite(store.id))
+        .sort((a, b) => {
+          const dateA = favoritedAt(a.id);
+          const dateB = favoritedAt(b.id);
+          if (!dateA || !dateB) return 0;
+          return new Date(dateB).getTime() - new Date(dateA).getTime();
+        }),
+    [isFavorite, favoritedAt, stores]
+  );
 
   return (
     <div className="flex w-full flex-col items-center gap-6 px-6 py-8 lg:px-[156px] lg:py-10">

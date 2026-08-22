@@ -64,6 +64,11 @@ export default function StoreDetail() {
   const { session } = useAuth();
   const [copied, setCopied] = useState(false);
   const [store, setStore] = useState<StoreWithCategory | null | undefined>(undefined);
+  // Qual das 4 fotos (fachada + 3 miniaturas) está em destaque na foto
+  // grande do topo — 22/08/2026, clicar numa miniatura troca ela de lugar
+  // com a foto principal (pedido da Amanda). Precisa ficar ANTES dos
+  // `return` antecipados abaixo pra não quebrar a ordem dos hooks.
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     if (!storeId) return;
@@ -81,6 +86,10 @@ export default function StoreDetail() {
     };
   }, [storeId]);
 
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [store?.id]);
+
   // `undefined` = ainda buscando (não redireciona ainda); `null` = buscou e
   // não achou (aí sim redireciona pra Lojas).
   if (store === null) {
@@ -92,6 +101,17 @@ export default function StoreDetail() {
 
   const details = store.details ?? {};
   const favorited = isFavorite(store.id);
+
+  // As 4 fotos da galeria de cima: posição 0 = fachada (`secondaryImageUrl`),
+  // 1-3 = as miniaturas. `activeImageIndex` decide qual delas vira a foto
+  // grande; as outras 3 aparecem como miniaturas clicáveis, na ordem
+  // original (22/08/2026).
+  const galleryImages: (string | null)[] = [details.secondaryImageUrl ?? null, ...(details.thumbnailImageUrls ?? [])];
+  while (galleryImages.length < 4) galleryImages.push(null);
+  const heroImage = galleryImages[activeImageIndex] ?? null;
+  const thumbnailEntries = galleryImages
+    .map((url, index) => ({ url, index }))
+    .filter((entry) => entry.index !== activeImageIndex);
 
   const handleCopyAddress = async () => {
     if (!details.address) return;
@@ -148,10 +168,20 @@ export default function StoreDetail() {
         <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
           <div className="flex w-full flex-col gap-2 lg:w-[552px] lg:shrink-0">
             <div className="relative">
+              {/*
+                BUG corrigido em 22/08/2026: `calc(100%+48px)` (sem espaço
+                em volta do `+`) é CSS inválido — a especificação exige
+                espaço nos dois lados do operador dentro de um `calc()`.
+                O navegador descartava a declaração inteira de `width`
+                silenciosamente, então a imagem nunca chegava de fato a
+                virar full-bleed no mobile (relatado pela Amanda em telas de
+                360 a 440px de largura). `calc(100%_+_48px)` — o `_` vira
+                espaço de verdade no valor arbitrário do Tailwind.
+              */}
               <ImagePlaceholder
-                src={details.secondaryImageUrl}
+                src={heroImage}
                 alt={store.name}
-                className="-mx-6 aspect-square w-[calc(100%+48px)] lg:mx-0 lg:aspect-square lg:h-auto lg:w-full"
+                className="-mx-6 aspect-square w-[calc(100%_+_48px)] object-top lg:mx-0 lg:aspect-square lg:h-auto lg:w-full"
                 rounded="rounded-none lg:rounded-lg"
               />
 
@@ -175,14 +205,24 @@ export default function StoreDetail() {
               </div>
             </div>
 
+            {/* Miniaturas clicáveis (22/08/2026): clicar em uma troca ela de
+                lugar com a foto grande de cima — `activeImageIndex` guarda
+                qual das 4 fotos está em destaque no momento. */}
             <div className="flex w-full items-center justify-center gap-2">
-              {(details.thumbnailImageUrls ?? [null, null, null]).slice(0, 3).map((url, i) => (
-                <ImagePlaceholder
-                  key={i}
-                  src={url}
-                  alt={`Foto ${i + 2} de ${store.name}`}
+              {thumbnailEntries.map(({ url, index }) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => setActiveImageIndex(index)}
+                  aria-label={`Ver foto ${index + 1} de ${store.name} em destaque`}
                   className="aspect-square w-1/3"
-                />
+                >
+                  <ImagePlaceholder
+                    src={url}
+                    alt={`Foto ${index + 1} de ${store.name}`}
+                    className="size-full object-top"
+                  />
+                </button>
               ))}
             </div>
           </div>
@@ -197,31 +237,53 @@ export default function StoreDetail() {
               </p>
             </div>
 
-            <div className="flex w-full items-center gap-3">
-              <a
-                href={details.instagramUrl ?? '#'}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => handleContactClick('instagram')}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-tr from-[#FEDA75] via-[#D62976] to-[#4F5BD5] p-3"
-              >
-                <InstagramIcon className="size-5 text-base-white" />
-                <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">Instagram</span>
-              </a>
-              <a
-                href={details.whatsappUrl ?? '#'}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => handleContactClick('whatsapp')}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#25D366] p-3"
-              >
-                <WhatsappIcon className="size-5 text-base-white" />
-                <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">WhatsApp</span>
-              </a>
-            </div>
+            {/*
+              22/08/2026: os botões agora seguem o que a loja realmente tem
+              cadastrado no admin — antes apareciam sempre os dois, com
+              `href="#"` quando faltava Instagram/WhatsApp. Sem nenhum dos
+              dois, mostra "Somente Presencial" no lugar (pedido da Amanda).
+            */}
+            {details.instagramUrl || details.whatsappUrl ? (
+              <div className="flex w-full items-center gap-3">
+                {details.instagramUrl && (
+                  <a
+                    href={details.instagramUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => handleContactClick('instagram')}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-tr from-[#FEDA75] via-[#D62976] to-[#4F5BD5] p-3"
+                  >
+                    <InstagramIcon className="size-5 text-base-white" />
+                    <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">
+                      Instagram
+                    </span>
+                  </a>
+                )}
+                {details.whatsappUrl && (
+                  <a
+                    href={details.whatsappUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => handleContactClick('whatsapp')}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#25D366] p-3"
+                  >
+                    <WhatsappIcon className="size-5 text-base-white" />
+                    <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">
+                      WhatsApp
+                    </span>
+                  </a>
+                )}
+              </div>
+            ) : (
+              <div className="flex w-full items-center justify-center rounded-lg border border-gray-300 p-3">
+                <span className="font-body font-bold text-[14px] tracking-[0.7px] text-gray-600">
+                  Somente Presencial
+                </span>
+              </div>
+            )}
 
             {details.tags && details.tags.length > 0 && (
-              <div className="flex w-full flex-wrap gap-2 lg:justify-start">
+              <div className="flex w-full flex-wrap justify-center gap-2">
                 {details.tags.map((tag) => (
                   <span
                     key={tag}

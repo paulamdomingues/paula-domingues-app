@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { PiCaretDown, PiPlus, PiTrash, PiUploadSimple, PiX } from 'react-icons/pi';
+import { PiPlus, PiTrash, PiUploadSimple, PiX } from 'react-icons/pi';
+import AdminSelect from '../../components/admin/AdminSelect';
 import {
   ArrowLeftIcon,
   BellIcon,
@@ -825,21 +826,15 @@ function SelectField({
   return (
     <label className="flex flex-col gap-1.5">
       <span className="font-body text-[13px] tracking-[0.65px] text-gray-500">{label}</span>
-      <div className="relative flex h-[50px] items-center rounded-lg border border-gray-200 px-4">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none border-0 bg-transparent font-body text-[14px] text-gray-900 focus:outline-none"
-        >
-          <option value="">{placeholder}</option>
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <PiCaretDown className="pointer-events-none absolute right-4 size-4 text-gray-400" />
-      </div>
+      <AdminSelect
+        value={String(value)}
+        onChange={onChange}
+        triggerClassName="flex h-[50px] w-full items-center gap-2 rounded-lg border border-gray-200 pl-4 pr-3 font-body text-[14px] text-gray-900 focus:outline-none"
+        options={[
+          { value: '', label: placeholder },
+          ...options.map((opt) => ({ value: String(opt.value), label: opt.label })),
+        ]}
+      />
     </label>
   );
 }
@@ -898,7 +893,7 @@ function TagsField({
               }
             }}
             onBlur={addTag}
-            placeholder="Insira até 5 tags"
+            placeholder="Use vírgulas para separar as tags (até 5)"
             className="w-full border-0 bg-transparent font-body text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none"
           />
         )}
@@ -963,24 +958,34 @@ function GalleryUpload({
   onRemove: (index: number) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
 
-  function openPicker(index: number) {
-    setPendingIndex(index);
+  function openPicker() {
     inputRef.current?.click();
   }
 
+  // 22/08/2026, pedido da Amanda: antes só dava pra subir uma foto de cada
+  // vez (o picker sempre mirava um slot específico) — agora o input aceita
+  // várias de uma vez (`multiple`) e cada arquivo escolhido preenche o
+  // próximo slot vazio, respeitando o limite de `MAX_GALLERY_IMAGES` (4).
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file && pendingIndex !== null) onUpload(file, pendingIndex);
+    const files = Array.from(e.target.files ?? []);
     e.target.value = '';
+    if (files.length === 0) return;
+
+    const emptySlotIndexes: number[] = [];
+    for (let i = 0; i < MAX_GALLERY_IMAGES; i++) {
+      if (!images[i]) emptySlotIndexes.push(i);
+    }
+    files.slice(0, emptySlotIndexes.length).forEach((file, i) => {
+      onUpload(file, emptySlotIndexes[i]);
+    });
   }
 
   const slots = Array.from({ length: MAX_GALLERY_IMAGES }, (_, i) => images[i] ?? null);
 
   return (
     <div className="flex flex-wrap gap-2">
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleChange} />
+      <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleChange} />
       {slots.map((image, index) => {
         const slotKey = `galeria-${index}`;
         const isUploading = uploadingSlot === slotKey;
@@ -1004,7 +1009,7 @@ function GalleryUpload({
               <button
                 type="button"
                 disabled={disabled || isUploading}
-                onClick={() => openPicker(index)}
+                onClick={openPicker}
                 className="flex size-full flex-col items-center justify-center gap-1 disabled:opacity-60"
               >
                 <PiPlus className="size-5 text-gray-400" />

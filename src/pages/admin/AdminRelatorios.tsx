@@ -96,8 +96,16 @@ export default function AdminRelatorios() {
             <WeeklyBarChart buckets={newUsersByDay} />
           </div>
 
-          <div className="grid w-full grid-cols-[1fr_420px] gap-4">
-            <div className="flex flex-col gap-4 rounded-lg bg-base-white p-6">
+          {/*
+            `min-w-0` na coluna da esquerda (22/08/2026): sem isso, um item
+            de grid dentro de uma track `1fr` não encolhe além do conteúdo
+            "intrínseco" das linhas (nomes/emails longos, mais a coluna
+            fixa de 420px ao lado) — em telas de notebook mais estreitas
+            isso empurrava a página inteira pra além da largura da tela
+            (barra de rolagem horizontal indevida, reportada pela Amanda).
+          */}
+          <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-[1fr_420px]">
+            <div className="flex min-w-0 flex-col gap-4 rounded-lg bg-base-white p-6">
               <div className="flex items-center justify-between">
                 <p className="font-display text-[24px] font-bold tracking-[0.72px] text-main-dark-900">Últimos Usuários Cadastrados</p>
                 <Link to="/admin/usuarios" className="font-body text-[14px] font-bold text-main-red-700">
@@ -108,7 +116,7 @@ export default function AdminRelatorios() {
                 {latestUsers.length === 0 && <p className="font-body text-[14px] text-gray-400">Nenhum usuário ainda.</p>}
                 {latestUsers.map((u) => (
                   <div key={u.id} className="flex items-center gap-4 border-b border-gray-50 px-2 py-3 last:border-0">
-                    <p className="w-16 shrink-0 font-body text-[14px] text-main-dark-900">#{u.id}</p>
+                    <p className="w-16 shrink-0 font-body text-[14px] text-main-dark-900">#{u.short_id ?? '—'}</p>
                     <p className="w-36 shrink-0 truncate font-body text-[13px] font-medium text-gray-900">{u.full_name || '—'}</p>
                     <p className="flex-1 truncate font-body text-[12px] text-gray-600">{u.email}</p>
                     <p className="w-20 shrink-0 font-body text-[13px] font-medium text-gray-500">

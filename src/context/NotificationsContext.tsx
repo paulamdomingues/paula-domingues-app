@@ -1,8 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { listRecentStores } from '../lib/catalog';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from './AuthContext';
+
+export type NotificationType = 'new_store' | 'new_story';
 
 export interface NotificationItem {
   id: string;
+  type: NotificationType;
   title: string;
   description: string;
   timeAgo: string;
@@ -18,43 +22,81 @@ interface NotificationsContextValue {
 
 const NotificationsContext = createContext<NotificationsContextValue | undefined>(undefined);
 
+interface NotificationRow {
+  id: number;
+  type: NotificationType;
+  title: string;
+  description: string;
+  created_at: string;
+}
+
 /**
- * Guarda o estado de lidas/não lidas fora da tela `/notificacoes` (era
- * `useState` local ali, então resetava toda vez que a tela desmontava e o
- * sino nunca conseguia refletir o estado real). O CONTEÚDO das notificações
- * ("Novo parceiro no app!") agora vem de lojas reais (`catalog.ts`) — mas o
- * mecanismo de lida/não lida continua só em memória por enquanto, mesmo
- * padrão de antes; quando existir uma tabela `notifications` de verdade no
- * Supabase, troca por leitura/escrita real (Amanda, 19/08/2026: "a bolinha
- * com notificações ativas e sem quando todas foram marcadas como lidas,
- * essa troca não está acontecendo" — isso já está resolvido pelo estado
- * centralizado aqui, só o backend de notificações em si que segue pendente).
+ * Feed de verdade agora (22/08/2026) — confirmado com a Amanda que são
+ * exatamente 2 tipos de notificação: loja nova publicada e story novo,
+ * alimentados por trigger no banco (`0010_notifications.sql`), não mais
+ * fabricados aqui a partir de `listRecentStores`. "Lida/não lida" também
+ * passa a ser real: `notification_reads.last_read_at` por usuário — uma
+ * notificação é lida se `created_at <= last_read_at` (ver migration pro
+ * racional completo). Continua centralizado aqui (fora da tela
+ * `/notificacoes`) pelo mesmo motivo de antes: o sino da Início/TopBar
+ * precisa do mesmo estado.
  */
+function timeAgo(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return 'agora';
+  if (minutes < 60) return `há ${minutes}min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `há ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `há ${days}d`;
+}
+
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const { session } = useAuth();
+  const userId = session?.user.id;
+  const [rows, setRows] = useState<NotificationRow[]>([]);
+  const [lastReadAt, setLastReadAt] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!userId) {
+      setRows([]);
+      setLastReadAt(null);
+      return;
+    }
+
     let cancelled = false;
-    listRecentStores(8)
-      .then((stores) => {
+
+    Promise.all([
+      supabase.from('notifications').select('id, type, title, description, created_at').order('created_at', { ascending: false }).limit(50),
+      supabase.from('notification_reads').select('last_read_at').eq('user_id', userId).maybeSingle(),
+    ])
+      .then(([notificationsRes, readsRes]) => {
         if (cancelled) return;
-        setNotifications(
-          stores.map((store, index) => ({
-            id: store.id,
-            title: 'Novo parceiro no app!',
-            description: `${store.name} foi adicionado.`,
-            timeAgo: `há ${index + 1}d`,
-            read: index >= 2,
-          }))
-        );
+        setRows(notificationsRes.data ?? []);
+        setLastReadAt(readsRes.data?.last_read_at ?? null);
       })
       .catch(() => {
         // Falha silenciosa: sino fica sem notificações em vez de quebrar o app.
       });
+
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [userId]);
+
+  const notifications = useMemo<NotificationItem[]>(
+    () =>
+      rows.map((row) => ({
+        id: String(row.id),
+        type: row.type,
+        title: row.title,
+        description: row.description,
+        timeAgo: timeAgo(row.created_at),
+        read: lastReadAt !== null && new Date(row.created_at).getTime() <= new Date(lastReadAt).getTime(),
+      })),
+    [rows, lastReadAt]
+  );
 
   const value = useMemo<NotificationsContextValue>(() => {
     const unreadCount = notifications.filter((n) => !n.read).length;
@@ -62,9 +104,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       notifications,
       unreadCount,
       hasUnread: unreadCount > 0,
-      markAllAsRead: () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true }))),
+      markAllAsRead: () => {
+        if (!userId) return;
+        const now = new Date().toISOString();
+        setLastReadAt(now);
+        supabase.from('notification_reads').upsert({ user_id: userId, last_read_at: now }, { onConflict: 'user_id' }).then();
+      },
     };
-  }, [notifications]);
+  }, [notifications, userId]);
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;
 }

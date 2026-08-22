@@ -16,7 +16,7 @@ import TopBar from '../components/TopBar';
 import LogoutConfirmModal from '../components/LogoutConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
-import { WHATSAPP_GROUP_URL, WHATSAPP_SUPPORT_URL } from '../lib/constants';
+import { EXTERNAL_PRIVACY_URL, EXTERNAL_TERMS_URL, WHATSAPP_GROUP_URL, WHATSAPP_SUPPORT_URL } from '../lib/constants';
 
 interface ProfileMenuItemProps {
   icon: ReactNode;
@@ -72,6 +72,7 @@ export default function Perfil() {
   const { session, signOut, firstName } = useAuth();
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [shortId, setShortId] = useState<string>('—');
+  const [plan, setPlan] = useState<'trimestral' | 'anual' | null>(null);
 
   const email = session?.user.email ?? 'amanda@exemplo.com';
 
@@ -87,6 +88,21 @@ export default function Perfil() {
         if (data?.short_id) setShortId(data.short_id);
       });
   }, [session?.user.id]);
+
+  // "Meu Plano" — 22/08/2026: antes era um texto fixo ("Trimestral" sempre,
+  // não importa o plano real). `get_my_plan()` é SECURITY DEFINER (mesmo
+  // padrão de `has_active_access()`) e devolve só o plano de quem está
+  // logado, sem precisar abrir a RLS de `allowed_users` pra clientes finais.
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!userId) return;
+    supabase
+      .rpc('get_my_plan')
+      .then(({ data }) => setPlan((data as 'trimestral' | 'anual' | null) ?? null));
+  }, [session?.user.id]);
+
+  const planLabel =
+    plan === 'trimestral' ? 'Meu Plano - Trimestral' : plan === 'anual' ? 'Meu Plano - Anual' : 'Meu Plano';
 
   const handleConfirmLogout = async () => {
     await signOut();
@@ -171,13 +187,18 @@ export default function Perfil() {
           <div className="flex w-full flex-col rounded-lg bg-base-white px-4 py-2">
             <ProfileMenuItem
               icon={<IdentificationCardIcon className="size-full" />}
-              label="Meu Plano - Trimestral"
+              label={planLabel}
               disabled
             />
             <ProfileMenuItem
               icon={<FileTextIcon className="size-full" />}
-              label="Termos de Uso e Privacidade"
-              onClick={() => navigate('/termos')}
+              label="Termos de Uso"
+              href={EXTERNAL_TERMS_URL}
+            />
+            <ProfileMenuItem
+              icon={<FileTextIcon className="size-full" />}
+              label="Política de Privacidade"
+              href={EXTERNAL_PRIVACY_URL}
             />
             <ProfileMenuItem
               icon={<SignOutIcon className="size-full" />}

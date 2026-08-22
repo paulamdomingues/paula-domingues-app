@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { EnvelopeIcon, EyeIcon, EyeSlashIcon, LockIcon, UserIcon } from '../../components/icons';
+import { EnvelopeIcon, EyeIcon, EyeSlashIcon, LockIcon, UserIcon, WhatsappIcon } from '../../components/icons';
 import Logo from '../../components/Logo';
 import AuthTextField from '../../components/auth/AuthTextField';
 import AuthPrimaryButton from '../../components/auth/AuthPrimaryButton';
 import AuthShowcasePanel from '../../components/auth/AuthShowcasePanel';
 import TermsFooter from '../../components/auth/TermsFooter';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function SignUp() {
   const { signUp } = useAuth();
@@ -14,6 +15,7 @@ export default function SignUp() {
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,6 +33,19 @@ export default function SignUp() {
 
     setLoading(true);
     const { error: signUpError } = await signUp(email, password, firstName);
+
+    // Salva o WhatsApp no mesmo lugar que a Hubla usaria (`allowed_users`,
+    // ancorado por email) — 22/08/2026, pedido da Amanda. Roda via RPC
+    // porque ainda não existe sessão nesse momento (o Supabase exige
+    // confirmar o email antes de logar) e nunca sobrescreve um WhatsApp que
+    // a Hubla já tenha gravado (a Hubla sempre tem prioridade sobre o que a
+    // pessoa digita aqui). Falha aqui não deve travar o cadastro em si —
+    // só loga em silêncio.
+    const whatsappDigits = whatsapp.replace(/\D/g, '');
+    if (!signUpError && whatsappDigits) {
+      supabase.rpc('record_signup_whatsapp', { p_email: email, p_whatsapp: whatsappDigits }).then();
+    }
+
     setLoading(false);
 
     if (signUpError) {
@@ -76,8 +91,18 @@ export default function SignUp() {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 icon={<EnvelopeIcon className="size-full" />}
+              />
+              <AuthTextField
+                label="WhatsApp"
+                placeholder="Ex: 11912345678"
+                type="tel"
+                autoComplete="tel"
+                required
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                icon={<WhatsappIcon className="size-full" />}
               />
               <AuthTextField
                 label="Senha"

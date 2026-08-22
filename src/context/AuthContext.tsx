@@ -117,7 +117,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // `team_members` (RLS permite cada membro ver só a própria equipe, mas a
   // busca "sou eu mesmo" sempre é permitida) e `accessLevel` fica `null`,
   // que é o estado esperado.
+  //
+  // BUG corrigido em 22/08/2026 ("login não tá segurando" no admin / "vê a
+  // tela de aguardando pagamento por 1-2s" no cliente): esse efeito reagia
+  // à sessão ANTES do efeito de cima (`getSession()`) terminar de resolver.
+  // Como o mount inicial tem `session = null`, esse efeito rodava de
+  // imediato e já deixava `accessLevelLoading = false` (correto pra quem
+  // realmente não tem sessão) — só que, no instante seguinte, quando a
+  // sessão de verdade chegava, havia UM frame de render em que `session`
+  // já existia mas `accessLevelLoading`/`accessLevel` ainda estavam com
+  // esse valor "antigo" (false/null) — tempo suficiente pra `ProtectedRoute`/
+  // `ProtectedAdminRoute` concluírem, por engano, que a pessoa não tinha
+  // acesso e redirecionar pra fora. Agora esse efeito espera `loading`
+  // (o efeito de cima) terminar antes de decidir qualquer coisa — assim
+  // `accessLevelLoading` só existe nos dois estados válidos: "ainda não
+  // sei" (true, enquanto `loading` também é true) ou "já sei" (com o valor
+  // real da sessão já resolvida).
   useEffect(() => {
+    if (loading) return;
+
     const userId = session?.user.id;
     if (!userId) {
       setAccessLevel(null);
@@ -141,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [session?.user.id]);
+  }, [session?.user.id, loading]);
 
   // Checa se a pessoa logada tem acesso pago ativo (`allowed_users.is_active`
   // via a função `has_active_access()`, que roda como SECURITY DEFINER pra
@@ -162,10 +180,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPurchaseAccessLoading(false);
   };
 
+  // Mesma correção de corrida do efeito de `accessLevel` acima — espera
+  // `loading` terminar antes de resolver `purchaseAccessLoading`, senão
+  // sobra um frame com `session` já definida mas `hasPurchaseAccess` ainda
+  // no valor "antigo" (22/08/2026).
   useEffect(() => {
+    if (loading) return;
     checkPurchaseAccess(session?.user.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user.id]);
+  }, [session?.user.id, loading]);
 
   const refreshPurchaseAccess = async () => {
     await checkPurchaseAccess(session?.user.id);

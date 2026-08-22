@@ -19,7 +19,7 @@ const faqs = [
   {
     question: 'Onde gerencio minha assinatura ou dados de pagamento?',
     answer:
-      'O processamento e gerenciamento da sua assinatura (trimestral ou anual) é realizado com total segurança pela plataforma Kiwify. Você pode gerenciar seu plano acessando o link da Kiwify disponível na aba Perfil > Meu Plano.',
+      'O processamento da sua assinatura (trimestral ou anual) é feito com total segurança pela Hubla. Em Perfil > Meu Plano você confere qual plano está ativo na sua conta; para alterar forma de pagamento, cancelar ou tirar dúvidas sobre a cobrança, fale com o nosso suporte pelo WhatsApp (Perfil > Falar com o Suporte).',
   },
   {
     question: 'Com que frequência novos fornecedores e conteúdos são adicionados?',

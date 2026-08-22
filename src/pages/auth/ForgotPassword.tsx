@@ -62,7 +62,7 @@ export default function ForgotPassword() {
               autoComplete="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
               icon={<EnvelopeIcon className="size-full" />}
             />
             {error && <p className="w-full text-center font-body text-[13px] text-main-red-800">{error}</p>}

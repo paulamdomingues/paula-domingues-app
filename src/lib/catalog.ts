@@ -112,7 +112,14 @@ function mapStore(row: StoreRow): StoreWithCategory {
     code: row.code_badge ?? '',
     name: row.name,
     categoryLabel: categoryNameFromRow(row),
-    imageUrl: row.storefront_image_url ?? gallery[0] ?? null,
+    // BUG corrigido em 22/08/2026: essa "peça em destaque" (StoreDetail.tsx,
+    // mais abaixo na página) usava a foto de fachada como primeira opção —
+    // como a fachada quase sempre está preenchida, a mesma foto acabava
+    // aparecendo duas vezes na tela (uma vez como fachada lá em cima, outra
+    // como "peça em destaque" aqui embaixo). Agora prioriza uma foto da
+    // galeria (peça/coleção, campo separado da fachada no cadastro) e só
+    // cai pra fachada se a loja não tiver nenhuma foto de galeria ainda.
+    imageUrl: gallery[0] ?? row.storefront_image_url ?? null,
     categoryId: row.category_id !== null ? String(row.category_id) : '',
     neighborhood: row.polo_location,
     createdAt: row.created_at,

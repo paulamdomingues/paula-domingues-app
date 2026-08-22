@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { PiPlus } from 'react-icons/pi';
 import { BellIcon, EyeIcon, MagnifyingGlassIcon } from '../../components/icons';
 import UsuarioModal, { type AllowedUserRow } from '../../components/admin/UsuarioModal';
+import AdminSelect from '../../components/admin/AdminSelect';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -119,10 +120,10 @@ export default function AdminUsuarios() {
         Cadastrar Usuário
       </button>
 
-      <div className="grid w-full grid-cols-3 gap-3 lg:gap-4">
-        <SummaryCard label="Total de Usuários" value={totalCount} />
-        <SummaryCard label="Plano Trimestral" value={trimestralCount} />
-        <SummaryCard label="Plano Anual" value={anualCount} />
+      <div className="mx-auto grid w-full max-w-[640px] grid-cols-3 gap-3 lg:gap-4">
+        <SummaryCard label="Total" value={totalCount} />
+        <SummaryCard label="Trimestral" value={trimestralCount} />
+        <SummaryCard label="Anual" value={anualCount} />
       </div>
 
       <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
@@ -135,15 +136,17 @@ export default function AdminUsuarios() {
             className="w-full border-0 bg-transparent font-body text-[14px] text-gray-900 placeholder:text-gray-500 focus:outline-none"
           />
         </div>
-        <select
-          value={planFilter}
-          onChange={(e) => setPlanFilter(e.target.value as PlanFilter)}
-          className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[14px] text-gray-800"
-        >
-          <option value="todos">Todos os planos</option>
-          <option value="trimestral">Plano Trimestral</option>
-          <option value="anual">Plano Anual</option>
-        </select>
+        <div className="lg:w-[200px]">
+          <AdminSelect
+            value={planFilter}
+            onChange={(v) => setPlanFilter(v as PlanFilter)}
+            options={[
+              { value: 'todos', label: 'Planos' },
+              { value: 'trimestral', label: 'Trimestral' },
+              { value: 'anual', label: 'Anual' },
+            ]}
+          />
+        </div>
       </div>
 
       {error && <p className="font-body text-[13px] text-main-red-800">{error}</p>}
@@ -205,10 +208,10 @@ export default function AdminUsuarios() {
                     <p className="shrink-0 font-display text-[18px] font-semibold tracking-[0.54px] text-base-black">
                       #{row.short_id}
                     </p>
-                    <span className="flex shrink-0 items-center justify-center rounded-lg bg-main-dark-800 px-2 py-1 font-body text-[13px] font-bold tracking-[0.65px] text-main-red-50">
+                    <span className="flex shrink-0 items-center justify-center rounded-lg bg-main-dark-800 px-2 py-1 font-body text-[14px] font-bold tracking-[0.65px] text-main-red-50">
                       {row.plan === 'trimestral' ? 'Trimestral' : row.plan === 'anual' ? 'Anual' : '—'}
                     </span>
-                    <p className="truncate font-body text-[11px] text-gray-500">
+                    <p className="truncate font-body text-[14px] text-gray-500">
                       {new Date(row.purchased_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>

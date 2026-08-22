@@ -3,6 +3,7 @@ import { PiDotsThreeVerticalBold, PiPlus } from 'react-icons/pi';
 import { BellIcon } from '../../components/icons';
 import NovoMembroModal from '../../components/admin/NovoMembroModal';
 import DeleteConfirmModal from '../../components/admin/DeleteConfirmModal';
+import AdminSelect from '../../components/admin/AdminSelect';
 import { useAuth, type AccessLevel } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -260,7 +261,10 @@ export default function AdminConfiguracoes() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* `pb-20` (80px) — pedido da Amanda pra sobrar espaço embaixo do
+          último card de membro, que ficava colado no fim da página
+          (22/08/2026). */}
+      <div className="flex flex-col gap-2 pb-20">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-[28px] font-extrabold tracking-[0.84px] text-main-dark-900 lg:text-[48px] lg:tracking-[1.44px]">
             Equipe
@@ -318,19 +322,20 @@ export default function AdminConfiguracoes() {
                     <td className="px-4 py-3 text-gray-600">{member.whatsapp || '—'}</td>
                     <td className="px-4 py-3">
                       {canManageTeam ? (
-                        <select
-                          value={member.access_level}
-                          disabled={isSelf || roleSavingId === member.id}
+                        <div
+                          className="w-[180px]"
                           title={isSelf ? 'Você não pode alterar sua própria função por aqui.' : undefined}
-                          onChange={(e) => handleRoleChange(member, e.target.value as AccessLevel)}
-                          className="h-10 rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[14px] text-gray-800 disabled:opacity-60"
                         >
-                          {(Object.keys(ACCESS_LEVEL_LABELS) as AccessLevel[]).map((level) => (
-                            <option key={level} value={level}>
-                              {ACCESS_LEVEL_LABELS[level]}
-                            </option>
-                          ))}
-                        </select>
+                          <AdminSelect
+                            value={member.access_level}
+                            disabled={isSelf || roleSavingId === member.id}
+                            onChange={(v) => handleRoleChange(member, v as AccessLevel)}
+                            options={(Object.keys(ACCESS_LEVEL_LABELS) as AccessLevel[]).map((level) => ({
+                              value: level,
+                              label: ACCESS_LEVEL_LABELS[level],
+                            }))}
+                          />
+                        </div>
                       ) : (
                         ACCESS_LEVEL_LABELS[member.access_level]
                       )}
@@ -379,19 +384,18 @@ export default function AdminConfiguracoes() {
                     <p className="w-full truncate font-body text-[13px] text-gray-600">{member.email}</p>
                     <p className="w-full truncate font-body text-[13px] text-gray-500">{member.whatsapp || '—'}</p>
                     {canManageTeam ? (
-                      <select
-                        value={member.access_level}
-                        disabled={isSelf || roleSavingId === member.id}
-                        title={isSelf ? 'Você não pode alterar sua própria função por aqui.' : undefined}
-                        onChange={(e) => handleRoleChange(member, e.target.value as AccessLevel)}
-                        className="h-9 w-full rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[13px] text-gray-800 disabled:opacity-60"
-                      >
-                        {(Object.keys(ACCESS_LEVEL_LABELS) as AccessLevel[]).map((level) => (
-                          <option key={level} value={level}>
-                            {ACCESS_LEVEL_LABELS[level]}
-                          </option>
-                        ))}
-                      </select>
+                      <div title={isSelf ? 'Você não pode alterar sua própria função por aqui.' : undefined}>
+                        <AdminSelect
+                          value={member.access_level}
+                          disabled={isSelf || roleSavingId === member.id}
+                          onChange={(v) => handleRoleChange(member, v as AccessLevel)}
+                          triggerClassName="flex h-9 w-full items-center gap-2 rounded-lg border border-gray-300 bg-base-white pl-3 pr-2 font-body text-[13px] text-gray-800 disabled:opacity-60"
+                          options={(Object.keys(ACCESS_LEVEL_LABELS) as AccessLevel[]).map((level) => ({
+                            value: level,
+                            label: ACCESS_LEVEL_LABELS[level],
+                          }))}
+                        />
+                      </div>
                     ) : (
                       <span className="font-body text-[13px] font-bold text-gray-700">
                         {ACCESS_LEVEL_LABELS[member.access_level]}

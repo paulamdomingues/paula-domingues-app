@@ -9,7 +9,6 @@ import Perfil from './pages/Perfil';
 import PerfilDuvidas from './pages/PerfilDuvidas';
 import PerfilTrocarSenha from './pages/PerfilTrocarSenha';
 import Notificacoes from './pages/Notificacoes';
-import Termos from './pages/Termos';
 import ComingSoon from './pages/ComingSoon';
 import PreLogin from './pages/auth/PreLogin';
 import Login from './pages/auth/Login';
@@ -101,9 +100,6 @@ export default function App() {
             `RedefinirSenha.tsx`). */}
         <Route path="/redefinir-senha" element={<RedefinirSenha />} />
         <Route path="/aguardando-liberacao" element={<AguardandoLiberacao />} />
-        {/* Termos e Privacidade são públicos: dá pra ler antes de criar conta */}
-        <Route path="/termos" element={<Termos />} />
-        <Route path="/privacidade" element={<Termos />} />
 
         {/*
           Painel admin: área separada do app cliente (sem BottomNav, sem

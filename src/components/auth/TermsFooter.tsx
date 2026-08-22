@@ -6,9 +6,9 @@ interface TermsFooterProps {
 
 /**
  * Rodapé de "concordo com os Termos..." usado em Login/Criar Conta. Aponta
- * pra um site EXTERNO (fora do app) — confirmado com a Amanda — diferente
- * da tela /termos interna, que continua existindo só pra quem acessa via
- * Perfil, já logado.
+ * pra um site EXTERNO (fora do app) — confirmado com a Amanda (22/08/2026).
+ * A tela `/termos` interna foi removida — o Perfil, já logado, usa os
+ * MESMOS links externos (ver `Perfil.tsx`).
  */
 export default function TermsFooter({ prefix }: TermsFooterProps) {
   return (

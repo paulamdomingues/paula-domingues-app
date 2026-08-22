@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { XCircleIcon } from '../icons';
 import { supabase } from '../../lib/supabaseClient';
+import AdminSelect from './AdminSelect';
 
 export interface AllowedUserRow {
   id: number;
@@ -163,16 +164,17 @@ export default function UsuarioModal({ user, canManage, onCancel, onSaved }: Usu
               <Field label="Email" value={email} onChange={setEmail} disabled={!canManage} />
               <label className="flex flex-col gap-1.5">
                 <span className="font-body text-[13px] tracking-[0.65px] text-gray-500">Plano</span>
-                <select
+                <AdminSelect
                   value={plan}
-                  onChange={(e) => setPlan(e.target.value as 'trimestral' | 'anual' | '')}
+                  onChange={(v) => setPlan(v as 'trimestral' | 'anual' | '')}
                   disabled={!canManage}
-                  className="flex h-[50px] w-full items-center rounded-lg border border-gray-200 px-4 font-body text-[14px] text-gray-900 disabled:opacity-60"
-                >
-                  <option value="">Escolha aqui</option>
-                  <option value="trimestral">Trimestral</option>
-                  <option value="anual">Anual</option>
-                </select>
+                  triggerClassName="flex h-[50px] w-full items-center gap-2 rounded-lg border border-gray-200 pl-4 pr-3 font-body text-[14px] text-gray-900 disabled:opacity-60"
+                  options={[
+                    { value: '', label: 'Escolha aqui' },
+                    { value: 'trimestral', label: 'Trimestral' },
+                    { value: 'anual', label: 'Anual' },
+                  ]}
+                />
               </label>
             </div>
           ) : (

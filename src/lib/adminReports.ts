@@ -13,6 +13,7 @@ import { supabase } from './supabaseClient';
 
 export interface AllowedUserLite {
   id: number;
+  short_id: string | null;
   full_name: string | null;
   email: string;
   plan: 'trimestral' | 'anual' | null;
@@ -100,7 +101,7 @@ export function useAdminReportsData() {
     Promise.all([
       supabase
         .from('allowed_users')
-        .select('id, full_name, email, plan, is_active, purchased_at')
+        .select('id, short_id, full_name, email, plan, is_active, purchased_at')
         .order('purchased_at', { ascending: false }),
       supabase.from('stores').select('id, name, is_active, created_at, category_id'),
       supabase.from('categories').select('id, name'),

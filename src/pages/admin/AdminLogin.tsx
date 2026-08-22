@@ -63,7 +63,7 @@ export default function AdminLogin() {
               autoComplete="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
               icon={<EnvelopeIcon className="size-full" />}
             />
             <AuthTextField
@@ -80,20 +80,15 @@ export default function AdminLogin() {
             />
           </div>
 
-          <div className="flex w-full items-center justify-between">
-            <label className="flex items-center gap-2 font-body text-[14px] tracking-[0.7px] text-gray-800">
-              <input
-                type="checkbox"
-                checked={rememberDevice}
-                onChange={(e) => setRememberDevice(e.target.checked)}
-                className="size-4 accent-main-red-600"
-              />
-              Lembrar deste dispositivo
-            </label>
-            <a href="/admin/esqueci-senha" className="font-body text-[14px] tracking-[0.7px] text-main-red-700">
-              Esqueceu sua senha ?
-            </a>
-          </div>
+          <label className="flex w-full items-center gap-2 font-body text-[14px] tracking-[0.7px] text-gray-800">
+            <input
+              type="checkbox"
+              checked={rememberDevice}
+              onChange={(e) => setRememberDevice(e.target.checked)}
+              className="size-4 accent-main-red-600"
+            />
+            Lembrar deste dispositivo
+          </label>
 
           {unauthorized && (
             <p className="w-full text-center font-body text-[13px] text-error-700">
@@ -103,6 +98,16 @@ export default function AdminLogin() {
           {error && <p className="w-full text-center font-body text-[13px] text-main-red-800">{error}</p>}
 
           <AuthPrimaryButton loading={loading}>Entrar</AuthPrimaryButton>
+
+          {/* 22/08/2026: separado do checkbox "Lembrar deste dispositivo" —
+              ficavam colados um no outro, com 48px de espaço embaixo do
+              botão Entrar (pedido da Amanda). */}
+          <a
+            href="/admin/esqueci-senha"
+            className="mt-12 w-full text-center font-body text-[14px] tracking-[0.7px] text-main-red-700"
+          >
+            Esqueceu sua senha ?
+          </a>
         </form>
       </div>
     </div>

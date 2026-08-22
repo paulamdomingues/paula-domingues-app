@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PiPlus } from 'react-icons/pi';
 import { BellIcon, FunnelIcon, MagnifyingGlassIcon, PencilIcon } from '../../components/icons';
 import { supabase } from '../../lib/supabaseClient';
+import AdminSelect from '../../components/admin/AdminSelect';
 
 interface StoreRow {
   id: number;
@@ -160,7 +161,7 @@ export default function AdminLojas() {
       </Link>
 
       <div className="grid w-full grid-cols-3 gap-3 lg:gap-4">
-        <SummaryCard label="Total de lojas" value={totalCount} />
+        <SummaryCard label="Total" value={totalCount} />
         <SummaryCard label="Ativas" value={activeCount} />
         <SummaryCard label="Inativas" value={inactiveCount} />
       </div>
@@ -179,33 +180,30 @@ export default function AdminLojas() {
             mesmo `<select>` de status em largura cheia — mesma função sem
             precisar de um componente de sheet novo só pra essa tela. */}
         <div className="flex w-full items-center gap-3 lg:w-auto">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 font-body text-[14px] text-gray-800 lg:flex-none"
-          >
-            <option value="todos">Todos os status</option>
-            <option value="ativos">Ativos</option>
-            <option value="inativos">Inativos</option>
-          </select>
+          <div className="flex-1 lg:w-[160px] lg:flex-none">
+            <AdminSelect
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(v as StatusFilter)}
+              options={[
+                { value: 'todos', label: 'Status' },
+                { value: 'ativos', label: 'Ativos' },
+                { value: 'inativos', label: 'Inativos' },
+              ]}
+            />
+          </div>
           {/* Filtro de Categoria (22/08/2026) — o "Filtrar" do Figma (node
               1160:10961) tinha um sub-menu de Categoria que ficou pra depois
-              da primeira entrega; agora funciona igual ao de Status: mesmo
-              `<select>`, sem inventar um componente de sheet novo. */}
-          <div className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-gray-300 bg-base-white px-3 lg:flex-none">
-            <FunnelIcon className="size-4 shrink-0 text-gray-500" />
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value === 'todos' ? 'todos' : Number(e.target.value))}
-              className="w-full border-0 bg-transparent font-body text-[14px] text-gray-800 focus:outline-none lg:w-auto"
-            >
-              <option value="todos">Todas as categorias</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              da primeira entrega. */}
+          <div className="flex-1 lg:w-[200px] lg:flex-none">
+            <AdminSelect
+              value={String(categoryFilter)}
+              onChange={(v) => setCategoryFilter(v === 'todos' ? 'todos' : Number(v))}
+              icon={<FunnelIcon className="size-4 shrink-0 text-gray-500" />}
+              options={[
+                { value: 'todos', label: 'Categorias' },
+                ...categories.map((category) => ({ value: String(category.id), label: category.name })),
+              ]}
+            />
           </div>
         </div>
       </div>

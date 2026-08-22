@@ -1,12 +1,11 @@
 /**
- * TODO: a Amanda confirmou que os Termos de uso e Política de privacidade
- * do rodapé de Login/Criar Conta devem apontar pra um site EXTERNO (fora do
- * app), diferente da tela /termos interna (que continua existindo só para
- * quem acessa via Perfil > Termos de Uso e Privacidade, já logado). Falta
- * só a URL real do site — troque os dois valores abaixo assim que tiver.
+ * URLs reais confirmadas pela Amanda (22/08/2026) — usadas no rodapé de
+ * Login/Criar Conta E na tela de Perfil ("Termos de Uso e Privacidade"),
+ * que agora aponta pra fora do app em vez de uma tela interna (a tela
+ * `/termos` foi removida).
  */
-export const EXTERNAL_TERMS_URL = 'https://SEU-SITE-AQUI.com.br/termos';
-export const EXTERNAL_PRIVACY_URL = 'https://SEU-SITE-AQUI.com.br/privacidade';
+export const EXTERNAL_TERMS_URL = 'https://pauladomingues.com/termos-de-uso-app/';
+export const EXTERNAL_PRIVACY_URL = 'https://pauladomingues.com/politica-de-privacidade/';
 
 /**
  * Links de WhatsApp usados no Perfil ("Entrar no grupo" / "Falar com o

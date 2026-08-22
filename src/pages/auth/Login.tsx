@@ -57,7 +57,7 @@ export default function Login() {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 icon={<EnvelopeIcon className="size-full" />}
               />
               <AuthTextField

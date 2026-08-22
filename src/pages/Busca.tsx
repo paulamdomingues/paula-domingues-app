@@ -53,7 +53,10 @@ export default function Busca() {
       (store) =>
         store.name.toLowerCase().includes(trimmedQuery) ||
         store.categoryLabel.toLowerCase().includes(trimmedQuery) ||
-        store.code.toLowerCase().includes(trimmedQuery)
+        store.code.toLowerCase().includes(trimmedQuery) ||
+        // 22/08/2026: as tags cadastradas na loja também entram na busca —
+        // antes só nome/categoria/código eram considerados.
+        (store.details.tags ?? []).some((tag) => tag.toLowerCase().includes(trimmedQuery))
     );
     return sortStores(matches, sort);
   }, [hasQuery, trimmedQuery, sort, stores]);

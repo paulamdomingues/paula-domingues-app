@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { XCircleIcon } from '../icons';
 import { supabase } from '../../lib/supabaseClient';
 import type { AccessLevel } from '../../context/AuthContext';
+import AdminSelect from './AdminSelect';
 
 interface NovoMembroModalProps {
   onCancel: () => void;
@@ -83,7 +84,7 @@ export default function NovoMembroModal({ onCancel, onSaved }: NovoMembroModalPr
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="Nome completo"
+              placeholder="maria da silva santos"
               className="flex h-[50px] w-full items-center rounded-lg border border-gray-200 px-4 font-body text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none"
             />
           </label>
@@ -93,7 +94,7 @@ export default function NovoMembroModal({ onCancel, onSaved }: NovoMembroModalPr
             <input
               value={whatsapp}
               onChange={(e) => setWhatsapp(e.target.value)}
-              placeholder="11966046494"
+              placeholder="11912345678"
               className="flex h-[50px] w-full items-center rounded-lg border border-gray-200 px-4 font-body text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none"
             />
           </label>
@@ -104,25 +105,25 @@ export default function NovoMembroModal({ onCancel, onSaved }: NovoMembroModalPr
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-              placeholder="email@exemplo.com"
+              placeholder="mariadasilva@gmail.com"
               className="flex h-[50px] w-full items-center rounded-lg border border-gray-200 px-4 font-body text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none"
             />
           </label>
 
           <label className="flex flex-col gap-1.5">
             <span className="font-body text-[13px] tracking-[0.65px] text-gray-500">Nível de Acesso</span>
-            <select
+            <AdminSelect
               value={accessLevel}
-              onChange={(e) => setAccessLevel(e.target.value as AccessLevel)}
-              className="flex h-[50px] w-full items-center rounded-lg border border-gray-200 px-4 font-body text-[14px] text-gray-900 focus:outline-none"
-            >
-              <option value="">Escolha aqui</option>
-              {(Object.keys(ACCESS_LEVEL_LABELS) as AccessLevel[]).map((level) => (
-                <option key={level} value={level}>
-                  {ACCESS_LEVEL_LABELS[level]}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setAccessLevel(v as AccessLevel)}
+              triggerClassName="flex h-[50px] w-full items-center gap-2 rounded-lg border border-gray-200 pl-4 pr-3 font-body text-[14px] text-gray-900 focus:outline-none"
+              options={[
+                { value: '', label: 'Escolha aqui' },
+                ...(Object.keys(ACCESS_LEVEL_LABELS) as AccessLevel[]).map((level) => ({
+                  value: level,
+                  label: ACCESS_LEVEL_LABELS[level],
+                })),
+              ]}
+            />
           </label>
 
           <p className="font-body text-[12px] tracking-[0.6px] text-gray-400">

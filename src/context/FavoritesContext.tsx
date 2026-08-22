@@ -6,6 +6,13 @@ import { useAuth } from './AuthContext';
 interface FavoritesContextValue {
   isFavorite: (storeId: string) => boolean;
   toggleFavorite: (storeId: string) => void;
+  /**
+   * Data (ISO) de quando a loja foi favoritada, pra quem precisa ordenar a
+   * lista de favoritos "mais recente primeiro" (`Favoritos.tsx`, 22/08/2026 —
+   * Amanda pediu pra ordenar por quando foi adicionado, não por nome).
+   * `undefined` se a loja não está favoritada.
+   */
+  favoritedAt: (storeId: string) => string | undefined;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | undefined>(undefined);
@@ -30,21 +37,30 @@ const ADDED_TO_FAVORITES_MESSAGE = 'Loja adicionada aos favoritos';
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
   const userId = session?.user.id;
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  // Guarda `store_id -> created_at` (em vez de só um Set) pra dar pra
+  // ordenar a lista de favoritos por quando cada um foi adicionado
+  // (22/08/2026 — antes só existia o Set, sem nenhuma noção de "quando").
+  const [favorites, setFavorites] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     if (!userId) {
-      setFavoriteIds(new Set());
+      setFavorites(new Map());
       return;
     }
     let cancelled = false;
     supabase
       .from('favorites')
-      .select('store_id')
+      .select('store_id, created_at')
       .eq('user_id', userId)
       .then(({ data, error }) => {
         if (cancelled || error || !data) return;
-        setFavoriteIds(new Set(data.map((row) => String(row.store_id)).filter(Boolean)));
+        setFavorites(
+          new Map(
+            data
+              .filter((row) => row.store_id != null)
+              .map((row) => [String(row.store_id), row.created_at as string])
+          )
+        );
       });
     return () => {
       cancelled = true;
@@ -62,19 +78,23 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<FavoritesContextValue>(
     () => ({
-      isFavorite: (storeId) => favoriteIds.has(storeId),
+      isFavorite: (storeId) => favorites.has(storeId),
+      favoritedAt: (storeId) => favorites.get(storeId),
       toggleFavorite: (storeId) => {
         if (!userId) return;
 
-        const wasFavorite = favoriteIds.has(storeId);
+        const wasFavorite = favorites.has(storeId);
         const numericStoreId = Number(storeId);
+        // Otimista: usa a hora local até o Supabase confirmar — é só pra
+        // ordenação da lista, não precisa ser exata ao milissegundo.
+        const optimisticCreatedAt = new Date().toISOString();
 
-        setFavoriteIds((prev) => {
-          const next = new Set(prev);
+        setFavorites((prev) => {
+          const next = new Map(prev);
           if (wasFavorite) {
             next.delete(storeId);
           } else {
-            next.add(storeId);
+            next.set(storeId, optimisticCreatedAt);
           }
           return next;
         });
@@ -95,10 +115,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
         persist.then(({ error }) => {
           if (!error) return;
-          setFavoriteIds((prev) => {
-            const next = new Set(prev);
+          setFavorites((prev) => {
+            const next = new Map(prev);
             if (wasFavorite) {
-              next.add(storeId);
+              next.set(storeId, optimisticCreatedAt);
             } else {
               next.delete(storeId);
             }
@@ -107,7 +127,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         });
       },
     }),
-    [favoriteIds, userId]
+    [favorites, userId]
   );
 
   return (

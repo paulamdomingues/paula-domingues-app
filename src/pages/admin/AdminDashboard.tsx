@@ -101,7 +101,7 @@ export default function AdminDashboard() {
         {latestUsers.length === 0 && <p className="font-body text-[14px] text-gray-400">Nenhum usuário ainda.</p>}
         {latestUsers.map((u) => (
           <div key={u.id} className="flex items-center gap-4 border-b border-gray-50 px-2 py-3 last:border-0">
-            <p className="w-16 shrink-0 font-body text-[14px] text-main-dark-900">#{u.id}</p>
+            <p className="w-16 shrink-0 font-body text-[14px] text-main-dark-900">#{u.short_id ?? '—'}</p>
             <p className="w-36 shrink-0 truncate font-body text-[13px] font-medium text-gray-900">{u.full_name || '—'}</p>
             <p className="flex-1 truncate font-body text-[12px] text-gray-600">{u.email}</p>
             <p className="w-20 shrink-0 font-body text-[13px] font-medium text-gray-500">
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
         {latestUsers.length === 0 && <p className="font-body text-[13px] text-gray-400">Nenhum usuário ainda.</p>}
         {latestUsers.map((u) => (
           <div key={u.id} className="flex items-center gap-3 border-b border-gray-50 py-2 last:border-0">
-            <p className="w-16 shrink-0 font-body text-[13px] text-main-dark-900">#{u.id}</p>
+            <p className="w-16 shrink-0 font-body text-[13px] text-main-dark-900">#{u.short_id ?? '—'}</p>
             <p className="flex-1 truncate font-body text-[13px] font-medium text-gray-900">{u.full_name || '—'}</p>
             <p className="shrink-0 font-body text-[11px] text-gray-400">
               {new Date(u.purchased_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}

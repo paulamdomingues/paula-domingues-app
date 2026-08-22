@@ -83,7 +83,13 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside className="flex h-screen w-[260px] shrink-0 flex-col justify-between bg-main-dark-50 px-4 py-8">
+    // BUG corrigido em 22/08/2026: `h-screen` sozinho trava a sidebar em
+    // exatamente 100vh — quando o conteúdo principal (ex: Relatórios) fica
+    // mais alto que uma tela, a página toda cresce mas a sidebar não
+    // acompanha, "ficando curta" perto do conteúdo. `sticky top-0` resolve
+    // sem precisar mexer no `<main>`: a sidebar sempre volta a ocupar a
+    // tela inteira, em qualquer ponto do scroll da página.
+    <aside className="sticky top-0 flex h-screen w-[260px] shrink-0 flex-col justify-between overflow-y-auto bg-main-dark-50 px-4 py-8">
       <div className="flex flex-col gap-10">
         <p className="px-2 font-display text-[22px] font-extrabold tracking-[0.66px] text-main-red-800">
           Paula Domingues

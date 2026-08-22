@@ -1,4 +1,4 @@
-import { StorefrontIcon } from '../components/icons';
+import { StorefrontIcon, VideoCameraIcon } from '../components/icons';
 import ScreenHeader from '../components/ScreenHeader';
 import { useNotifications } from '../context/NotificationsContext';
 
@@ -7,6 +7,10 @@ import { useNotifications } from '../context/NotificationsContext';
  * `useState` local aqui, então resetava toda vez que saía dessa tela — o
  * sino da Início/TopBar nunca conseguia refletir o estado real). Ver
  * `src/context/NotificationsContext.tsx` (Amanda, 19/08/2026).
+ *
+ * 22/08/2026: o feed agora tem 2 tipos reais (loja nova / story novo) — o
+ * ícone à esquerda de cada card muda conforme `notification.type`, em vez
+ * de ser sempre `StorefrontIcon` fixo.
  */
 export default function Notificacoes() {
   const { notifications, unreadCount, markAllAsRead } = useNotifications();
@@ -32,7 +36,11 @@ export default function Notificacoes() {
                 notification.read ? 'opacity-60' : ''
               }`}
             >
-              <StorefrontIcon className="size-[30px] shrink-0 text-main-red-800" />
+              {notification.type === 'new_story' ? (
+                <VideoCameraIcon className="size-[30px] shrink-0 text-main-red-800" />
+              ) : (
+                <StorefrontIcon className="size-[30px] shrink-0 text-main-red-800" />
+              )}
               <div className="flex flex-1 flex-col items-start gap-4">
                 <div className="flex w-full flex-col items-start gap-1">
                   <p className="w-full font-display font-bold text-[22px] leading-[1.2] tracking-[0.66px] text-main-red-800">
