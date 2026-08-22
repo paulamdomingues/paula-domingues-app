@@ -181,8 +181,7 @@ export default function StoreDetail() {
               <ImagePlaceholder
                 src={heroImage}
                 alt={store.name}
-                className="-mx-6 aspect-square w-[calc(100%_+_48px)] object-top lg:mx-0 lg:aspect-square lg:h-auto lg:w-full"
-                rounded="rounded-none lg:rounded-lg"
+                className="-mx-6 aspect-square w-[calc(100%_+_48px)] max-w-none object-top lg:mx-0 lg:aspect-square lg:h-auto lg:w-full"
               />
 
               <button

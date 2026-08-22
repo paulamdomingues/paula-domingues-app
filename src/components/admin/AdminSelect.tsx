@@ -86,7 +86,7 @@ export default function AdminSelect({
       {open && (
         <ul
           role="listbox"
-          className="absolute left-0 top-[calc(100%+4px)] z-20 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-base-white py-1 shadow-lg"
+          className="absolute left-0 top-[calc(100%_+_4px)] z-20 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-base-white py-1 shadow-lg"
         >
           {options.map((option) => (
             <li key={option.value} role="option" aria-selected={option.value === value}>
