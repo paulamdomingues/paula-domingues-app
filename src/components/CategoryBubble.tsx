@@ -13,7 +13,12 @@ export default function CategoryBubble({ category, onSelect }: CategoryBubblePro
       onClick={() => onSelect?.(category)}
       className="flex w-[clamp(72px,22vw,95px)] shrink-0 flex-col items-center gap-2 lg:h-[193px] lg:w-[147px]"
     >
-      <span className="flex aspect-square w-full items-center justify-center rounded-full border-[1.15px] border-main-red-900 bg-main-red-50 p-2">
+      {/* 24/08/2026, pedido da Amanda: tirar o "anel" claro que aparecia
+          entre a borda vermelha escura e a foto — era o `p-2` deixando a
+          cor de fundo (`bg-main-red-50`, rosa claro) visível como uma
+          borda interna. Sem o padding a foto vai até a borda escura
+          direto; a borda escura (`border-main-red-900`) continua igual. */}
+      <span className="flex aspect-square w-full items-center justify-center rounded-full border-[1.15px] border-main-red-900 bg-main-red-50">
         <ImagePlaceholder
           src={category.imageUrl}
           alt={category.label}
