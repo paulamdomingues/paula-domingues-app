@@ -71,15 +71,24 @@ export default function AdminLojas() {
             category_id: row.category_id,
             // BUG corrigido em 24/08/2026: a categoria nunca aparecia no
             // card da loja (só um "—"). `category_id → categories.id` é
-            // N:1 (a FK está em `stores`), então o PostgREST embeda
-            // `categories` como OBJETO (`{ name: "..." }` ou `null`), não
-            // como array — só arrays teriam `[0]`. `Array.isArray` sempre
-            // dava `false` aqui, então `category_name` sempre virava
-            // `null`. Mesmo padrão defensivo (aceita os dois formatos) já
-            // usado em `categoryNameFromRow` (`src/lib/catalog.ts`).
-            category_name: Array.isArray(row.categories)
-              ? (row.categories[0]?.name ?? null)
-              : (row.categories?.name ?? null),
+            // N:1 (a FK está em `stores`), então em TEMPO DE EXECUÇÃO o
+            // PostgREST embeda `categories` como OBJETO (`{ name: "..." }`
+            // ou `null`), não como array. Só que o supabase-js INFERE o
+            // TIPO desse `.select(...)` sempre como array (não tem como
+            // ele saber a cardinalidade da FK só lendo a string) — daí o
+            // build quebrava (TS2339 "Property 'name' does not exist on
+            // type 'never'": o TypeScript, vendo o tipo declarado como
+            // SEMPRE array, considerava o `else` do `Array.isArray`
+            // logicamente impossível). O `as unknown as` abaixo existe só
+            // pra "resetar" esse tipo inferido otimista e permitir tratar
+            // os dois formatos de verdade — mesmo padrão defensivo já
+            // usado em `categoryNameFromRow` (`src/lib/catalog.ts`), que
+            // não quebra porque lá `StoreRow.categories` é uma interface
+            // própria (união), não o tipo auto-inferido do `.select(...)`.
+            category_name: (() => {
+              const cat = row.categories as unknown as { name: string } | { name: string }[] | null;
+              return Array.isArray(cat) ? (cat[0]?.name ?? null) : (cat?.name ?? null);
+            })(),
           }))
         );
       });
