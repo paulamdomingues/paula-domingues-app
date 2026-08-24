@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabaseClient';
+import { countInRange, getPeriodRange, getPreviousPeriodRange, isInRange, type ReportPeriod } from './reportPeriods';
 
 /**
  * Dado compartilhado entre Relatórios (`AdminRelatorios.tsx`) e o Resumo
@@ -42,6 +43,7 @@ interface ClickRow {
 interface SearchRow {
   term: string;
   category_id: number | null;
+  created_at: string;
 }
 
 interface StoryLite {
@@ -88,7 +90,16 @@ export function computeDelta(dates: string[], windowDays: number): Delta | null 
   return { pct: Math.abs(pct), positive: pct >= 0 };
 }
 
-export function useAdminReportsData() {
+/**
+ * `period` é opcional e só usado por Relatórios (`AdminRelatorios.tsx`) —
+ * quando presente, o hook TAMBÉM devolve a versão "filtrada por período"
+ * de cada card (prefixo `period*`), calculada em cima dos mesmos dados já
+ * buscados (sem query nova nenhuma). O Resumo (`AdminDashboard.tsx`)
+ * chama o hook sem argumento nenhum, então continua recebendo exatamente
+ * os mesmos campos de sempre (`activeUsersCount`, `newUsersByDay`, etc,
+ * sempre "geral"/"hoje vs ontem") — nada nele muda com essa adição.
+ */
+export function useAdminReportsData(period?: ReportPeriod) {
   const [users, setUsers] = useState<AllowedUserLite[] | null>(null);
   const [stores, setStores] = useState<StoreLite[] | null>(null);
   const [categories, setCategories] = useState<CategoryLite[] | null>(null);
@@ -106,7 +117,7 @@ export function useAdminReportsData() {
       supabase.from('stores').select('id, name, is_active, created_at, category_id'),
       supabase.from('categories').select('id, name'),
       supabase.from('store_contact_clicks').select('store_id, created_at'),
-      supabase.from('search_queries').select('term, category_id'),
+      supabase.from('search_queries').select('term, category_id, created_at'),
       supabase.from('stories').select('id, expires_at'),
     ]).then(([u, s, c, cl, sq, st]) => {
       if (u.error || s.error || c.error || cl.error || sq.error || st.error) {
@@ -219,6 +230,149 @@ export function useAdminReportsData() {
     return stories.filter((s) => new Date(s.expires_at).getTime() > now).length;
   }, [stories]);
 
+  // ------------------------------------------------------------------
+  // A partir daqui: só roda de verdade quando `period` é passado
+  // (Relatórios). `range`/`previousRange` ficam parados (mesmo objeto)
+  // enquanto o período escolhido não muda — recalcular só quando `period`
+  // muda é suficiente, não precisa reagir ao relógio passando.
+  // ------------------------------------------------------------------
+  const range = useMemo(() => (period ? getPeriodRange(period) : null), [period]);
+  const previousRange = useMemo(() => (period ? getPreviousPeriodRange(period) : null), [period]);
+
+  const periodUsers = useMemo(() => {
+    if (!users || !range) return [];
+    return users.filter((u) => isInRange(u.purchased_at, range));
+  }, [users, range]);
+
+  const periodStoresCount = useMemo(() => {
+    if (!stores || !range) return 0;
+    return countInRange(stores.map((s) => s.created_at), range);
+  }, [stores, range]);
+
+  const periodClicksInRange = useMemo(() => {
+    if (!clicks || !range) return [];
+    return clicks.filter((c) => isInRange(c.created_at, range));
+  }, [clicks, range]);
+
+  const periodSearchesInRange = useMemo(() => {
+    if (!searches || !range) return [];
+    return searches.filter((s) => isInRange(s.created_at, range));
+  }, [searches, range]);
+
+  function delta(dates: string[]): Delta | null {
+    if (!range || !previousRange) return null;
+    const current = countInRange(dates, range);
+    const previous = countInRange(dates, previousRange);
+    if (previous === 0) return null;
+    const pct = Math.round(((current - previous) / previous) * 100);
+    return { pct: Math.abs(pct), positive: pct >= 0 };
+  }
+
+  const periodUsersCount = periodUsers.length;
+  const periodUsersDelta = users ? delta(users.map((u) => u.purchased_at)) : null;
+  const periodStoresDelta = stores ? delta(stores.map((s) => s.created_at)) : null;
+  const periodClicksCount = periodClicksInRange.length;
+  const periodClicksDelta = clicks ? delta(clicks.map((c) => c.created_at)) : null;
+
+  // Barras por dia dentro do período escolhido — rótulo por dia da semana
+  // pra períodos curtos (≤7 dias, igual sempre foi), ou por dia do mês
+  // pra períodos mais longos (30 dias/mês específico), senão os rótulos
+  // "Seg/Ter/Qua" repetidos várias vezes ficariam sem sentido. O número de
+  // barras vem do TIPO de período escolhido (não da duração em ms do
+  // intervalo) — "últimos 7 dias" sempre = 7 barras (hoje + 6 anteriores),
+  // nunca 8, mesmo o intervalo de comparação sendo calculado por hora.
+  const periodNewUsersByDay = useMemo(() => {
+    if (!users || !range || !period) return [];
+    let totalDays: number;
+    // 'hoje'/'7dias'/'30dias' são janelas móveis ancoradas em "agora", não
+    // em meia-noite — por isso o cursor abaixo começa contando pra trás a
+    // partir de HOJE (não de `range.start` truncado, que ficaria 1 dia
+    // "atrasado" nesses três casos). 'ontem' e 'mes' já são alinhados à
+    // meia-noite de verdade, então usam `range.start` direto.
+    const anchorsOnToday = period.kind === 'hoje' || period.kind === '7dias' || period.kind === '30dias';
+    if (period.kind === 'hoje' || period.kind === 'ontem') {
+      totalDays = 1;
+    } else if (period.kind === '7dias') {
+      totalDays = 7;
+    } else if (period.kind === '30dias') {
+      totalDays = 30;
+    } else {
+      // 'mes': dias corridos do mês inteiro, ou só os que já passaram, se
+      // for o mês atual (parcial).
+      totalDays = Math.max(1, Math.ceil((range.end - range.start) / DAY_MS));
+    }
+    const useWeekday = totalDays <= 7;
+    const cursor = anchorsOnToday ? new Date() : new Date(range.start);
+    cursor.setHours(0, 0, 0, 0);
+    if (anchorsOnToday) cursor.setDate(cursor.getDate() - (totalDays - 1));
+    const buckets: { key: string; label: string }[] = [];
+    for (let i = 0; i < totalDays; i++) {
+      buckets.push({
+        key: cursor.toISOString().slice(0, 10),
+        label: useWeekday ? WEEKDAY_LABELS[cursor.getDay()] : String(cursor.getDate()).padStart(2, '0'),
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return buckets.map(({ key, label }) => ({
+      label,
+      value: users.filter((u) => u.purchased_at.slice(0, 10) === key).length,
+    }));
+  }, [users, range, period]);
+
+  const periodLatestUsers = useMemo(
+    () => [...periodUsers].sort((a, b) => (a.purchased_at < b.purchased_at ? 1 : -1)).slice(0, 6),
+    [periodUsers]
+  );
+
+  const periodTop5Stores = useMemo(() => {
+    if (!stores) return [];
+    const countByStore = new Map<number, number>();
+    periodClicksInRange.forEach((c) => countByStore.set(c.store_id, (countByStore.get(c.store_id) ?? 0) + 1));
+    return [...countByStore.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([storeId, count]) => {
+        const store = stores.find((s) => s.id === storeId);
+        const category = store ? categories?.find((c) => c.id === store.category_id) : undefined;
+        return { id: storeId, name: store?.name ?? 'Loja removida', categoryName: category?.name ?? '—', count };
+      });
+  }, [stores, categories, periodClicksInRange]);
+
+  const periodSearchedCategories = useMemo(() => {
+    if (!categories) return [];
+    const countByCategory = new Map<number, number>();
+    periodSearchesInRange.forEach((s) => {
+      if (s.category_id == null) return;
+      countByCategory.set(s.category_id, (countByCategory.get(s.category_id) ?? 0) + 1);
+    });
+    return [...countByCategory.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([categoryId, count], i) => ({
+        label: categories.find((c) => c.id === categoryId)?.name ?? 'Categoria removida',
+        value: count,
+        color: CHART_COLORS[i % CHART_COLORS.length],
+      }));
+  }, [categories, periodSearchesInRange]);
+
+  const periodTopSearchTerms = useMemo(() => {
+    const countByTerm = new Map<string, number>();
+    periodSearchesInRange.forEach((s) => {
+      const key = s.term.trim();
+      if (!key) return;
+      countByTerm.set(key, (countByTerm.get(key) ?? 0) + 1);
+    });
+    return [...countByTerm.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+  }, [periodSearchesInRange]);
+
+  const periodPlanSegments = useMemo(() => {
+    const withPlan = periodUsers.filter((u) => u.plan);
+    return [
+      { label: 'Trimestral', value: withPlan.filter((u) => u.plan === 'trimestral').length, color: CHART_COLORS[0] },
+      { label: 'Anual', value: withPlan.filter((u) => u.plan === 'anual').length, color: CHART_COLORS[1] },
+    ];
+  }, [periodUsers]);
+
   return {
     loading,
     error,
@@ -238,5 +392,19 @@ export function useAdminReportsData() {
     topSearchTerms,
     planSegments,
     upcomingRenewals,
+    // Versões filtradas pelo `period` recebido (só fazem sentido quando
+    // `period` foi passado — ficam vazias/zeradas caso contrário).
+    periodUsersCount,
+    periodUsersDelta,
+    periodStoresCount,
+    periodStoresDelta,
+    periodClicksCount,
+    periodClicksDelta,
+    periodNewUsersByDay,
+    periodLatestUsers,
+    periodTop5Stores,
+    periodSearchedCategories,
+    periodTopSearchTerms,
+    periodPlanSegments,
   };
 }

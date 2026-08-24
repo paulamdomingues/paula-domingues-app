@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BellIcon, ClockIcon } from '../../components/icons';
+import { BellIcon } from '../../components/icons';
 import { DonutChart, SummaryCard, WeeklyBarChart } from '../../components/admin/charts';
-import { computeDelta, useAdminReportsData } from '../../lib/adminReports';
+import ReportPeriodSelector from '../../components/admin/ReportPeriodSelector';
+import { useAdminReportsData } from '../../lib/adminReports';
+import type { ReportPeriod } from '../../lib/reportPeriods';
 
 /**
  * Relatórios (Figma: `Relatórios` node 627:10085). Diferente das outras
@@ -23,57 +25,55 @@ import { computeDelta, useAdminReportsData } from '../../lib/adminReports';
  *    Make gravar isso a partir do webhook da Hubla.
  *  - Vencimentos Próximo: aproximação combinada com ela (compra +
  *    90/365 dias conforme o plano) até esse mesmo webhook existir.
- *  - Os deltas "vs 30 dias anteriores" só aparecem quando já existe um
+ *  - Os deltas "vs período anterior" só aparecem quando já existe um
  *    período anterior pra comparar (senão a conta é 0→N, que não é uma
  *    porcentagem que signifique nada) — fica em branco nesse caso, em vez
  *    de mostrar um número inventado.
- *
- * O filtro de mês do Figma ("Julho ▾") virou só um selo com o mês atual,
- * sem funcionalidade de fatiar por mês — não existe snapshot histórico
- * pra isso ainda (só temos o estado atual + timestamps de criação).
  *
  * 21/08/2026: dados/cálculos movidos pra `lib/adminReports.ts` (hook
  * `useAdminReportsData`) e os cards/gráficos pra
  * `components/admin/charts.tsx` — o Resumo (`AdminDashboard.tsx`) precisa
  * dos mesmos números, e reaproveitar em vez de duplicar as 5 queries.
+ *
+ * 24/08/2026: filtro de período de verdade (pedido antigo da Amanda,
+ * "Instruções Mudanças App V4", retomado agora) — o selo decorativo do
+ * mês virou o `ReportPeriodSelector` (Hoje/Ontem/7 dias/30 dias/mês
+ * específico), e todos os cards abaixo (exceto "Vencimentos Próximo", que
+ * é sempre "daqui pra frente" por natureza — não faz sentido "filtrar" um
+ * prazo que ainda vai vencer) passam a refletir só o período escolhido,
+ * com o "vs período anterior" comparando contra o período equivalente
+ * imediatamente anterior (ex.: mês escolhido vs mês anterior a ele, 30
+ * dias vs os 30 dias antes desses). Ver `lib/reportPeriods.ts` pra
+ * matemática do intervalo e `lib/adminReports.ts` (campos `period*`) pro
+ * cálculo em cima dos dados. O Resumo continua 100% como estava.
  */
 export default function AdminRelatorios() {
+  const [period, setPeriod] = useState<ReportPeriod>({ kind: '30dias' });
+
   const {
     loading,
     error,
-    users,
-    stores,
-    clicks,
-    activeUsersCount,
-    visibleStoresCount,
-    clicksCount,
-    newUsersByDay,
-    latestUsers,
-    top5Stores,
-    searchedCategories,
-    topSearchTerms,
-    planSegments,
+    periodUsersCount,
+    periodUsersDelta,
+    periodStoresCount,
+    periodStoresDelta,
+    periodClicksCount,
+    periodClicksDelta,
+    periodNewUsersByDay,
+    periodLatestUsers,
+    periodTop5Stores,
+    periodSearchedCategories,
+    periodTopSearchTerms,
+    periodPlanSegments,
     upcomingRenewals,
-  } = useAdminReportsData();
-
-  const activeUsersDelta = users ? computeDelta(users.map((u) => u.purchased_at), 30) : null;
-  const visibleStoresDelta = stores ? computeDelta(stores.map((s) => s.created_at), 30) : null;
-  const clicksDelta = clicks ? computeDelta(clicks.map((c) => c.created_at), 30) : null;
-
-  const currentMonthLabel = useMemo(() => {
-    const label = new Date().toLocaleDateString('pt-BR', { month: 'long' });
-    return label.charAt(0).toUpperCase() + label.slice(1);
-  }, []);
+  } = useAdminReportsData(period);
 
   return (
     <div className="flex w-full flex-col gap-8">
       <div className="flex w-full items-center justify-between">
         <h1 className="font-display text-[32px] font-bold tracking-[0.96px] text-main-dark-900">Relatórios</h1>
         <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2">
-            <span className="font-body text-[14px] text-gray-700">{currentMonthLabel}</span>
-            <ClockIcon className="size-5 text-gray-500" />
-          </div>
+          <ReportPeriodSelector value={period} onChange={setPeriod} />
           <BellIcon className="size-6 text-gray-400" />
         </div>
       </div>
@@ -85,15 +85,15 @@ export default function AdminRelatorios() {
       ) : (
         <>
           <div className="grid w-full grid-cols-3 gap-4">
-            <SummaryCard label="Alunas Ativas" value={activeUsersCount} delta={activeUsersDelta} deltaSuffix="novos cadastros vs 30 dias anteriores" />
-            <SummaryCard label="Lojas Visíveis" value={visibleStoresCount} delta={visibleStoresDelta} deltaSuffix="novas lojas vs 30 dias anteriores" />
-            <SummaryCard label="Cliques em Contatos" value={clicksCount} delta={clicksDelta} deltaSuffix="vs 30 dias anteriores" />
+            <SummaryCard label="Alunas Ativas" value={periodUsersCount} delta={periodUsersDelta} deltaSuffix="vs período anterior" />
+            <SummaryCard label="Lojas Visíveis" value={periodStoresCount} delta={periodStoresDelta} deltaSuffix="vs período anterior" />
+            <SummaryCard label="Cliques em Contatos" value={periodClicksCount} delta={periodClicksDelta} deltaSuffix="vs período anterior" />
           </div>
 
           <div className="flex flex-col gap-4 rounded-lg bg-base-white p-6">
             <p className="font-display text-[32px] font-bold tracking-[1.6px] text-main-dark-900">Novos Usuários</p>
-            <p className="font-body text-[13px] text-gray-400">Cadastros por dia, últimos 7 dias</p>
-            <WeeklyBarChart buckets={newUsersByDay} />
+            <p className="font-body text-[13px] text-gray-400">Cadastros por dia, no período selecionado</p>
+            <WeeklyBarChart buckets={periodNewUsersByDay} />
           </div>
 
           {/*
@@ -113,8 +113,10 @@ export default function AdminRelatorios() {
                 </Link>
               </div>
               <div className="flex flex-col gap-1">
-                {latestUsers.length === 0 && <p className="font-body text-[14px] text-gray-400">Nenhum usuário ainda.</p>}
-                {latestUsers.map((u) => (
+                {periodLatestUsers.length === 0 && (
+                  <p className="font-body text-[14px] text-gray-400">Nenhum usuário cadastrado nesse período.</p>
+                )}
+                {periodLatestUsers.map((u) => (
                   <div key={u.id} className="flex items-center gap-4 border-b border-gray-50 px-2 py-3 last:border-0">
                     <p className="w-16 shrink-0 font-body text-[14px] text-main-dark-900">#{u.short_id ?? '—'}</p>
                     <p className="w-36 shrink-0 truncate font-body text-[13px] font-medium text-gray-900">{u.full_name || '—'}</p>
@@ -132,12 +134,12 @@ export default function AdminRelatorios() {
 
             <div className="flex flex-col gap-4 rounded-lg bg-base-white p-6">
               <p className="font-display text-[24px] font-bold tracking-[0.72px] text-main-dark-900">Top 5 Lojas</p>
-              <p className="font-body text-[12px] text-gray-400">Por cliques em WhatsApp/Instagram</p>
-              {top5Stores.length === 0 ? (
-                <p className="font-body text-[13px] text-gray-400">Sem cliques registrados ainda.</p>
+              <p className="font-body text-[12px] text-gray-400">Por cliques em WhatsApp/Instagram, no período selecionado</p>
+              {periodTop5Stores.length === 0 ? (
+                <p className="font-body text-[13px] text-gray-400">Sem cliques registrados nesse período.</p>
               ) : (
                 <div className="flex flex-col gap-1">
-                  {top5Stores.map((store) => (
+                  {periodTop5Stores.map((store) => (
                     <Link
                       key={store.id}
                       to={`/admin/lojas/${store.id}`}
@@ -158,20 +160,20 @@ export default function AdminRelatorios() {
           <div className="grid w-full grid-cols-2 gap-4">
             <div className="flex flex-col gap-4 rounded-lg bg-base-white p-6">
               <p className="font-display text-[24px] font-bold tracking-[0.72px] text-main-dark-900">Categorias mais buscadas</p>
-              {searchedCategories.length === 0 ? (
-                <p className="font-body text-[13px] text-gray-400">Sem buscas registradas ainda.</p>
+              {periodSearchedCategories.length === 0 ? (
+                <p className="font-body text-[13px] text-gray-400">Sem buscas registradas nesse período.</p>
               ) : (
-                <DonutChart segments={searchedCategories} />
+                <DonutChart segments={periodSearchedCategories} />
               )}
             </div>
 
             <div className="flex flex-col gap-4 rounded-lg bg-base-white p-6">
               <p className="font-display text-[24px] font-bold tracking-[0.72px] text-main-dark-900">Termos de Busca mais pesquisados</p>
-              {topSearchTerms.length === 0 ? (
-                <p className="font-body text-[13px] text-gray-400">Sem buscas registradas ainda.</p>
+              {periodTopSearchTerms.length === 0 ? (
+                <p className="font-body text-[13px] text-gray-400">Sem buscas registradas nesse período.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {topSearchTerms.map(([term, count]) => (
+                  {periodTopSearchTerms.map(([term, count]) => (
                     <span
                       key={term}
                       className="flex items-center gap-2 rounded-full bg-gray-200 px-3 py-1.5 font-body text-[14px] text-main-dark-800"
@@ -190,16 +192,18 @@ export default function AdminRelatorios() {
               <p className="font-display text-[24px] font-bold tracking-[0.72px] text-main-dark-900">Vencimentos Próximo</p>
               <p className="font-display text-[48px] font-extrabold tracking-[1.44px] text-main-dark-900">{upcomingRenewals}</p>
               <p className="font-body text-[13px] text-gray-400">
-                Estimativa (compra + duração do plano) — assinaturas vencendo em até 30 dias
+                Estimativa (compra + duração do plano) — assinaturas vencendo em até 30 dias a partir de hoje (não muda com o
+                período selecionado acima)
               </p>
             </div>
 
             <div className="flex flex-col gap-4 rounded-lg bg-base-white p-6">
               <p className="font-display text-[24px] font-bold tracking-[0.72px] text-main-dark-900">Tipo de Assinaturas</p>
-              {planSegments.every((s) => s.value === 0) ? (
-                <p className="font-body text-[13px] text-gray-400">Nenhum usuário com plano definido ainda.</p>
+              <p className="font-body text-[12px] text-gray-400">Novas assinaturas no período selecionado</p>
+              {periodPlanSegments.every((s) => s.value === 0) ? (
+                <p className="font-body text-[13px] text-gray-400">Nenhuma assinatura nova nesse período.</p>
               ) : (
-                <DonutChart segments={planSegments} />
+                <DonutChart segments={periodPlanSegments} />
               )}
             </div>
           </div>

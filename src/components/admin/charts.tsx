@@ -37,18 +37,26 @@ export function SummaryCard({
 
 export function WeeklyBarChart({ buckets }: { buckets: { label: string; value: number }[] }) {
   const max = Math.max(1, ...buckets.map((b) => b.value));
+  // Além de ~10 barras (períodos de 30 dias/mês inteiro nos Relatórios,
+  // 24/08/2026) `flex-1` deixaria cada barra fininha demais pra caber —
+  // aqui vira uma faixa com largura fixa por barra + rolagem horizontal,
+  // em vez de espremer tudo. Pro uso original (sempre 7 barras, Resumo e
+  // Relatórios/"últimos 7 dias") nada muda.
+  const dense = buckets.length > 10;
   return (
-    <div className="flex h-[180px] w-full items-end gap-4">
-      {buckets.map((b) => (
-        <div key={b.label} className="flex flex-1 flex-col items-center gap-2">
-          <span className="font-body text-[12px] text-gray-500">{b.value}</span>
-          <div
-            className="w-full min-h-[4px] rounded-t-md bg-main-red-500"
-            style={{ height: `${(b.value / max) * 130}px` }}
-          />
-          <span className="font-body text-[13px] text-gray-600">{b.label}</span>
-        </div>
-      ))}
+    <div className={dense ? 'w-full overflow-x-auto' : 'w-full'}>
+      <div className={`flex h-[180px] items-end ${dense ? 'w-max min-w-full gap-2' : 'w-full gap-4'}`}>
+        {buckets.map((b, i) => (
+          <div key={`${b.label}-${i}`} className={`flex flex-col items-center gap-2 ${dense ? 'w-8 shrink-0' : 'flex-1'}`}>
+            <span className="font-body text-[12px] text-gray-500">{b.value}</span>
+            <div
+              className="w-full min-h-[4px] rounded-t-md bg-main-red-500"
+              style={{ height: `${(b.value / max) * 130}px` }}
+            />
+            <span className="font-body text-[13px] text-gray-600">{b.label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
