@@ -56,6 +56,10 @@ export default function Busca() {
         store.code.toLowerCase().includes(trimmedQuery) ||
         // 22/08/2026: as tags cadastradas na loja também entram na busca —
         // antes só nome/categoria/código eram considerados.
+        // BUG corrigido em 22/08/2026: `store.details` é opcional
+        // (`StoreDetails | undefined`) — o build da Vercel quebrou
+        // (TS18048) porque isso aqui acessava `.tags` sem checar se
+        // `details` existia primeiro. Faltava o `?.`, não só o `?? []`.
         (store.details?.tags ?? []).some((tag) => tag.toLowerCase().includes(trimmedQuery))
     );
     return sortStores(matches, sort);
@@ -129,10 +133,15 @@ export default function Busca() {
 
       {hasQuery && results.length > 0 && (
         <div className="flex w-full flex-col items-center gap-2">
-          {/* Alinhado à esquerda (era `justify-end`, ficava colado na outra
-              ponta) — rótulo + botão em linha única, sem quebrar, com
-              espaçamento confortável entre os dois (Amanda, 20/08/2026). */}
-          <div className="flex h-10 w-full items-center gap-4 lg:h-auto lg:gap-7">
+          {/* 24/08/2026, pedido da Amanda: no mobile, "Ordem de exibição:" e
+              o dropdown ficam justificados nas pontas (esquerda/direita),
+              com espaçamento automático — sempre o mais afastados possível,
+              independente da largura da tela (mesma lógica de
+              `CategoryScreen.tsx`, `justify-between ... lg:justify-normal`).
+              No desktop `lg:justify-normal` cancela isso e volta pro gap
+              fixo de 20/08/2026 (rótulo + botão colados, com espaçamento
+              confortável entre os dois). */}
+          <div className="flex h-10 w-full items-center justify-between gap-4 lg:h-auto lg:justify-normal lg:gap-7">
             <span className="whitespace-nowrap font-body text-[13px] tracking-[0.65px] text-gray-800 lg:text-[14px] lg:tracking-[0.7px]">
               Ordem de exibição:
             </span>

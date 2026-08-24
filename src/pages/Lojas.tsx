@@ -40,13 +40,15 @@ export default function Lojas() {
         centerTitleOnDesktop
       />
 
-      {/* Mobile: os dois botões ficam com 163px de largura cada e 16px de gap
-          entre eles (342x40px de caixa pra linha toda), pra bater com a
-          largura de duas colunas da grade de cards embaixo e com a mesma
-          caixa usada na Busca. Desktop (`lg:justify-between`): volta a ficar
-          como antes, com o rótulo "Ordem de exibição:" e os botões nas
-          pontas (Amanda, 20/08/2026). */}
-      <div className="flex h-10 w-full items-center gap-4 lg:h-auto lg:justify-between">
+      {/* 24/08/2026, pedido da Amanda: "Mais populares" e "Filtrar" ficam
+          justificados nas pontas (esquerda/direita), com espaçamento
+          automático entre eles — sempre o mais afastados possível,
+          independente da largura da tela (mesma lógica já usada em
+          `CategoryScreen.tsx`). Antes, no mobile, os dois tinham 163px
+          fixos + 16px de gap (342px de caixa), então ficavam grudados no
+          meio da tela em vez de nas pontas — por isso o `fixedWidth` saiu
+          daqui (ele existia só pra forçar essa largura fixa). */}
+      <div className="flex h-10 w-full items-center justify-between lg:h-auto">
         <div className="flex items-center gap-4">
           {/* No mobile o rótulo some (só o texto "Mais populares" + ícone,
               tipo aba) — no desktop mantém o rótulo, ver print da Amanda
@@ -54,9 +56,9 @@ export default function Lojas() {
           <span className="hidden font-body text-[14px] tracking-[0.7px] text-gray-800 lg:inline">
             Ordem de exibição:
           </span>
-          <SortDropdown value={sort} onChange={setSort} align="left" fixedWidth />
+          <SortDropdown value={sort} onChange={setSort} align="left" />
         </div>
-        <CategoryFilterSheet fixedWidth />
+        <CategoryFilterSheet />
       </div>
 
       <div className="flex w-full flex-wrap items-start justify-center gap-x-4 gap-y-8">
