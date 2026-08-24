@@ -321,10 +321,14 @@ export default function StoreDetail() {
           dentro da margem da página (sem full-bleed).
         */}
         <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+        {/* `object-top` (24/08/2026, pedido da Amanda): quando a foto é
+            maior que a moldura, o corte do `object-cover` deve sempre
+            "puxar" pra cima (topo/centro), não cortar pelo meio — assim o
+            topo da fachada não some. */}
         <ImagePlaceholder
           src={details.facadeImageUrl}
           alt={`Fachada da loja — ${store.name}`}
-          className="aspect-[4/3] w-full lg:aspect-[4/5] lg:h-auto lg:w-1/2"
+          className="aspect-[4/3] w-full object-top lg:aspect-[4/5] lg:h-auto lg:w-1/2"
         />
 
         <div className="flex w-full flex-col gap-3 lg:w-1/2">
