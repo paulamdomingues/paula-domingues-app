@@ -67,9 +67,11 @@ const SECTION_VIEWERS: Record<AdminSection, AccessLevel[]> = {
   // `AdminUsuarios.tsx`/`UsuarioModal.tsx` nunca incluiu `suporte`, só
   // precisou liberar a aba aqui.
   usuarios: ['master_admin', 'editor', 'suporte'],
-  // Stories: função exclusiva do Convidado, fora o Master Admin — nem
-  // `editor` nem `suporte` têm acesso.
-  stories: ['master_admin', 'convidado'],
+  // Stories: Master Admin, Convidado (função exclusiva dele) e, a partir de
+  // 24/08/2026 (pedido da Amanda), também `editor` — sobe e exclui story
+  // igual ao Convidado (ver `canUpload`/`canDelete` em `AdminStories.tsx`).
+  // `suporte` continua sem acesso.
+  stories: ['master_admin', 'editor', 'convidado'],
   // Configurações fica visível pra TODO mundo — é onde qualquer membro edita
   // o próprio nome/whatsapp ("Meu Perfil"), mesmo quem não gerencia a
   // equipe. A seção "Equipe" dentro da tela continua travada por

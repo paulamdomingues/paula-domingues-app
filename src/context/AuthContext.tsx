@@ -15,7 +15,8 @@ import { supabase } from '../lib/supabaseClient';
  * Agora o valor salvo bate com o que aparece na tela:
  * - `master_admin` → Master Admin. Acesso total.
  * - `editor` → aparece como **"Editor de Conteúdo"** no painel → CRUD
- *   completo em Lojas, Categorias e Usuários; vê Resumo e Relatórios.
+ *   completo em Lojas, Categorias e Usuários; vê Resumo e Relatórios; e
+ *   (24/08/2026) também sobe/exclui Stories.
  * - `suporte` → aparece como **"Suporte"** no painel → cria/edita Lojas e
  *   Categorias (sem excluir) + só visualiza Usuários (sem editar); não vê
  *   Resumo/Relatórios/Stories.

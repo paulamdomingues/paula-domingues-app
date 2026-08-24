@@ -38,8 +38,10 @@ export default function AdminStories() {
   // função exclusiva do Convidado (fora o Master Admin) — Editor perdeu o
   // acesso que tinha antes (ele cuida só de Lojas/Categorias agora), e
   // Convidado passou a poder excluir também, não só subir vídeo.
-  const canUpload = accessLevel === 'master_admin' || accessLevel === 'convidado';
-  const canDelete = accessLevel === 'master_admin' || accessLevel === 'convidado';
+  // 24/08/2026: Editor de Conteúdo recuperou o acesso — agora sobe e exclui
+  // story igual ao Convidado/Master Admin (pedido da Amanda).
+  const canUpload = accessLevel === 'master_admin' || accessLevel === 'editor' || accessLevel === 'convidado';
+  const canDelete = accessLevel === 'master_admin' || accessLevel === 'editor' || accessLevel === 'convidado';
 
   const [stories, setStories] = useState<StoryRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
