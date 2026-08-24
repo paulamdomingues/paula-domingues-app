@@ -12,12 +12,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Centraliza o "frame" do app em telas maiores. Até 1023px, continua como
-   um mockup de celular (max-width 430px) — a partir de 1024px (o mesmo
-   breakpoint `lg:` do Tailwind), a versão desktop passa a valer e o frame
-   se expande até 1440px (a largura do canvas desktop no Figma); o cinza ao
-   redor (#e5e5e5, no body) funciona como a margem/"letterbox" em monitores
-   ainda mais largos. */
+/* Centraliza o "frame" do app CLIENTE (`ClientFrame`, App.tsx) em telas
+   maiores. Até 1023px, continua como um mockup de celular (max-width
+   430px) — a partir de 1024px (o mesmo breakpoint `lg:` do Tailwind), a
+   versão desktop passa a valer e o frame se expande até 1440px (a largura
+   do canvas desktop no Figma); o cinza ao redor (#e5e5e5, no body) funciona
+   como a margem/"letterbox" em monitores ainda mais largos.
+   24/08/2026: o painel ADMIN (`/admin/*`) não usa mais essa classe — ele
+   precisa da tela inteira (sidebar fixa + conteúdo), sem letterbox nem o
+   `overflow-x: hidden` daqui (que atrapalhava o `position: sticky` da
+   sidebar). Ver comentário em `ClientFrame`, App.tsx. */
 #root {
   min-height: 100vh;
   display: flex;

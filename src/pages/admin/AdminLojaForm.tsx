@@ -957,41 +957,45 @@ function GalleryUpload({
   onUpload: (file: File, index: number) => void;
   onRemove: (index: number) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  // 24/08/2026, pedido da Amanda: volta pra upload de UMA foto de cada vez
+  // por slot. O `multiple` (22/08/2026) juntava até 4 uploads concorrentes
+  // — cada `handleUpload` lia `form.gallery_images` do fechamento (closure)
+  // daquele instante, então quando 2+ terminavam quase juntos, o último a
+  // gravar sobrescrevia a galeria só com a SUA própria foto, apagando as
+  // dos outros (o "erro" que a Amanda via ao subir 4 de uma vez). Cada
+  // slot agora tem seu próprio `<input>` (sem `multiple`), então só existe
+  // um upload por vez em cada um.
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  function openPicker() {
-    inputRef.current?.click();
+  function openPicker(index: number) {
+    inputRefs.current[index]?.click();
   }
 
-  // 22/08/2026, pedido da Amanda: antes só dava pra subir uma foto de cada
-  // vez (o picker sempre mirava um slot específico) — agora o input aceita
-  // várias de uma vez (`multiple`) e cada arquivo escolhido preenche o
-  // próximo slot vazio, respeitando o limite de `MAX_GALLERY_IMAGES` (4).
-  function handleChange(e: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
+  function handleChange(index: number, e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
     e.target.value = '';
-    if (files.length === 0) return;
-
-    const emptySlotIndexes: number[] = [];
-    for (let i = 0; i < MAX_GALLERY_IMAGES; i++) {
-      if (!images[i]) emptySlotIndexes.push(i);
-    }
-    files.slice(0, emptySlotIndexes.length).forEach((file, i) => {
-      onUpload(file, emptySlotIndexes[i]);
-    });
+    if (file) onUpload(file, index);
   }
 
   const slots = Array.from({ length: MAX_GALLERY_IMAGES }, (_, i) => images[i] ?? null);
 
   return (
     <div className="flex flex-wrap gap-2">
-      <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleChange} />
       {slots.map((image, index) => {
         const slotKey = `galeria-${index}`;
         const isUploading = uploadingSlot === slotKey;
         if (!image && index > images.length) return null; // só mostra o próximo slot vazio, não todos de uma vez
         return (
           <div key={index} className="relative size-[100px] overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+            <input
+              ref={(el) => {
+                inputRefs.current[index] = el;
+              }}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handleChange(index, e)}
+            />
             {image ? (
               <>
                 <img src={image} alt={`Foto ${index + 1}`} className="size-full object-cover" />
@@ -1009,7 +1013,7 @@ function GalleryUpload({
               <button
                 type="button"
                 disabled={disabled || isUploading}
-                onClick={openPicker}
+                onClick={() => openPicker(index)}
                 className="flex size-full flex-col items-center justify-center gap-1 disabled:opacity-60"
               >
                 <PiPlus className="size-5 text-gray-400" />

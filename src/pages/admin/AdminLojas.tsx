@@ -69,9 +69,17 @@ export default function AdminLojas() {
             code_badge: row.code_badge,
             is_active: row.is_active,
             category_id: row.category_id,
-            // O client do Supabase tipa relações 1:N como array por padrão;
-            // aqui é sempre 0 ou 1 item (fk simples category_id → categories.id).
-            category_name: Array.isArray(row.categories) ? (row.categories[0]?.name ?? null) : null,
+            // BUG corrigido em 24/08/2026: a categoria nunca aparecia no
+            // card da loja (só um "—"). `category_id → categories.id` é
+            // N:1 (a FK está em `stores`), então o PostgREST embeda
+            // `categories` como OBJETO (`{ name: "..." }` ou `null`), não
+            // como array — só arrays teriam `[0]`. `Array.isArray` sempre
+            // dava `false` aqui, então `category_name` sempre virava
+            // `null`. Mesmo padrão defensivo (aceita os dois formatos) já
+            // usado em `categoryNameFromRow` (`src/lib/catalog.ts`).
+            category_name: Array.isArray(row.categories)
+              ? (row.categories[0]?.name ?? null)
+              : (row.categories?.name ?? null),
           }))
         );
       });

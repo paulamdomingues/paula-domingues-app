@@ -26,10 +26,19 @@ export interface StoreDetails {
   tags?: string[];
   instagramUrl?: string;
   whatsappUrl?: string;
-  /** Segunda foto grande (imagem "de destaque" abaixo dos contatos). */
-  secondaryImageUrl?: string | null;
-  /** Miniaturas do carrossel, além da foto principal. */
-  thumbnailImageUrls?: (string | null)[];
+  /**
+   * 24/08/2026: renomeado (Instruções Mudanças App V5.md, item 7) —
+   * antes a foto da fachada (`secondaryImageUrl`) entrava misturada no
+   * carrossel de cima como a foto padrão (posição 0), e o carrossel só
+   * mostrava 3 das 4 fotos de galeria (`thumbnailImageUrls`). A Amanda
+   * pediu pra inverter: a fachada tem um propósito fixo (mostrar a
+   * fachada da loja, upada separadamente no admin) e não deveria
+   * "roubar" o lugar da foto 1 no carrossel. Ver `StoreDetail.tsx`.
+   */
+  /** Foto da fachada (`stores.storefront_image_url`) — seção própria, não entra no carrossel de cima. */
+  facadeImageUrl?: string | null;
+  /** As 4 fotos do carrossel de cima (`stores.gallery_images`), na ordem cadastrada no admin. */
+  galleryImageUrls?: (string | null)[];
 }
 
 export interface Store {
@@ -37,7 +46,12 @@ export interface Store {
   code: string; // ex: "AL-0034"
   name: string;
   categoryLabel: string;
-  /** Vem de `stores.storefront_image_url` (Supabase Storage). */
+  /**
+   * Thumbnail do card. Prioriza a foto 1 da galeria
+   * (`stores.gallery_images[0]`) — só cai pra `storefront_image_url`
+   * (fachada) se a loja ainda não tiver nenhuma foto de galeria (ver
+   * `mapStore`, catalog.ts, e Instruções Mudanças App V5.md item 8).
+   */
   imageUrl?: string | null;
   isFavorite?: boolean;
   details?: StoreDetails;

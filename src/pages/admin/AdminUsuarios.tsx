@@ -235,7 +235,9 @@ export default function AdminUsuarios() {
       )}
 
       {rows !== null && filteredRows.length > 0 && (
-        <div className="flex items-center justify-end gap-3">
+        // 24/08/2026, pedido da Amanda: bloco "Anterior + número + Próxima"
+        // centralizado (era `justify-end`, ficava colado na ponta direita).
+        <div className="flex items-center justify-center gap-3">
           <button
             type="button"
             disabled={page === 0}

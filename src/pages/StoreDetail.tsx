@@ -102,11 +102,19 @@ export default function StoreDetail() {
   const details = store.details ?? {};
   const favorited = isFavorite(store.id);
 
-  // As 4 fotos da galeria de cima: posição 0 = fachada (`secondaryImageUrl`),
-  // 1-3 = as miniaturas. `activeImageIndex` decide qual delas vira a foto
-  // grande; as outras 3 aparecem como miniaturas clicáveis, na ordem
-  // original (22/08/2026).
-  const galleryImages: (string | null)[] = [details.secondaryImageUrl ?? null, ...(details.thumbnailImageUrls ?? [])];
+  // As 4 fotos do carrossel de cima vêm só da galeria (fotos 1-4 cadastradas
+  // no admin) — `activeImageIndex` decide qual delas vira a foto grande; as
+  // outras aparecem como miniaturas clicáveis, na ordem original (22/08/2026).
+  //
+  // 24/08/2026, BUG corrigido (Instruções Mudanças App V5.md, item 7 —
+  // "inverter fotos 1 e 5"): antes a foto da fachada (`facadeImageUrl`)
+  // entrava aqui na posição 0 (virava a foto grande padrão) e a galeria só
+  // aparecia como miniatura. A Amanda apontou que a fachada tem um
+  // propósito fixo — próprio, upado separadamente no admin — e não deveria
+  // ocupar o lugar da foto 1 do carrossel. Agora a fachada tem sua própria
+  // seção mais abaixo na página (ver `details.facadeImageUrl` perto do
+  // final deste arquivo) e nunca entra nesse carrossel.
+  const galleryImages: (string | null)[] = [...(details.galleryImageUrls ?? [])];
   while (galleryImages.length < 4) galleryImages.push(null);
   const heroImage = galleryImages[activeImageIndex] ?? null;
   const thumbnailEntries = galleryImages
@@ -158,12 +166,10 @@ export default function StoreDetail() {
 
         {/*
           Bloco de cima: galeria + info principal (lado a lado no desktop).
-
-          Amanda pediu pra inverter as fotos (19/08/2026): a foto "cheia" do
-          topo (com as miniaturas embaixo, coração e código sobrepostos)
-          agora é `details.secondaryImageUrl` (a foto "de destaque", em pé,
-          já com o enquadramento certo) — e `store.imageUrl` desce pra virar
-          a foto de destaque lá embaixo, perto dos cards de informação.
+          A foto "cheia" do topo (com as miniaturas embaixo, coração e
+          código sobrepostos) vem só da galeria de 4 fotos — a fachada não
+          entra aqui, ver comentário em `galleryImages` acima (item 7,
+          24/08/2026).
         */}
         <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
           <div className="flex w-full flex-col gap-2 lg:w-[552px] lg:shrink-0">
@@ -177,11 +183,21 @@ export default function StoreDetail() {
                 virar full-bleed no mobile (relatado pela Amanda em telas de
                 360 a 440px de largura). `calc(100%_+_48px)` — o `_` vira
                 espaço de verdade no valor arbitrário do Tailwind.
+
+                SEGUNDO bug, mesmo sintoma (22/08/2026): corrigido o calc(),
+                a imagem AINDA não ficava full-bleed — o Preflight do
+                Tailwind aplica `img, video { max-width: 100%; height: auto }`
+                globalmente. `max-width` é uma propriedade separada de
+                `width`; mesmo com `width: calc(100% + 48px)` calculando
+                certo, o teto de `max-width: 100%` do Preflight cortava a
+                imagem de volta pra 100% do espaço disponível. `max-w-none`
+                cancela esse teto só aqui.
               */}
               <ImagePlaceholder
                 src={heroImage}
                 alt={store.name}
                 className="-mx-6 aspect-square w-[calc(100%_+_48px)] max-w-none object-top lg:mx-0 lg:aspect-square lg:h-auto lg:w-full"
+                rounded="rounded-none lg:rounded-lg"
               />
 
               <button
@@ -297,16 +313,17 @@ export default function StoreDetail() {
         </div>
 
         {/*
-          Bloco de baixo: foto secundária (agora `store.imageUrl` — trocou
-          de lugar com a de cima, ver comentário acima) + cards de
+          Bloco de baixo: foto da fachada (`details.facadeImageUrl` —
+          24/08/2026, item 7: essa foto tem propósito fixo — mostrar a
+          fachada da loja — então ganhou seção própria aqui embaixo em vez
+          de disputar a posição da foto 1 no carrossel de cima) + cards de
           informação (lado a lado no desktop). Aqui a foto fica contida
-          dentro da margem da página (sem full-bleed), como a de cima
-          ficava antes da troca.
+          dentro da margem da página (sem full-bleed).
         */}
         <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
         <ImagePlaceholder
-          src={store.imageUrl}
-          alt={`Peça em destaque — ${store.name}`}
+          src={details.facadeImageUrl}
+          alt={`Fachada da loja — ${store.name}`}
           className="aspect-[4/3] w-full lg:aspect-[4/5] lg:h-auto lg:w-1/2"
         />
 

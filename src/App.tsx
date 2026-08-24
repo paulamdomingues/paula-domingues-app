@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import Busca from './pages/Busca';
 import CategoryScreen from './pages/CategoryScreen';
@@ -32,6 +32,35 @@ import AdminUsuarios from './pages/admin/AdminUsuarios';
 import AdminConfiguracoes from './pages/admin/AdminConfiguracoes';
 import AdminRelatorios from './pages/admin/AdminRelatorios';
 import { isAdminHost } from './lib/constants';
+
+/**
+ * 24/08/2026, BUG apontado pela Amanda (Instruções Mudanças App V5.md,
+ * itens 5 e 6 — "Versão Administrativo Desktop"): o painel admin inteiro
+ * (sidebar + conteúdo) estava dentro da mesma `<div className="app-shell">`
+ * do app cliente — aquele "mockup de celular" que trava a largura em 430px
+ * (mobile) / 1440px (desktop) e centraliza no meio da tela (`#root` em
+ * `index.css`). Resultado: (a) o painel admin ficava "sobrando" espaço nas
+ * laterais em telas largas — nunca usava a tela toda, só até 1440px; e (b)
+ * `overflow-x: hidden` do `.app-shell` vira, sem querer, o "ancestral com
+ * mecanismo de scroll" que o `position: sticky` da `AdminSidebar` usa como
+ * referência — em vez de grudar no viewport normalmente, ela grudava
+ * relativo a essa caixa, o que quebrava visualmente quando o conteúdo da
+ * página era mais alto que a tela (exatamente o que a Amanda marcou de
+ * azul no print).
+ *
+ * `AdminLayout`/`AdminSidebar` já são pensados pra ocupar a tela inteira
+ * sozinhos (não usam nada do app cliente, ver comentário em
+ * `AdminLayout.tsx`) — então a correção é essa: só o app CLIENTE (as rotas
+ * abaixo, dentro de `<ClientFrame>`) fica dentro do `.app-shell`; `/admin/*`
+ * passa a ser irmã dele na árvore de rotas, fora dessa caixa.
+ */
+function ClientFrame() {
+  return (
+    <div className="app-shell">
+      <Outlet />
+    </div>
+  );
+}
 
 function AppShell() {
   return (
@@ -85,9 +114,10 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <Routes>
-        {/* Fluxo de autenticação: sem menu inferior */}
+    <Routes>
+      {/* App cliente: mockup de celular/frame de até 1440px (`.app-shell`,
+          ver `ClientFrame` acima) — fluxo de autenticação + app principal. */}
+      <Route element={<ClientFrame />}>
         <Route path="/entrar" element={<PreLogin />} />
         <Route path="/login" element={<Login />} />
         <Route path="/criar-conta" element={<SignUp />} />
@@ -97,40 +127,39 @@ export default function App() {
             recuperação (`requestPasswordReset`, `AuthContext.tsx`), mas não
             tinha NENHUMA página registrada aqui — o link do email levava a
             lugar nenhum. Serve tanto o fluxo cliente quanto o admin (ver
-            `RedefinirSenha.tsx`). */}
+            `RedefinirSenha.tsx`) — fica aqui dentro do `.app-shell` porque a
+            tela já se centraliza sozinha (mesmo padrão do `AdminLogin`),
+            então não tem o problema dos itens 5/6. */}
         <Route path="/redefinir-senha" element={<RedefinirSenha />} />
         <Route path="/aguardando-liberacao" element={<AguardandoLiberacao />} />
-
-        {/*
-          Painel admin: área separada do app cliente (sem BottomNav, sem
-          nenhum componente client), mas usando a MESMA sessão do Supabase
-          Auth — ver `ProtectedAdminRoute`. Registrado antes do catch-all
-          "/*" do app cliente; no React Router v6 isso não é estritamente
-          necessário (caminhos explícitos como "/admin/lojas" sempre vencem
-          um splat "/*" na hora de rankear a rota, não importa a ordem),
-          mas deixa a intenção clara na leitura do arquivo.
-        */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/esqueci-senha" element={<AdminForgotPassword />} />
-        <Route element={<ProtectedAdminRoute />}>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="lojas" element={<AdminLojas />} />
-            <Route path="lojas/nova" element={<AdminLojaForm />} />
-            <Route path="lojas/:storeId" element={<AdminLojaForm />} />
-            <Route path="stories" element={<AdminStories />} />
-            <Route path="usuarios" element={<AdminUsuarios />} />
-            <Route path="categorias" element={<AdminCategorias />} />
-            <Route path="relatorios" element={<AdminRelatorios />} />
-            <Route path="configuracoes" element={<AdminConfiguracoes />} />
-          </Route>
-        </Route>
 
         {/* App principal: protegido por sessão do Supabase */}
         <Route element={<ProtectedRoute />}>
           <Route path="/*" element={<AppShell />} />
         </Route>
-      </Routes>
-    </div>
+      </Route>
+
+      {/*
+        Painel admin: área separada do app cliente (sem BottomNav, sem
+        nenhum componente client, e de propósito FORA do `.app-shell` — ver
+        comentário em `ClientFrame` acima), mas usando a MESMA sessão do
+        Supabase Auth — ver `ProtectedAdminRoute`.
+      */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/esqueci-senha" element={<AdminForgotPassword />} />
+      <Route element={<ProtectedAdminRoute />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="lojas" element={<AdminLojas />} />
+          <Route path="lojas/nova" element={<AdminLojaForm />} />
+          <Route path="lojas/:storeId" element={<AdminLojaForm />} />
+          <Route path="stories" element={<AdminStories />} />
+          <Route path="usuarios" element={<AdminUsuarios />} />
+          <Route path="categorias" element={<AdminCategorias />} />
+          <Route path="relatorios" element={<AdminRelatorios />} />
+          <Route path="configuracoes" element={<AdminConfiguracoes />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 }

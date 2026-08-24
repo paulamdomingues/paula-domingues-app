@@ -133,10 +133,6 @@ export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStor
           />
         </label>
 
-        <p className="font-body text-[12px] tracking-[0.6px] text-gray-400">
-          Uso interno apenas — não aparece para o usuário do app.
-        </p>
-
         <div className="flex flex-col gap-1.5">
           <span className="font-body text-[13px] tracking-[0.65px] text-gray-500">Cadastrado em</span>
           <div className="flex h-[50px] items-center rounded-lg border border-gray-100 bg-gray-50 px-4">

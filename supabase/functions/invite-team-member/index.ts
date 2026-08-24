@@ -20,6 +20,16 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+// 24/08/2026: BUG corrigido — essa função nunca passava `redirectTo` pro
+// `inviteUserByEmail`, então o Supabase caía no fallback padrão dele (a
+// Site URL configurada no dashboard). Um membro de equipe precisa cair no
+// painel ADMIN pra definir a senha (`/redefinir-senha?admin=1`, que manda
+// pra `/admin/login` no final — ver `RedefinirSenha.tsx`), não no app
+// cliente. Foi isso (o link caindo num destino não cadastrado nas Redirect
+// URLs do Supabase) que causava o erro "requested path is invalid" ao
+// clicar no link do convite.
+const ADMIN_URL = 'https://admin.pauladomingues.com';
+
 // 21/08/2026: 'suporte'/'editor_conteudo' foram renomeados de verdade no
 // banco pra 'editor'/'suporte' (ver `AccessLevel` em `src/context/AuthContext.tsx`).
 const ACCESS_LEVELS = ['master_admin', 'editor', 'suporte', 'convidado'];
@@ -109,7 +119,15 @@ Deno.serve(async (req) => {
   });
 
   const { data: invited, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    data: { first_name: fullName.split(' ')[0] },
+    // 24/08/2026: `source: 'team_invite'` é lido pelo trigger
+    // `on_auth_user_created_ensure_allowed_users` (migration
+    // `skip_allowed_users_for_team_invites`) pra NAO criar uma linha em
+    // `allowed_users` pra gente de equipe — esse trigger existe pro
+    // cadastro de CLIENTE (`SignUp.tsx`, fluxo /aguardando-liberacao), não
+    // pra convite de equipe. Sem essa marcação, todo membro convidado
+    // aparecia também (errado) na tela "Usuários".
+    data: { first_name: fullName.split(' ')[0], source: 'team_invite' },
+    redirectTo: `${ADMIN_URL}/redefinir-senha?admin=1`,
   });
 
   if (inviteError || !invited.user) {
