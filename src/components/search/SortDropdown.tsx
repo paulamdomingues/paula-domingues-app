@@ -52,7 +52,7 @@ export default function SortDropdown({
           compact
             ? 'gap-1.5 px-3 py-1.5 text-[13px] tracking-[0.65px] lg:gap-2 lg:px-4 lg:py-2 lg:text-[15px] lg:tracking-[0.75px]'
             : 'gap-2 px-4 py-2 text-[15px] tracking-[0.75px]'
-        } ${fixedWidth ? 'w-full justify-between lg:w-auto lg:justify-start' : ''}`}
+        } ${fixedWidth ? 'h-10 w-full justify-between lg:h-auto lg:w-auto lg:justify-start' : ''}`}
       >
         {current.label}
         <SortArrowsIcon className="size-[18px] shrink-0" />
