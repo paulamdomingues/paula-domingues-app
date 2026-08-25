@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PiDotsThreeVerticalBold, PiPlus } from 'react-icons/pi';
-import { BellIcon } from '../../components/icons';
+import { BellIcon, SignOutIcon } from '../../components/icons';
 import NovoMembroModal from '../../components/admin/NovoMembroModal';
 import DeleteConfirmModal from '../../components/admin/DeleteConfirmModal';
 import AdminSelect from '../../components/admin/AdminSelect';
+import LogoutConfirmModal from '../../components/LogoutConfirmModal';
 import { useAuth, type AccessLevel } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -48,9 +50,23 @@ const ACCESS_LEVEL_LABELS: Record<AccessLevel, string> = {
  * o mesmo `MemberMenu` de dropdown, só reposicionado pro card).
  */
 export default function AdminConfiguracoes() {
-  const { session, accessLevel, updatePassword } = useAuth();
+  const { session, accessLevel, updatePassword, signOut } = useAuth();
+  const navigate = useNavigate();
   const canManageTeam = accessLevel === 'master_admin';
   const myUserId = session?.user.id;
+
+  // --- Sair da conta (mobile) ----------------------------------------------
+  // 25/08/2026: no mobile a `AdminSidebar` (onde mora o botão "Sair") fica
+  // escondida (`hidden lg:block`, ver `AdminLayout.tsx`) e o `AdminMobileNav`
+  // (menu inferior) só tem os 5 ícones de navegação — não sobrava NENHUM
+  // jeito de deslogar do painel admin pelo celular. Reaproveita o mesmo
+  // `LogoutConfirmModal` (POP-UP "sure-logout") já usado em `Perfil.tsx` no
+  // app cliente.
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const handleConfirmLogout = async () => {
+    await signOut();
+    navigate('/admin/login', { replace: true });
+  };
 
   // --- Meu Perfil ---------------------------------------------------------
   const [myRow, setMyRow] = useState<TeamMemberRow | null>(null);
@@ -259,6 +275,17 @@ export default function AdminConfiguracoes() {
             {passwordError && <p className="font-body text-[13px] text-main-red-800">{passwordError}</p>}
           </div>
         </div>
+
+        {/* Mobile: único jeito de deslogar do painel admin pelo celular
+            (desktop já tem "Sair" na sidebar, ver `AdminSidebar.tsx`). */}
+        <button
+          type="button"
+          onClick={() => setLogoutOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-error-500 bg-base-white py-3 font-body text-[15px] font-bold tracking-[0.75px] text-error-500 lg:hidden"
+        >
+          <SignOutIcon className="size-5" />
+          Sair da Conta
+        </button>
       </div>
 
       {/* `pb-20` (80px) — pedido da Amanda pra sobrar espaço embaixo do
@@ -456,6 +483,10 @@ export default function AdminConfiguracoes() {
           onCancel={() => setRemoveTarget(null)}
           onConfirm={handleRemove}
         />
+      )}
+
+      {logoutOpen && (
+        <LogoutConfirmModal onCancel={() => setLogoutOpen(false)} onConfirm={handleConfirmLogout} />
       )}
     </div>
   );
