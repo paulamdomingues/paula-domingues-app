@@ -95,8 +95,14 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [accessLevel, setAccessLevel] = useState<AccessLevel | null>(null);
-  const [accessLevelLoading, setAccessLevelLoading] = useState(true);
+  // `accessLevelData` guarda pra QUAL `userId` aquele resultado é válido —
+  // ver o comentário grande logo abaixo (25/08/2026) sobre por que isso
+  // substituiu dois `useState` soltos (`accessLevel`/`accessLevelLoading`).
+  const [accessLevelData, setAccessLevelData] = useState<{
+    userId: string | null;
+    level: AccessLevel | null;
+    loading: boolean;
+  }>({ userId: null, level: null, loading: true });
   const firstName = (session?.user.user_metadata?.first_name as string | undefined) ?? 'Amanda';
 
   useEffect(() => {
@@ -137,15 +143,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const userId = session?.user.id;
+    const userId = session?.user.id ?? null;
     if (!userId) {
-      setAccessLevel(null);
-      setAccessLevelLoading(false);
+      setAccessLevelData({ userId: null, level: null, loading: false });
       return;
     }
 
     let cancelled = false;
-    setAccessLevelLoading(true);
+    setAccessLevelData((prev) => ({ ...prev, loading: true }));
     supabase
       .from('team_members')
       .select('access_level')
@@ -153,14 +158,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled) return;
-        setAccessLevel((data?.access_level as AccessLevel | undefined) ?? null);
-        setAccessLevelLoading(false);
+        setAccessLevelData({ userId, level: (data?.access_level as AccessLevel | undefined) ?? null, loading: false });
       });
 
     return () => {
       cancelled = true;
     };
   }, [session?.user.id, loading]);
+
+  // BUG corrigido em 25/08/2026 ("entrar no admin às vezes cai direto em
+  // 'conta sem acesso', só entra de verdade na segunda tentativa de
+  // login"): mesma FAMÍLIA do bug de 22/08 acima, só que disparando no
+  // momento do LOGIN em vez do carregamento inicial da página. Sequência:
+  // 1) `signIn()` autentica com sucesso e o listener `onAuthStateChange`
+  //    atualiza `session` pro usuário recém-logado;
+  // 2) `AdminLogin.tsx` navega pra `/admin` logo em seguida;
+  // 3) `ProtectedAdminRoute` renderiza usando o `accessLevelLoading` que
+  //    ainda estava `false` (sobra do estado "deslogado" de antes) — o
+  //    efeito acima AINDA NÃO rodou de novo pra esse novo `userId` (efeitos
+  //    só rodam depois do render commitar). Pra esse render, o contexto
+  //    parecia dizer "já sei o accessLevel, e é null" — `ProtectedAdminRoute`
+  //    concluía (errado) "conta sem acesso" e mandava de volta pro login.
+  // Corrigido comparando o `userId` salvo em `accessLevelData` contra o
+  // `session.user.id` ATUAL em todo render (não só depois do efeito rodar):
+  // se não bate, ainda não temos resposta pra ESSA sessão — força
+  // `accessLevelLoading = true` e `accessLevel = null` até o efeito
+  // terminar de buscar o valor certo, fechando a janela de tempo em que um
+  // valor "herdado" de outra sessão (ou de nenhuma sessão) podia vazar.
+  const currentUserId = session?.user.id ?? null;
+  const accessLevelStale = accessLevelData.userId !== currentUserId;
+  const accessLevel = accessLevelStale ? null : accessLevelData.level;
+  const accessLevelLoading = accessLevelStale ? true : accessLevelData.loading;
 
   // Checa se a pessoa logada tem acesso pago ativo (`allowed_users.is_active`
   // via a função `has_active_access()`, que roda como SECURITY DEFINER pra
