@@ -13,7 +13,7 @@ import { BUNNY_AUTH_SHOWCASE_URL } from '../../lib/bunnyStorage';
  */
 export default function AuthShowcasePanel() {
   return (
-    <div className="relative hidden h-full overflow-hidden bg-main-dark-900 lg:block lg:w-1/2">
+    <div className="relative hidden self-stretch overflow-hidden bg-main-dark-900 lg:block lg:w-1/2">
       <div className="absolute inset-0 opacity-80">
         <img src={BUNNY_AUTH_SHOWCASE_URL} alt="" aria-hidden="true" className="size-full object-cover" />
         <div className="absolute inset-0 bg-main-red-600/15" />
