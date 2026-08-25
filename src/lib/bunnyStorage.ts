@@ -16,6 +16,20 @@ export const BUNNY_CDN_BASE_URL = 'https://paula-assets.b-cdn.net/';
 export const BUNNY_LOGO_URL = `${BUNNY_CDN_BASE_URL}logo-paula-app.png`;
 
 /**
+ * Fotos institucionais reais (Figma, 25/08/2026 — substituem os placeholders
+ * de gradiente que existiam em `PreLogin.tsx`/`AuthShowcasePanel.tsx` desde
+ * que a Amanda ainda não tinha mandado o link da foto de verdade). Cada uma
+ * já vem tratada/recortada do jeito certo pro lugar onde é usada:
+ * - As duas de Pré-Login já saem do Figma com o escurecimento aplicado (não
+ *   precisa de nenhum overlay extra por cima no código).
+ * - A de Login/Criar Conta é a foto "limpa" — o tom vermelho por cima
+ *   continua sendo aplicado via CSS em `AuthShowcasePanel.tsx`.
+ */
+export const BUNNY_PRELOGIN_BG_DESKTOP_URL = `${BUNNY_CDN_BASE_URL}prelogin-bg-desktop.png`;
+export const BUNNY_PRELOGIN_BG_MOBILE_URL = `${BUNNY_CDN_BASE_URL}prelogin-bg-mobile.png`;
+export const BUNNY_AUTH_SHOWCASE_URL = `${BUNNY_CDN_BASE_URL}auth-showcase.png`;
+
+/**
  * Resolve um caminho de imagem salvo no Supabase (ex: `storefront_image_url`
  * de uma loja, algo como "al-0034-fachada.jpg") pra URL pública da CDN do
  * Bunny. Também aceita:

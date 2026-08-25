@@ -1,39 +1,47 @@
 import { Link } from 'react-router-dom';
 import Logo from '../../components/Logo';
+import { BUNNY_PRELOGIN_BG_DESKTOP_URL, BUNNY_PRELOGIN_BG_MOBILE_URL } from '../../lib/bunnyStorage';
 
+/**
+ * 25/08/2026 (Figma, node "telas pra atualizar e imagens"): entrou a foto
+ * institucional de verdade no lugar do gradiente placeholder — mobile e
+ * desktop usam fotos DIFERENTES (recortes próprios pra cada formato, ver
+ * `bunnyStorage.ts`), por isso são dois <img> (um escondido em cada
+ * breakpoint) em vez de um só com `object-position` genérico. As duas já
+ * saem do Figma escurecidas/tratadas — não precisa de nenhum overlay extra
+ * aqui por cima.
+ *
+ * O cartão com a frase "O catálogo de moda..." que existia antes por cima
+ * do logo saiu do design novo — agora é só o logo puro sobre a foto.
+ */
 export default function PreLogin() {
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-between overflow-hidden px-6 py-16">
-      {/*
-        Fundo institucional em foto, cobrindo a tela toda (mobile e desktop) —
-        diferente do painel 50/50 de Login/SignUp. A Amanda ainda não mandou o
-        link da foto real, então por enquanto usamos um gradiente sólido com
-        os mesmos tokens do AuthShowcasePanel (não hotlinkar asset do Figma,
-        expira em ~7 dias). Quando a foto do Bunny.net estiver pronta, basta
-        trocar esta div por um <img>/`background-image` cobrindo o mesmo
-        espaço, sem mexer no resto da tela.
-      */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-main-dark-900 via-main-red-900 to-main-red-700" />
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-between overflow-hidden px-6 py-[40px] lg:px-[256px] lg:py-[80px]">
+      <img
+        src={BUNNY_PRELOGIN_BG_MOBILE_URL}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 size-full object-cover lg:hidden"
+      />
+      <img
+        src={BUNNY_PRELOGIN_BG_DESKTOP_URL}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 hidden size-full object-cover lg:block"
+      />
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <div className="flex flex-col items-center gap-4 rounded-lg bg-main-dark-900/70 px-8 py-6">
-          <Logo className="h-auto w-[clamp(180px,45vw,280px)]" />
-          <p className="text-center font-body text-[16px] tracking-[0.8px] text-base-white">
-            O catálogo de moda para o seu negócio vender mais.
-          </p>
-        </div>
-      </div>
+      <Logo className="h-auto w-[clamp(180px,45vw,280px)]" />
 
-      <div className="flex w-full flex-col items-center gap-4 lg:pb-[180px]">
+      <div className="flex w-full flex-col items-center gap-4">
         <Link
           to="/login"
-          className="flex h-[50px] w-full items-center justify-center rounded-lg bg-main-red-800 p-2 font-display font-bold text-[26px] tracking-[0.78px] text-base-white lg:w-[408px]"
+          className="flex h-[50px] w-full items-center justify-center rounded-lg bg-main-red-600 p-2 font-display font-bold text-[26px] tracking-[0.78px] text-base-white lg:h-[60px] lg:text-[32px] lg:tracking-[1.6px]"
         >
           Acessar Conta
         </Link>
-        <p className="text-center font-body text-[12px] tracking-[0.36px] text-base-white">
+        <p className="text-center font-body text-[12px] tracking-[0.36px] text-main-dark-50 lg:text-[24px] lg:tracking-[0.24px]">
           Primeira vez aqui?{' '}
-          <Link to="/criar-conta" className="text-base-white underline">
+          <Link to="/criar-conta" className="text-main-red-50 underline lg:text-main-dark-50">
             Criar Conta
           </Link>
         </p>
