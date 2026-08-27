@@ -16,7 +16,7 @@ import { BUNNY_PRELOGIN_BG_DESKTOP_URL, BUNNY_PRELOGIN_BG_MOBILE_URL } from '../
  */
 export default function PreLogin() {
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col items-center justify-between overflow-hidden px-6 py-[40px] lg:px-[256px] lg:py-[80px]">
+    <div className="relative isolate flex min-h-screen w-full flex-col items-center justify-between overflow-hidden px-6 pt-[40px] pb-[184px] lg:px-[256px] lg:py-[80px]">
       <img
         src={BUNNY_PRELOGIN_BG_MOBILE_URL}
         alt=""
