@@ -9,17 +9,23 @@ export default {
         // Amanda antes de renomear/remover qualquer tom (alguns tons abaixo
         // ainda não tinham nome confirmado antes dessa conferência, ex:
         // main-red-100, main-red-500, e boa parte da rampa main-dark).
+        //
+        // 02/09/2026: rampa `main-red` atualizada — Amanda trocou só o hex
+        // dos tokens no Figma (mesmos nomes, mesma posição na rampa), sem
+        // mexer em nenhuma outra cor nem em estrutura. Vem daí a nova mão de
+        // vermelho em todo o app (cliente e admin, que compartilham esse
+        // arquivo — ver conversa de 02/09/2026 sobre isso).
         'main-red': {
-          50: '#F6E8E8',
-          100: '#E2B8B8',
-          200: '#D49595',
-          300: '#C16565',
-          400: '#B54747',
-          500: '#A21919',
-          600: '#931717',
-          700: '#731212',
-          800: '#590E0E',
-          900: '#440B0B',
+          50: '#FBE8E9',
+          100: '#F3B8BA',
+          200: '#EE9698',
+          300: '#E6666A',
+          400: '#E1484D',
+          500: '#D91A20',
+          600: '#C5181D',
+          700: '#9A1217',
+          800: '#770E12',
+          900: '#5B0B0D',
         },
         'main-dark': {
           50: '#ECE6E7',
