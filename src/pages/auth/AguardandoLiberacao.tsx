@@ -19,7 +19,8 @@ export default function AguardandoLiberacao() {
   const [checking, setChecking] = useState(false);
 
   if (!loading && !session) {
-    return <Navigate to="/entrar" replace />;
+    // 02/09/2026: a tela de Pre-Login saiu — vai direto pro Login de verdade.
+    return <Navigate to="/login" replace />;
   }
 
   // Se a checagem (rodando de novo ou não) já confirmou acesso, sai daqui —

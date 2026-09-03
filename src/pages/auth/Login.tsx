@@ -82,6 +82,15 @@ export default function Login() {
 
           <div className="flex w-full flex-col items-center gap-[44px]">
             <AuthPrimaryButton loading={loading}>Entrar</AuthPrimaryButton>
+            {/* 02/09/2026 (Amanda): a tela de Pre-Login (que tinha esse
+                convite pra criar conta) saiu — o link mudou pra cá, direto
+                embaixo do botão "Entrar". */}
+            <p className="w-full text-center font-body text-[14px] tracking-[0.7px] text-gray-900">
+              Primeira vez aqui?{' '}
+              <Link to="/criar-conta" className="text-main-red-600 underline">
+                Criar Conta
+              </Link>
+            </p>
             <TermsFooter prefix="Ao continuar você concorda com os" />
           </div>
         </div>

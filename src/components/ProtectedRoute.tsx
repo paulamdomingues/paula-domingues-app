@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 
 /**
  * Protege as rotas internas do app (Início, Busca, Lojas, Favoritos, Perfil):
- * se não houver sessão do Supabase, redireciona para a tela de Pre-Login.
+ * se não houver sessão do Supabase, redireciona para a tela de Login.
+ * 02/09/2026: a tela de Pre-Login foi removida — vai direto pro Login.
  *
  * 20/08/2026: além da sessão, agora também exige acesso pago ativo
  * (`hasPurchaseAccess`, ver AuthContext) — quem criou conta mas nunca
@@ -25,7 +26,7 @@ export default function ProtectedRoute() {
   }
 
   if (!session) {
-    return <Navigate to="/entrar" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   const hasClientAccess = accessLevel !== null || hasPurchaseAccess === true;

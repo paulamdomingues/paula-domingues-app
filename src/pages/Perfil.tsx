@@ -106,7 +106,9 @@ export default function Perfil() {
 
   const handleConfirmLogout = async () => {
     await signOut();
-    navigate('/entrar', { replace: true });
+    // 02/09/2026: a tela de Pre-Login saiu — depois de sair, vai direto pro
+    // Login de verdade.
+    navigate('/login', { replace: true });
   };
 
   return (

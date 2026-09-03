@@ -19,7 +19,15 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { generateNextCodeBadge } from '../../lib/codeBadge';
 import { uploadStoreImage } from '../../lib/storeImages';
-import { NEIGHBORHOODS as neighborhoods } from '../../lib/neighborhoods';
+import { NEIGHBORHOODS as neighborhoods, NAMED_NEIGHBORHOODS, normalizeOutroLocation } from '../../lib/neighborhoods';
+
+/** Deriva o valor exibido no <select> a partir do que está salvo em
+ * `polo_location`: um dos 3 bairros fixos aparece direto; qualquer outra
+ * coisa (texto customizado ou vazio) cai em "Outros"/placeholder. */
+function poloChoiceFromLocation(location: string): string {
+  if (NAMED_NEIGHBORHOODS.includes(location)) return location;
+  return location ? 'Outros' : '';
+}
 
 const MAX_GALLERY_IMAGES = 4;
 const MAX_TAGS = 5;
@@ -155,6 +163,11 @@ export default function AdminLojaForm() {
 
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  // Espelha o <select> de Localização — igual a `form.polo_location` pros
+  // 3 bairros fixos, mas guarda "Outros" mesmo quando o texto customizado
+  // ainda está vazio (novo cadastro) ou já preenchido (edição), pra não
+  // confundir "nada escolhido ainda" com "escolheu Outros".
+  const [poloChoice, setPoloChoice] = useState<string>('');
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(!isCreate);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -208,6 +221,7 @@ export default function AdminLojaForm() {
           return;
         }
         setForm(rowToForm(data as StoreRow));
+        setPoloChoice(poloChoiceFromLocation(data.polo_location ?? ''));
         setCreatedAt(data.created_at);
       });
     return () => {
@@ -493,11 +507,35 @@ export default function AdminLojaForm() {
               />
               <SelectField
                 label="Localização *"
-                value={form.polo_location}
-                onChange={(v) => setForm((p) => ({ ...p, polo_location: v }))}
+                value={poloChoice}
+                onChange={(v) => {
+                  setPoloChoice(v);
+                  // Pros 3 bairros fixos, `form.polo_location` já é o valor
+                  // final. Ao trocar PRA "Outros" ou pro placeholder, limpa
+                  // `form.polo_location` (senão ficaria com o bairro fixo
+                  // anterior salvo por baixo do campo de texto livre, que
+                  // pode continuar vazio). Ao trocar de "Outros" (ou vazio)
+                  // pra um bairro fixo, `form.polo_location` já vem certo
+                  // pela própria lista de opções (o `value` de cada option é
+                  // o próprio bairro).
+                  if (v === 'Outros' || v === '') {
+                    setForm((p) => ({ ...p, polo_location: '' }));
+                  } else {
+                    setForm((p) => ({ ...p, polo_location: v }));
+                  }
+                }}
                 placeholder="Escolha aqui"
                 options={neighborhoods.map((n) => ({ value: n, label: n }))}
               />
+              {poloChoice === 'Outros' && (
+                <TextField
+                  label="Qual localização? *"
+                  value={form.polo_location}
+                  onChange={(v) => setForm((p) => ({ ...p, polo_location: normalizeOutroLocation(v) }))}
+                  placeholder="Ex: Limeira, Monte Sião - MG"
+                  maxLength={60}
+                />
+              )}
               <TagsField
                 label="Tags (SEO)*"
                 tags={form.tags}

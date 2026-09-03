@@ -10,7 +10,6 @@ import PerfilDuvidas from './pages/PerfilDuvidas';
 import PerfilTrocarSenha from './pages/PerfilTrocarSenha';
 import Notificacoes from './pages/Notificacoes';
 import ComingSoon from './pages/ComingSoon';
-import PreLogin from './pages/auth/PreLogin';
 import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -118,7 +117,13 @@ export default function App() {
       {/* App cliente: mockup de celular/frame de até 1440px (`.app-shell`,
           ver `ClientFrame` acima) — fluxo de autenticação + app principal. */}
       <Route element={<ClientFrame />}>
-        <Route path="/entrar" element={<PreLogin />} />
+        {/* 02/09/2026 (Amanda): a tela de pré-login (logo + "Acessar Conta")
+            saiu — agora quem cai em "/entrar" (sessão expirada, logout, um
+            link/favorito antigo) vai direto pra "/login" de verdade, que já
+            tem o link "Criar Conta" lá embaixo. Mantido como redirect (em
+            vez de apagar a rota) só pra não quebrar quem ainda tiver esse
+            link salvo. */}
+        <Route path="/entrar" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/criar-conta" element={<SignUp />} />
         <Route path="/esqueci-senha" element={<ForgotPassword />} />

@@ -16,6 +16,13 @@ interface NeighborhoodFilterProps {
  * grid (sem largura fixa em px) pra bater exatamente com a margem do
  * título e da grade de cards abaixo — Amanda pediu pra alinhar certinho
  * com o resto do conteúdo, 19/08/2026.
+ *
+ * 02/09/2026 (Amanda): tamanho base do botão trocado de 90px pra 48px de
+ * altura (referência do Figma: 167×48) e paleta trocada — não selecionado
+ * vira `main-red-700` sólido, selecionado vira `main-dark-600`, texto
+ * branco nos dois estados. A largura continua `w-full` (não fixa em px) de
+ * propósito: no mobile de referência (grid-cols-2, gap 16px) isso já
+ * resulta em ~167px por botão sozinho, então não precisa hardcodar.
  */
 export default function NeighborhoodFilter({ value, onChange }: NeighborhoodFilterProps) {
   return (
@@ -28,10 +35,8 @@ export default function NeighborhoodFilter({ value, onChange }: NeighborhoodFilt
             type="button"
             onClick={() => onChange(isSelected ? null : neighborhood)}
             aria-pressed={isSelected}
-            className={`flex h-[90px] w-full items-center justify-center rounded-lg p-2 text-center font-display text-[26px] font-bold uppercase tracking-[0.78px] ${
-              isSelected
-                ? 'border-2 border-main-dark-700 bg-main-dark-400 text-main-dark-900'
-                : 'border border-gray-100 bg-main-red-200 text-gray-50'
+            className={`flex h-[48px] w-full items-center justify-center rounded-lg px-2 text-center font-display text-[15px] font-bold uppercase tracking-[0.45px] text-base-white transition-colors ${
+              isSelected ? 'bg-main-dark-600' : 'bg-main-red-700'
             }`}
           >
             {neighborhood}
