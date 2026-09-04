@@ -30,10 +30,19 @@ interface HighlightBannerProps {
  *   de referência do Figma, 390×203).
  * - Desktop: fica CONTIDO dentro do card de 640px que a Home já reserva pra
  *   essa seção — sem sangrar — com cantos arredondados (`lg:rounded-2xl`,
- *   já que aqui ele é só mais um bloco de conteúdo, não a borda da tela) e
- *   altura definida pelo próprio conteúdo (o mini-player, que é maior no
- *   desktop) em vez do aspect-ratio do mobile, que ficaria apertado num
- *   card bem mais largo.
+ *   já que aqui ele é só mais um bloco de conteúdo, não a borda da tela).
+ *
+ * 05/09/2026, BUG corrigido (Amanda: "no desktop sumiu banner e o mini
+ * player"): a primeira versão desse ajuste tirava o `aspect-[390/203]` no
+ * desktop (`lg:aspect-auto`) contando que a altura ficaria "definida pelo
+ * conteúdo" — mas tanto a imagem de fundo quanto o mini-player são
+ * `absolute inset-0`/posicionados de forma absoluta, então NENHUM dos dois
+ * empurra a altura do container pai (elemento absoluto sai do fluxo normal).
+ * Sem aspect-ratio E sem conteúdo em fluxo normal, o container ficava com
+ * altura 0 no desktop — por isso banner e mini-player simplesmente
+ * desapareciam (não é questão de z-index/CSS visual, o container real não
+ * tinha altura nenhuma). Corrigido fixando `lg:h-[368px]` (cobre a altura do
+ * mini-player nesse breakpoint, 320px, mais o respiro do `py-6` ao redor).
  *
  * Não existe (ainda) uma versão em proporção widescreen desse banner — o
  * mesmo arquivo do mobile é reaproveitado via `object-cover`, então ele sofre
@@ -56,7 +65,7 @@ export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBann
     // body inteiro (não só com os irmãos aqui dentro) e acabava atrás do
     // `background-color` opaco do `.app-shell`/body, sumindo por completo
     // mesmo carregando certinho. Mesmo truque já usado em `PreLogin.tsx`.
-    <div className="relative isolate -mx-6 aspect-[390/203] w-[calc(100%+3rem)] overflow-hidden lg:mx-0 lg:aspect-auto lg:w-full lg:rounded-2xl">
+    <div className="relative isolate -mx-6 aspect-[390/203] w-[calc(100%+3rem)] overflow-hidden lg:mx-0 lg:aspect-auto lg:h-[368px] lg:w-full lg:rounded-2xl">
       <img
         src={BUNNY_HOME_STORIES_BANNER_URL}
         alt=""
