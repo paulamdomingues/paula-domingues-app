@@ -49,9 +49,14 @@ export const BUNNY_AUTH_SHOWCASE_URL = `${BUNNY_CDN_BASE_URL}auth-showcase-2.png
  *   no WhatsApp" — agora é um banner-imagem clicável (mesmo link
  *   `WHATSAPP_GROUP_URL`), dentro do conteúdo normal (não sangra a tela).
  *   Proporção de referência: 342×211 (~1.62:1).
+ *
+ * 04/09/2026: extensão em MAIÚSCULO (`.PNG`) de propósito — é assim que os
+ * 2 arquivos foram subidos de verdade no Bunny, e essa URL é case-sensitive
+ * (bate exatamente com o nome do arquivo no storage, então "png" minúsculo
+ * dava 404 mesmo o arquivo existindo).
  */
-export const BUNNY_HOME_STORIES_BANNER_URL = `${BUNNY_CDN_BASE_URL}home-stories-banner.png`;
-export const BUNNY_COMMUNITY_BANNER_URL = `${BUNNY_CDN_BASE_URL}community-banner.png`;
+export const BUNNY_HOME_STORIES_BANNER_URL = `${BUNNY_CDN_BASE_URL}home-stories-banner.PNG`;
+export const BUNNY_COMMUNITY_BANNER_URL = `${BUNNY_CDN_BASE_URL}community-banner.PNG`;
 
 /**
  * Resolve um caminho de imagem salvo no Supabase (ex: `storefront_image_url`
