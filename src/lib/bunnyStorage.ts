@@ -15,10 +15,14 @@ export const BUNNY_CDN_BASE_URL = 'https://paula-assets.b-cdn.net/';
 /**
  * Logo oficial da marca, já hospedada no Bunny.
  * 03/09/2026 (Amanda): logo trocada pela versão nova — arquivo "logo-nova"
- * (.png) substituiu o antigo "logo-paula-app" no Bunny. Como é uma constante
- * única usada por `Logo.tsx` em toda tela, a troca aqui já propaga sozinha.
+ * (.png) substituiu o antigo "logo-paula-app" no Bunny.
+ * 05/09/2026 (Amanda: "achei ela borrada em tamanhos maiores"): trocada de
+ * novo, agora pra um SVG ("logo.svg") — vetorial, não borra em nenhum
+ * tamanho (era o problema real do PNG anterior ao escalar pra 300px+ nas
+ * telas de Entrar/Criar Conta). Como é uma constante única usada por
+ * `Logo.tsx` em toda tela, a troca aqui já propaga sozinha.
  */
-export const BUNNY_LOGO_URL = `${BUNNY_CDN_BASE_URL}logo-nova.png`;
+export const BUNNY_LOGO_URL = `${BUNNY_CDN_BASE_URL}logo.svg`;
 
 /**
  * Fotos institucionais reais (Figma, 25/08/2026 — substituem os placeholders
