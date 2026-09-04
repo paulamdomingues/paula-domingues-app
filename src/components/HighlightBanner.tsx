@@ -35,7 +35,15 @@ interface HighlightBannerProps {
  */
 export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBannerProps) {
   return (
-    <div className="relative -mx-6 aspect-[390/203] w-[calc(100%+3rem)] overflow-hidden lg:static lg:mx-0 lg:aspect-auto lg:w-full lg:overflow-visible">
+    // `isolate` é o que faltava (BUG, 04/09/2026): sem ele, `relative`
+    // sozinho não cria um novo contexto de empilhamento — o `-z-10` da
+    // imagem de fundo então competia com a pilha de empilhamento do body
+    // inteiro (não só com os irmãos aqui dentro) e acabava atrás do
+    // `background-color` opaco do `.app-shell`/body, sumindo por completo
+    // mesmo carregando certinho (confirmado: a URL responde ok, só não
+    // aparecia). Mesmo truque já usado em `PreLogin.tsx` (lá o `isolate`
+    // já estava certo desde o início).
+    <div className="relative isolate -mx-6 aspect-[390/203] w-[calc(100%+3rem)] overflow-hidden lg:static lg:mx-0 lg:aspect-auto lg:w-full lg:overflow-visible">
       <img
         src={BUNNY_HOME_STORIES_BANNER_URL}
         alt=""
@@ -43,7 +51,13 @@ export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBann
         className="absolute inset-0 -z-10 size-full object-cover lg:hidden"
       />
 
-      <div className="absolute inset-0 flex items-center gap-6 px-8 lg:static lg:gap-9 lg:px-0">
+      {/* 04/09/2026 (Amanda): banner sangra a tela toda, mas o mini-player
+          em cima dele respeita a margem de 32px (`px-8`) das laterais —
+          no mobile ele é o único elemento vivo (o texto some, já embutido
+          na imagem), então `justify-end` encosta ele na margem direita,
+          igual à referência do Figma. Desktop não muda (`lg:justify-start`
+          volta ao lado a lado de sempre). */}
+      <div className="absolute inset-0 flex items-center justify-end gap-6 px-8 lg:static lg:justify-start lg:gap-9 lg:px-0">
         <button
           type="button"
           onClick={onClick}
