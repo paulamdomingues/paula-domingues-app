@@ -12,8 +12,13 @@
 /** Pull Zone (CDN) oficial do Bunny.net do projeto. Sempre termina com "/". */
 export const BUNNY_CDN_BASE_URL = 'https://paula-assets.b-cdn.net/';
 
-/** Logo oficial da marca, já hospedada no Bunny. */
-export const BUNNY_LOGO_URL = `${BUNNY_CDN_BASE_URL}logo-paula-app.png`;
+/**
+ * Logo oficial da marca, já hospedada no Bunny.
+ * 03/09/2026 (Amanda): logo trocada pela versão nova — arquivo "logo-nova"
+ * (.png) substituiu o antigo "logo-paula-app" no Bunny. Como é uma constante
+ * única usada por `Logo.tsx` em toda tela, a troca aqui já propaga sozinha.
+ */
+export const BUNNY_LOGO_URL = `${BUNNY_CDN_BASE_URL}logo-nova.png`;
 
 /**
  * Fotos institucionais reais (Figma, 25/08/2026 — substituem os placeholders
@@ -27,7 +32,26 @@ export const BUNNY_LOGO_URL = `${BUNNY_CDN_BASE_URL}logo-paula-app.png`;
  */
 export const BUNNY_PRELOGIN_BG_DESKTOP_URL = `${BUNNY_CDN_BASE_URL}prelogin-bg-desktop.png`;
 export const BUNNY_PRELOGIN_BG_MOBILE_URL = `${BUNNY_CDN_BASE_URL}prelogin-bg-mobile.png`;
-export const BUNNY_AUTH_SHOWCASE_URL = `${BUNNY_CDN_BASE_URL}auth-showcase.png`;
+// 03/09/2026 (Amanda): trocada pela foto nova — arquivo "auth-showcase-2"
+// (.png) no Bunny, substituindo "auth-showcase".
+export const BUNNY_AUTH_SHOWCASE_URL = `${BUNNY_CDN_BASE_URL}auth-showcase-2.png`;
+
+/**
+ * 03/09/2026 (Amanda + Figma node 113:7556): 2 imagens fixas novas da Home.
+ * Ambas hospedadas no Bunny, mesmo padrão das outras acima — só sobe o
+ * arquivo com esse nome exato e já funciona, sem tocar em código.
+ *
+ * - `BUNNY_HOME_STORIES_BANNER_URL`: banner que ocupa a LARGURA TOTAL da
+ *   tela no mobile (sangra além do padding de 24px do resto da Home) — fica
+ *   atrás do mini-player de stories (o "STREAMING..." da referência do
+ *   Figma). Proporção de referência: 390×203 (~1.92:1).
+ * - `BUNNY_COMMUNITY_BANNER_URL`: substitui o antigo botão verde "Comunidade
+ *   no WhatsApp" — agora é um banner-imagem clicável (mesmo link
+ *   `WHATSAPP_GROUP_URL`), dentro do conteúdo normal (não sangra a tela).
+ *   Proporção de referência: 342×211 (~1.62:1).
+ */
+export const BUNNY_HOME_STORIES_BANNER_URL = `${BUNNY_CDN_BASE_URL}home-stories-banner.png`;
+export const BUNNY_COMMUNITY_BANNER_URL = `${BUNNY_CDN_BASE_URL}community-banner.png`;
 
 /**
  * Resolve um caminho de imagem salvo no Supabase (ex: `storefront_image_url`

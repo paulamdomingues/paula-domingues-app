@@ -19,9 +19,19 @@ export default function StoreCard({ store, onToggleFavorite }: StoreCardProps) {
       onKeyDown={(e) => {
         if (e.key === 'Enter') navigate(`/loja/${store.id}`);
       }}
-      className="flex w-[clamp(140px,38vw,163px)] cursor-pointer flex-col items-center gap-1 py-2"
+      className="flex w-[160px] cursor-pointer flex-col items-center gap-1 py-2"
     >
-      <div className="relative aspect-[163/180] w-full overflow-hidden rounded-lg">
+      {/* 03/09/2026, pedido da Amanda (Figma node 113:7556 confirma
+          160x160): imagem virou um quadrado fixo — era `aspect-[163/180]`
+          numa largura responsiva `clamp(140px,38vw,163px)`. Vale pra TODOS
+          os cards de loja (componente único, usado em Home/CategoryScreen/
+          Busca/Lojas/Favoritos), então essa mudança aqui já propaga sozinha.
+       *
+       * Em telas bem estreitas (<~350px de largura), 2 colunas de 160px +
+       * 16px de gap passam a largura do aparelho — pode gerar um scroll
+       * horizontal leve nessas grades. Se incomodar na prática, dá pra
+       * revisitar (ex: manter fixo só a partir de um breakpoint mínimo). */}
+      <div className="relative size-[160px] overflow-hidden rounded-lg">
         <ImagePlaceholder src={store.imageUrl} alt={store.name} className="size-full" />
 
         <button
@@ -42,8 +52,11 @@ export default function StoreCard({ store, onToggleFavorite }: StoreCardProps) {
           )}
         </button>
 
-        <div className="absolute bottom-0 right-0 flex h-6 w-[68px] items-center justify-end rounded-tl-2xl rounded-br-lg bg-accent-yellow p-1">
-          <span className="font-body text-[12px] leading-[1.35] tracking-[0.36px] text-base-black">
+        {/* 03/09/2026, pedido da Amanda: label do código mudou de
+            `bg-accent-yellow`/texto preto pra `bg-main-red-800`/texto
+            branco, em todos os cards. */}
+        <div className="absolute bottom-0 right-0 flex h-6 w-[68px] items-center justify-end rounded-tl-2xl rounded-br-lg bg-main-red-800 p-1">
+          <span className="font-body text-[12px] leading-[1.35] tracking-[0.36px] text-base-white">
             {store.code}
           </span>
         </div>

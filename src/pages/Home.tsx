@@ -83,9 +83,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="lg:mx-auto lg:w-full lg:max-w-[640px]">
-          <WhatsappCommunityButton href={WHATSAPP_GROUP_URL} />
-        </div>
       </div>
 
       {/* Do título "O que você procura hoje?" até os cards de lojas, tudo fica dentro
@@ -99,6 +96,14 @@ export default function Home() {
           </h2>
           <CategoryGrid categories={categories} onSelectCategory={handleSelectCategory} />
         </section>
+
+        {/* 03/09/2026 (Amanda, Figma node 113:7556): o banner da comunidade
+            no WhatsApp mudou de posição — antes ficava colado no
+            mini-player, lá em cima; agora vem depois das categorias, igual
+            ao Figma. */}
+        <div className="lg:mx-auto lg:w-full lg:max-w-[640px]">
+          <WhatsappCommunityButton href={WHATSAPP_GROUP_URL} />
+        </div>
 
         <section className="flex w-full flex-col items-center gap-4">
           <h2 className="w-full font-display font-bold capitalize text-[32px] tracking-[1.6px] text-base-black">
