@@ -36,10 +36,14 @@ export default function BottomNav() {
         <NavLink key={to} to={to} end={to === '/'} className="flex w-[62px] flex-col items-center gap-0">
           {({ isActive }) => (
             <>
+              {/* 04/09/2026 (Amanda, Figma node 79:1211): cor do estado
+                  selecionado trocada — círculo de fundo era main-red-300,
+                  agora main-red-700; label era main-red-400, agora
+                  main-red-900 (bate exatamente com o componente do Figma). */}
               <span
                 className={
                   isActive
-                    ? 'flex items-center justify-center rounded-full bg-main-red-300 p-2'
+                    ? 'flex items-center justify-center rounded-full bg-main-red-700 p-2'
                     : 'flex items-center justify-center p-2'
                 }
               >
@@ -52,7 +56,7 @@ export default function BottomNav() {
               <span
                 className={
                   isActive
-                    ? 'whitespace-nowrap text-center font-body text-[12px] tracking-[0.36px] text-main-red-400'
+                    ? 'whitespace-nowrap text-center font-body text-[12px] tracking-[0.36px] text-main-red-900'
                     : 'whitespace-nowrap text-center font-body text-[12px] tracking-[0.36px] text-main-red-800'
                 }
               >

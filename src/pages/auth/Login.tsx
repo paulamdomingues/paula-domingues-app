@@ -34,6 +34,11 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen w-full items-stretch bg-screen-bg lg:mx-auto lg:max-w-[1440px]">
+      {/* 04/09/2026 (Amanda): lados invertidos no desktop — a foto
+          (`AuthShowcasePanel`) vem primeiro agora (fica à esquerda), o
+          formulário depois (fica à direita). No mobile não muda nada, o
+          painel já é `lg:hidden` por dentro. */}
+      <AuthShowcasePanel />
       <div className="flex w-full flex-col items-center justify-center gap-8 px-6 py-10 lg:w-1/2 lg:max-w-[720px] lg:px-[156px]">
         <Logo />
 
@@ -96,8 +101,6 @@ export default function Login() {
         </div>
         </form>
       </div>
-
-      <AuthShowcasePanel />
     </div>
   );
 }

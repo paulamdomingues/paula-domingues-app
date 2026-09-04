@@ -59,6 +59,11 @@ export default function SignUp() {
 
   return (
     <div className="flex min-h-screen w-full items-stretch bg-screen-bg">
+      {/* 04/09/2026 (Amanda): mesma inversão de lados feita no Login — a
+          foto (`AuthShowcasePanel`) vem primeiro agora (fica à esquerda),
+          o formulário depois (fica à direita), pra manter as duas telas
+          consistentes (compartilham a mesma imagem). */}
+      <AuthShowcasePanel />
       <div className="flex w-full flex-col items-center justify-center gap-10 px-6 py-10 lg:w-1/2 lg:max-w-[720px] lg:px-[156px]">
         <Logo />
 
@@ -136,8 +141,6 @@ export default function SignUp() {
         </div>
         </form>
       </div>
-
-      <AuthShowcasePanel />
     </div>
   );
 }
