@@ -9,11 +9,13 @@ export const EXTERNAL_PRIVACY_URL = 'https://pauladomingues.com/politica-de-priv
 
 /**
  * Links de WhatsApp usados no Perfil ("Entrar no grupo" / "Falar com o
- * Suporte"). A Amanda confirmou (18/08/2026) que o número de suporte ainda
- * é fictício/provisório — trocar assim que tiver o número oficial.
+ * Suporte"). O número de suporte foi confirmado pela Amanda (27/08/2026) —
+ * já vem com mensagem pré-preenchida pra abrir a conversa direto no contexto
+ * certo (mensagem atualizada em 05/09/2026, mesmo número).
  */
 export const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/C8k4KPFSafZ4bE36wYkOyG';
-export const WHATSAPP_SUPPORT_URL = 'https://wa.me/5511912345678';
+export const WHATSAPP_SUPPORT_URL =
+  'https://wa.me/5511934001020?text=Ol%C3%A1%2C%20vim%20do%20app%20preciso%20de%20ajuda!';
 
 /**
  * `true` quando o app está rodando em `admin.pauladomingues.com` (decisão

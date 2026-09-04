@@ -65,16 +65,20 @@ export default function SignUp() {
           consistentes (compartilham a mesma imagem). */}
       <AuthShowcasePanel />
       <div className="flex w-full flex-col items-center justify-center gap-10 px-6 py-10 lg:w-1/2 lg:max-w-[720px] lg:px-[156px]">
-        <Logo />
+        {/* 05/09/2026 (Amanda): mesma regra do Login — logo cresce
+            proporcional, só a LARGURA no mobile vai pra 300px, desktop
+            mantém o clamp padrão do componente. */}
+        <Logo className="h-auto w-[300px] lg:w-[clamp(120px,24vw,179px)]" />
 
         <form onSubmit={handleSubmit} className="flex w-full flex-col items-center gap-[38px]">
         <div className="flex w-full flex-col items-center gap-[44px]">
           <div className="flex w-full flex-col gap-6">
             <div className="flex w-full flex-col items-start">
-              <h1 className="w-full font-display text-[48px] font-extrabold tracking-[1.44px] text-main-red-600">
+              {/* 05/09/2026 (Amanda): título 48px → 32px, subtítulo 16px → 14px (mobile). */}
+              <h1 className="w-full font-display text-[32px] font-extrabold tracking-[1.44px] text-main-red-600">
                 Criar conta
               </h1>
-              <p className="w-full font-body text-[16px] tracking-[0.8px] text-gray-500">
+              <p className="w-full font-body text-[14px] tracking-[0.8px] text-gray-500">
                 Preencha seus dados para começar
               </p>
             </div>
@@ -131,13 +135,15 @@ export default function SignUp() {
         </div>
 
         <div className="flex w-full flex-col items-center gap-8">
-          <p className="whitespace-nowrap text-center font-body text-[12px] tracking-[0.36px] text-gray-900">
+          <TermsFooter prefix="Ao criar uma conta, você concorda com os" />
+          {/* 05/09/2026 (Amanda): esse link desceu pra depois do TermsFooter,
+              mesma mudança de ordem feita no Login. */}
+          <p className="whitespace-nowrap text-center font-body text-[12px] tracking-[0.36px] text-gray-500">
             Já tem conta ?{' '}
             <Link to="/login" className="text-main-red-600 underline">
               Fazer Login
             </Link>
           </p>
-          <TermsFooter prefix="Ao criar uma conta, você concorda com os" />
         </div>
         </form>
       </div>

@@ -40,14 +40,18 @@ export default function Login() {
           painel já é `lg:hidden` por dentro. */}
       <AuthShowcasePanel />
       <div className="flex w-full flex-col items-center justify-center gap-8 px-6 py-10 lg:w-1/2 lg:max-w-[720px] lg:px-[156px]">
-        <Logo />
+        {/* 05/09/2026 (Amanda): logo cresce proporcional, só a LARGURA no
+            mobile vai pra 300px — desktop mantém exatamente o tamanho de
+            sempre (o clamp padrão do componente). */}
+        <Logo className="h-auto w-[300px] lg:w-[clamp(120px,24vw,179px)]" />
 
         <form onSubmit={handleSubmit} className="flex w-full flex-col gap-6">
         <div className="flex w-full flex-col items-start">
-          <h1 className="w-full font-display text-[48px] font-extrabold tracking-[1.44px] text-main-red-600">
+          {/* 05/09/2026 (Amanda): título 48px → 32px, subtítulo 16px → 14px (mobile). */}
+          <h1 className="w-full font-display text-[32px] font-extrabold tracking-[1.44px] text-main-red-600">
             Entrar
           </h1>
-          <p className="w-full font-body text-[16px] tracking-[0.8px] text-gray-500">
+          <p className="w-full font-body text-[14px] tracking-[0.8px] text-gray-500">
             Acesse sua conta
           </p>
         </div>
@@ -87,16 +91,20 @@ export default function Login() {
 
           <div className="flex w-full flex-col items-center gap-[44px]">
             <AuthPrimaryButton loading={loading}>Entrar</AuthPrimaryButton>
-            {/* 02/09/2026 (Amanda): a tela de Pre-Login (que tinha esse
-                convite pra criar conta) saiu — o link mudou pra cá, direto
-                embaixo do botão "Entrar". */}
-            <p className="w-full text-center font-body text-[14px] tracking-[0.7px] text-gray-900">
-              Primeira vez aqui?{' '}
+            <TermsFooter prefix="Ao continuar você concorda com os" />
+            {/* 05/09/2026 (Amanda): esse link desceu pra depois do
+                TermsFooter e perdeu prioridade visual (texto menor/mais
+                claro, era o mesmo peso do resto). A frase "Primeira vez
+                aqui?" também saiu — em algum momento TODO mundo já vai ter
+                acessado antes, e a redação antiga dava a entender que só
+                valia pro primeiro acesso, o que arriscava confundir e levar
+                a pessoa a criar uma conta duplicada. */}
+            <p className="w-full text-center font-body text-[12px] tracking-[0.36px] text-gray-500">
+              Ainda não tem conta?{' '}
               <Link to="/criar-conta" className="text-main-red-600 underline">
                 Criar Conta
               </Link>
             </p>
-            <TermsFooter prefix="Ao continuar você concorda com os" />
           </div>
         </div>
         </form>

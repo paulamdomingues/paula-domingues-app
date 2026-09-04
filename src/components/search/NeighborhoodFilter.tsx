@@ -35,7 +35,15 @@ export default function NeighborhoodFilter({ value, onChange }: NeighborhoodFilt
             type="button"
             onClick={() => onChange(isSelected ? null : neighborhood)}
             aria-pressed={isSelected}
-            className={`flex h-[48px] w-full items-center justify-center rounded-lg px-2 text-center font-display text-[15px] font-bold uppercase tracking-[0.45px] text-base-white transition-colors ${
+            // 05/09/2026 (Amanda, Figma "Sofia Sans Extra Condensed", Bold,
+            // 26px, altura de linha 115%, letter-spacing 3%): label subiu de
+            // 15px pra 26px e perdeu o uppercase forçado — os nomes (Brás,
+            // 25 de Março, Bom Retiro, Outros) aparecem exatamente como
+            // cadastrados, sem transformação de caixa. Testado pela Amanda
+            // no Figma numa tela de 390px (a base mobile) sem quebrar.
+            // No desktop os botões ficam maiores/mais altos (puramente
+            // estético, sem valor de referência do Figma pra isso).
+            className={`flex h-[48px] w-full items-center justify-center rounded-lg px-2 text-center font-display text-[26px] font-bold leading-[115%] tracking-[0.78px] text-base-white transition-colors lg:h-[64px] lg:px-4 ${
               isSelected ? 'bg-main-dark-600' : 'bg-main-red-700'
             }`}
           >

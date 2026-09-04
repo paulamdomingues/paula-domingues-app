@@ -15,49 +15,56 @@ interface HighlightBannerProps {
 }
 
 /**
- * 03/09/2026 (Amanda, Figma node 113:7556 "Inicio"): no MOBILE, o texto/logo
- * "Destaques e Novidades" ao lado do mini-player deu lugar a um banner-
- * imagem fixo (arquivo no Bunny, `BUNNY_HOME_STORIES_BANNER_URL` — ver
- * `bunnyStorage.ts`) que ocupa a LARGURA TOTAL da tela — sangra além do
- * padding de 24px da Home via `-mx-6`/`w-[calc(100%+3rem)]` (mesma conta de
- * "desfazer o px-6 do container pai" usada em outros lugares do app pra
- * sangrar conteúdo, ex: `TopBar` no desktop, `App.tsx`). A proporção
- * `aspect-[390/203]` reproduz a proporção do banner no Figma (referência
- * 390×203) continuamente, não só num breakpoint fixo.
+ * 03/09/2026 (Amanda, Figma node 113:7556 "Inicio"): o texto/logo "Destaques
+ * e Novidades" ao lado do mini-player deu lugar a um banner-imagem fixo
+ * (arquivo no Bunny, `BUNNY_HOME_STORIES_BANNER_URL` — ver `bunnyStorage.ts`).
+ *
+ * 05/09/2026 (Amanda: "no desktop o banner ainda não aparece e ainda temos o
+ * título, adapte da melhor forma possível"): o banner passou a valer nos
+ * DOIS breakpoints — não só no mobile. A diferença entre eles é só de
+ * enquadramento:
+ * - Mobile: sangra a LARGURA TOTAL da tela (`-mx-6`/`w-[calc(100%+3rem)]`,
+ *   desfazendo o `px-6` do container pai da Home — mesma conta usada em
+ *   outros lugares do app pra sangrar conteúdo), sem cantos arredondados
+ *   (vai até a borda física do aparelho) e com `aspect-[390/203]` (proporção
+ *   de referência do Figma, 390×203).
+ * - Desktop: fica CONTIDO dentro do card de 640px que a Home já reserva pra
+ *   essa seção — sem sangrar — com cantos arredondados (`lg:rounded-2xl`,
+ *   já que aqui ele é só mais um bloco de conteúdo, não a borda da tela) e
+ *   altura definida pelo próprio conteúdo (o mini-player, que é maior no
+ *   desktop) em vez do aspect-ratio do mobile, que ficaria apertado num
+ *   card bem mais largo.
+ *
+ * Não existe (ainda) uma versão em proporção widescreen desse banner — o
+ * mesmo arquivo do mobile é reaproveitado via `object-cover`, então ele sofre
+ * um corte vertical um pouco maior no desktop. Vale conferir ao vivo se o
+ * enquadramento ainda fica bom; se não, a solução correta seria pedir uma
+ * variante mais larga do banner (ex: 640×368) em vez de mexer só no CSS.
  *
  * O mini-player de stories (a prévia clicável com o ícone de play) continua
- * VIVO por cima do banner, sem nenhuma mudança de comportamento — só a
- * moldura ao redor dele que virou essa imagem.
- *
- * DESKTOP não muda: continua com o texto "Destaques e Novidades" ao vivo,
- * dentro do card de 640px que já existia (a Amanda só pediu a mudança pro
- * mobile — "banner novo que fica na width total da tela MOBILE").
+ * VIVO por cima do banner nos dois breakpoints, sem nenhuma mudança de
+ * comportamento — só a moldura ao redor dele que virou essa imagem. Ele fica
+ * encostado na margem direita (`justify-end`, `px-8` = 32px) nos dois
+ * tamanhos agora, já que não sobra mais nenhum texto ao lado dele pra
+ * ocupar o espaço à esquerda.
  */
 export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBannerProps) {
   return (
-    // `isolate` é o que faltava (BUG, 04/09/2026): sem ele, `relative`
-    // sozinho não cria um novo contexto de empilhamento — o `-z-10` da
-    // imagem de fundo então competia com a pilha de empilhamento do body
-    // inteiro (não só com os irmãos aqui dentro) e acabava atrás do
+    // `isolate` é necessário (BUG corrigido em 04/09/2026): sem ele,
+    // `relative` sozinho não cria um novo contexto de empilhamento — o
+    // `-z-10` da imagem de fundo comparava com a pilha de empilhamento do
+    // body inteiro (não só com os irmãos aqui dentro) e acabava atrás do
     // `background-color` opaco do `.app-shell`/body, sumindo por completo
-    // mesmo carregando certinho (confirmado: a URL responde ok, só não
-    // aparecia). Mesmo truque já usado em `PreLogin.tsx` (lá o `isolate`
-    // já estava certo desde o início).
-    <div className="relative isolate -mx-6 aspect-[390/203] w-[calc(100%+3rem)] overflow-hidden lg:static lg:mx-0 lg:aspect-auto lg:w-full lg:overflow-visible">
+    // mesmo carregando certinho. Mesmo truque já usado em `PreLogin.tsx`.
+    <div className="relative isolate -mx-6 aspect-[390/203] w-[calc(100%+3rem)] overflow-hidden lg:mx-0 lg:aspect-auto lg:w-full lg:rounded-2xl">
       <img
         src={BUNNY_HOME_STORIES_BANNER_URL}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 -z-10 size-full object-cover lg:hidden"
+        className="absolute inset-0 -z-10 size-full object-cover lg:rounded-2xl"
       />
 
-      {/* 04/09/2026 (Amanda): banner sangra a tela toda, mas o mini-player
-          em cima dele respeita a margem de 32px (`px-8`) das laterais —
-          no mobile ele é o único elemento vivo (o texto some, já embutido
-          na imagem), então `justify-end` encosta ele na margem direita,
-          igual à referência do Figma. Desktop não muda (`lg:justify-start`
-          volta ao lado a lado de sempre). */}
-      <div className="absolute inset-0 flex items-center justify-end gap-6 px-8 lg:static lg:justify-start lg:gap-9 lg:px-0">
+      <div className="absolute inset-0 flex items-center justify-end px-8 py-6">
         <button
           type="button"
           onClick={onClick}
@@ -73,18 +80,6 @@ export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBann
             <PlayIcon className="size-5 text-rose-950 lg:size-7" />
           </span>
         </button>
-
-        {/* Só desktop — no mobile esse texto saiu, já vem embutido no banner acima. */}
-        <div className="hidden min-w-0 flex-1 flex-col items-start justify-center gap-6 lg:flex">
-          <div className="flex w-full flex-col items-start gap-1">
-            <p className="w-full font-display font-bold text-[26px] leading-[1.15] tracking-[0.78px] text-base-black lg:text-[32px]">
-              Destaques e Novidades
-            </p>
-            <p className="w-full font-body text-[14px] leading-[1.35] tracking-[0.7px] text-gray-800">
-              Conteúdos exclusivos para o seu negócio vender mais.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

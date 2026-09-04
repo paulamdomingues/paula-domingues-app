@@ -213,8 +213,11 @@ export default function StoreDetail() {
                 )}
               </button>
 
-              <div className="absolute right-3 top-3 flex h-7 items-center justify-center rounded-full bg-accent-yellow px-3">
-                <span className="font-body text-[13px] leading-[1.35] tracking-[0.39px] text-base-black">
+              {/* 05/09/2026, pedido da Amanda: mesma cor do label dos cards
+                  (bg-accent-yellow/texto preto → bg-main-red-800/texto
+                  branco), pra ficar combinado em toda a tela da loja. */}
+              <div className="absolute right-3 top-3 flex h-7 items-center justify-center rounded-full bg-main-red-800 px-3">
+                <span className="font-body text-[13px] leading-[1.35] tracking-[0.39px] text-base-white">
                   {store.code}
                 </span>
               </div>
