@@ -18,6 +18,22 @@ interface CategoriaModalProps {
 interface StoreOption {
   id: number;
   name: string;
+  /**
+   * true = essa é a categoria RAIZ da loja (`stores.category_id` — a que
+   * gera o código/`code_badge`). false = vínculo ADICIONAL, gravado em
+   * `store_categories` (tabela N:N, 04/09/2026). Só o vínculo adicional
+   * pode ser desfeito por aqui — desvincular a raiz deixaria a loja sem
+   * categoria (foi exatamente o bug que corrigimos na "Sn Biju"), então
+   * pra trocar a raiz o caminho continua sendo o cadastro da loja
+   * (`AdminLojaForm.tsx`).
+   */
+  isRoot: boolean;
+}
+
+/** Resultado da busca "Adicionar Loja" — ainda não vinculada a essa categoria. */
+interface SearchStoreOption {
+  id: number;
+  name: string;
 }
 
 /**
@@ -26,12 +42,25 @@ interface StoreOption {
  * direita ("Adicionar Loja" + chips "Lojas Adicionadas").
  *
  * Decisão de escopo: o Figma mostra a busca de lojas já disponível na
- * criação, mas isso exigiria linkar `stores.category_id` a uma categoria
- * que ainda não existe no banco — não dá. Por isso, no cadastro NOVO essa
- * seção fica escondida (com um aviso), e libera assim que a categoria já
- * existe (reabrindo o mesmo modal pra editar, ao clicar no card). Vincular/
- * desvincular loja é sempre "ao vivo" (grava na hora, não espera o Salvar
- * do modal) — só Nome/Capa dependem do botão Salvar.
+ * criação, mas isso exigiria linkar uma categoria que ainda não existe no
+ * banco — não dá. Por isso, no cadastro NOVO essa seção fica escondida
+ * (com um aviso), e libera assim que a categoria já existe (reabrindo o
+ * mesmo modal pra editar, ao clicar no card). Vincular/desvincular loja é
+ * sempre "ao vivo" (grava na hora, não espera o Salvar do modal) — só
+ * Nome/Capa dependem do botão Salvar.
+ *
+ * 04/09/2026 (Amanda: "eu quero que a loja seja encontrada em mais de uma
+ * categoria, sem mudar o codigo e sem remover ela da categoria inicial"):
+ * antes, "Adicionar Loja" aqui simplesmente SOBRESCREVIA
+ * `stores.category_id` — ou seja, "adicionar" na prática MOVIA a loja pra
+ * cá e tirava ela de onde estava (e o código mudava junto, já que o
+ * `code_badge` é gerado a partir da categoria). Agora vincula em
+ * `store_categories` (tabela N:N nova) em vez de tocar em `category_id` —
+ * a categoria raiz (e o código) fica intacta, e a loja passa a aparecer
+ * nas duas categorias pro cliente final (`CategoryScreen.tsx` já lê os
+ * dois). "Lojas Adicionadas" mostra a raiz (sem botão de remover — pra
+ * tirar a raiz, editar o cadastro da loja) e os vínculos extras (com botão
+ * de remover) juntos, na mesma lista.
  */
 export default function CategoriaModal({ category, canManage, onCancel, onSaved }: CategoriaModalProps) {
   const isEdit = Boolean(category);
@@ -43,20 +72,39 @@ export default function CategoriaModal({ category, canManage, onCancel, onSaved 
 
   const [linkedStores, setLinkedStores] = useState<StoreOption[]>([]);
   const [search, setSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<StoreOption[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchStoreOption[]>([]);
   const [searching, setSearching] = useState(false);
 
   const capaInputRef = useRef<HTMLInputElement>(null);
   const folderKeyRef = useRef(String(category?.id ?? crypto.randomUUID()));
+  // Espelha `linkedStores` num ref só pra ler o valor mais recente dentro do
+  // debounce da busca (abaixo) sem precisar colocar `linkedStores` nas deps
+  // do efeito — isso re-disparava a busca (e cancelava o que a pessoa tava
+  // digitando) toda vez que uma loja era vinculada/desvinculada.
+  const linkedStoresRef = useRef<StoreOption[]>([]);
+  useEffect(() => {
+    linkedStoresRef.current = linkedStores;
+  }, [linkedStores]);
 
   useEffect(() => {
     if (!category) return;
-    supabase
-      .from('stores')
-      .select('id, name')
-      .eq('category_id', category.id)
-      .order('name', { ascending: true })
-      .then(({ data }) => setLinkedStores(data ?? []));
+    // Junta a categoria RAIZ (`stores.category_id`) com os vínculos
+    // ADICIONAIS (`store_categories`, N:N) numa lista só — a raiz nunca
+    // deveria aparecer duplicada como vínculo extra, mas o `!rootIds.has`
+    // protege mesmo assim (ex: se um dia a raiz mudar pra uma categoria que
+    // já tinha um vínculo extra igual).
+    Promise.all([
+      supabase.from('stores').select('id, name').eq('category_id', category.id).order('name', { ascending: true }),
+      supabase.from('store_categories').select('stores(id, name)').eq('category_id', category.id),
+    ]).then(([rootRes, extraRes]) => {
+      const rootStores: StoreOption[] = (rootRes.data ?? []).map((s) => ({ ...s, isRoot: true }));
+      const rootIds = new Set(rootStores.map((s) => s.id));
+      const extraStores: StoreOption[] = (extraRes.data ?? [])
+        .flatMap((row) => (Array.isArray(row.stores) ? row.stores : row.stores ? [row.stores] : []))
+        .filter((s) => !rootIds.has(s.id))
+        .map((s) => ({ ...s, isRoot: false }));
+      setLinkedStores([...rootStores, ...extraStores].sort((a, b) => a.name.localeCompare(b.name)));
+    });
   }, [category]);
 
   useEffect(() => {
@@ -71,12 +119,14 @@ export default function CategoriaModal({ category, canManage, onCancel, onSaved 
         .from('stores')
         .select('id, name')
         .ilike('name', `%${search.trim()}%`)
-        .neq('category_id', category!.id)
-        .limit(6)
+        .limit(12)
         .then(({ data }) => {
           if (cancelled) return;
           setSearching(false);
-          setSearchResults(data ?? []);
+          // Some as já vinculadas (raiz OU extra) da lista de resultados —
+          // adicionar de novo seria um no-op confuso.
+          const linkedIds = new Set(linkedStoresRef.current.map((s) => s.id));
+          setSearchResults((data ?? []).filter((s) => !linkedIds.has(s.id)).slice(0, 6));
         });
     }, 300);
     return () => {
@@ -102,22 +152,34 @@ export default function CategoriaModal({ category, canManage, onCancel, onSaved 
     }
   }
 
-  async function handleAddStore(store: StoreOption) {
-    const { error: updateError } = await supabase
-      .from('stores')
-      .update({ category_id: category!.id })
-      .eq('id', store.id);
-    if (updateError) {
+  async function handleAddStore(store: SearchStoreOption) {
+    setError(null);
+    // Vínculo ADICIONAL (`store_categories`) — nunca toca em
+    // `stores.category_id`, então a categoria raiz e o código continuam os
+    // mesmos e a loja não sai de onde já estava.
+    const { error: insertError } = await supabase
+      .from('store_categories')
+      .insert({ store_id: store.id, category_id: category!.id });
+    if (insertError) {
       setError('Não foi possível vincular essa loja.');
       return;
     }
-    setLinkedStores((prev) => [...prev, store].sort((a, b) => a.name.localeCompare(b.name)));
+    setLinkedStores((prev) => [...prev, { ...store, isRoot: false }].sort((a, b) => a.name.localeCompare(b.name)));
     setSearchResults((prev) => prev.filter((s) => s.id !== store.id));
   }
 
   async function handleRemoveStore(store: StoreOption) {
-    const { error: updateError } = await supabase.from('stores').update({ category_id: null }).eq('id', store.id);
-    if (updateError) {
+    // A raiz não pode ser removida por aqui (ver doc-comment de `StoreOption`
+    // acima) — os botões de remover já não aparecem pra ela na UI, isso é
+    // só uma segunda trava.
+    if (store.isRoot) return;
+    setError(null);
+    const { error: deleteError } = await supabase
+      .from('store_categories')
+      .delete()
+      .eq('store_id', store.id)
+      .eq('category_id', category!.id);
+    if (deleteError) {
       setError('Não foi possível desvincular essa loja.');
       return;
     }
@@ -265,13 +327,18 @@ export default function CategoriaModal({ category, canManage, onCancel, onSaved 
                       {linkedStores.map((store) => (
                         <span
                           key={store.id}
+                          title={store.isRoot ? 'Categoria principal desta loja — para trocar, edite o cadastro dela.' : undefined}
                           className="flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1.5 font-body text-[13px] text-gray-700"
                         >
                           {store.name}
-                          {canManage && (
-                            <button type="button" onClick={() => handleRemoveStore(store)} aria-label={`Remover ${store.name}`}>
-                              <PiX className="size-3" />
-                            </button>
+                          {store.isRoot ? (
+                            <span className="font-body text-[11px] text-gray-400">principal</span>
+                          ) : (
+                            canManage && (
+                              <button type="button" onClick={() => handleRemoveStore(store)} aria-label={`Remover ${store.name}`}>
+                                <PiX className="size-3" />
+                              </button>
+                            )
                           )}
                         </span>
                       ))}

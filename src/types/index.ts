@@ -64,14 +64,22 @@ export interface Store {
 }
 
 /**
- * `Store` + os 2 campos internos usados só pra filtrar (nunca exibidos pro
- * usuário final): `categoryId` (FK real de `stores.category_id`, como
- * string) e `neighborhood` (`stores.polo_location`). Antes vivia só em
- * `mockData.ts`; virou tipo de verdade porque `catalog.ts` devolve isso
- * pra alimentar os filtros de Categoria/Busca com dado real.
+ * `Store` + os campos internos usados só pra filtrar (nunca exibidos pro
+ * usuário final): `categoryId` (FK real de `stores.category_id` — a
+ * categoria RAIZ, que também gera o código da loja, como string),
+ * `extraCategoryIds` e `neighborhood` (`stores.polo_location`). Antes vivia
+ * só em `mockData.ts`; virou tipo de verdade porque `catalog.ts` devolve
+ * isso pra alimentar os filtros de Categoria/Busca com dado real.
+ *
+ * 04/09/2026 (Amanda): `extraCategoryIds` — categorias ADICIONAIS que a
+ * loja foi vinculada pela tela Categorias do painel admin (tabela nova
+ * `store_categories`, N:N), sem trocar `categoryId`/o código. `CategoryScreen`
+ * usa `categoryId` OU `extraCategoryIds` pra decidir se a loja aparece
+ * naquela categoria — ver `resolveStoreCategoryIds` em `catalog.ts`.
  */
 export interface StoreWithCategory extends Store {
   categoryId: string;
+  extraCategoryIds: string[];
   neighborhood: string | null;
 }
 

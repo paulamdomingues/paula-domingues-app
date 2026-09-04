@@ -39,24 +39,32 @@ export default function AdminCategorias() {
   }, []);
 
   function fetchCategories() {
-    supabase
-      .from('categories')
-      .select('id, name, icon_url, stores(count)')
-      .order('name', { ascending: true })
-      .then(({ data, error: fetchError }) => {
-        if (fetchError) {
-          setError('Não foi possível carregar as categorias.');
-          return;
-        }
-        setCategories(
-          (data ?? []).map((row) => ({
-            id: row.id,
-            name: row.name,
-            icon_url: row.icon_url,
-            storeCount: Array.isArray(row.stores) ? (row.stores[0]?.count ?? 0) : 0,
-          }))
-        );
+    // 04/09/2026 (Amanda): "X lojas adicionadas" agora soma a categoria
+    // RAIZ (`stores(count)`, já existia) + os vínculos ADICIONAIS
+    // (`store_categories`, tabela N:N nova — ver `CategoriaModal.tsx`), pra
+    // não mostrar um número menor do que a lista "Lojas Adicionadas" de
+    // dentro do modal realmente tem.
+    Promise.all([
+      supabase.from('categories').select('id, name, icon_url, stores(count)').order('name', { ascending: true }),
+      supabase.from('store_categories').select('category_id'),
+    ]).then(([{ data, error: fetchError }, { data: extraLinks, error: extraError }]) => {
+      if (fetchError || extraError) {
+        setError('Não foi possível carregar as categorias.');
+        return;
+      }
+      const extraCounts = new Map<number, number>();
+      (extraLinks ?? []).forEach((row) => {
+        extraCounts.set(row.category_id, (extraCounts.get(row.category_id) ?? 0) + 1);
       });
+      setCategories(
+        (data ?? []).map((row) => ({
+          id: row.id,
+          name: row.name,
+          icon_url: row.icon_url,
+          storeCount: (Array.isArray(row.stores) ? (row.stores[0]?.count ?? 0) : 0) + (extraCounts.get(row.id) ?? 0),
+        }))
+      );
+    });
   }
 
   async function handleDelete() {

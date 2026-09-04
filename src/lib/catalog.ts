@@ -11,14 +11,18 @@ import type { Category, Story, StoreDetails, StoreWithCategory } from '../types'
 
 // Mesma lista de colunas usada no admin (`AdminLojaForm.tsx`) + o nome da
 // categoria via join, pra montar `categoryLabel` sem uma segunda consulta.
+// `store_categories(category_id)`: categorias ADICIONAIS (04/09/2026,
+// Amanda) vinculadas pela tela Categorias do admin — ver `StoreWithCategory`
+// em `types/index.ts` e `CategoriaModal.tsx`.
 const STORE_COLUMNS =
-  'id, name, category_id, categories(name), polo_location, tags, is_active, code_badge, whatsapp, instagram, storefront_image_url, gallery_images, address, working_hours, sizes_available, shipping_info, wholesale_rules, retail_rules, created_at';
+  'id, name, category_id, categories(name), store_categories(category_id), polo_location, tags, is_active, code_badge, whatsapp, instagram, storefront_image_url, gallery_images, address, working_hours, sizes_available, shipping_info, wholesale_rules, retail_rules, created_at';
 
 interface StoreRow {
   id: number;
   name: string;
   category_id: number | null;
   categories: { name: string } | { name: string }[] | null;
+  store_categories: { category_id: number }[] | null;
   polo_location: string | null;
   tags: string[] | null;
   is_active: boolean;
@@ -122,6 +126,7 @@ function mapStore(row: StoreRow): StoreWithCategory {
     // serve só o card mesmo.
     imageUrl: gallery[0] ?? row.storefront_image_url ?? null,
     categoryId: row.category_id !== null ? String(row.category_id) : '',
+    extraCategoryIds: (row.store_categories ?? []).map((sc) => String(sc.category_id)),
     neighborhood: row.polo_location,
     createdAt: row.created_at,
     details: mapStoreDetails(row),

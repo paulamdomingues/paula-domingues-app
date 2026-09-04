@@ -45,7 +45,10 @@ export default function CategoryScreen() {
     () =>
       sortStores(
         stores.filter((s) => {
-          if (s.categoryId !== categoryId) return false;
+          // 04/09/2026 (Amanda): loja aparece aqui se essa for a categoria
+          // RAIZ dela OU uma das categorias adicionais vinculadas pela tela
+          // Categorias do admin (`extraCategoryIds` — ver `catalog.ts`).
+          if (s.categoryId !== categoryId && !s.extraCategoryIds.includes(categoryId ?? '')) return false;
           if (neighborhood === null) return true;
           // 02/09/2026: "Outros" deixou de ser um valor literal — agora
           // `s.neighborhood` guarda o texto customizado (ex: "LIMEIRA")
