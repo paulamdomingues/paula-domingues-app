@@ -54,7 +54,12 @@ export default function AdminLojas() {
 
     supabase
       .from('stores')
-      .select('id, name, code_badge, is_active, category_id, categories(name)')
+      // 04/09/2026: `!stores_category_id_fkey` obrigatório — desde que a
+      // tabela `store_categories` existe, `categories(name)` sem o FK
+      // explícito virou ambíguo pro PostgREST (2 caminhos possíveis) e
+      // quebrava essa tela inteira. Ver o mesmo comentário, mais detalhado,
+      // em `catalog.ts` (`STORE_COLUMNS`).
+      .select('id, name, code_badge, is_active, category_id, categories!stores_category_id_fkey(name)')
       .order('created_at', { ascending: false })
       .then(({ data, error: fetchError }) => {
         if (cancelled) return;

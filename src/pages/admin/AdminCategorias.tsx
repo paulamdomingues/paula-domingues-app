@@ -45,7 +45,14 @@ export default function AdminCategorias() {
     // não mostrar um número menor do que a lista "Lojas Adicionadas" de
     // dentro do modal realmente tem.
     Promise.all([
-      supabase.from('categories').select('id, name, icon_url, stores(count)').order('name', { ascending: true }),
+      // 04/09/2026: `!stores_category_id_fkey` obrigatório — a tabela
+      // `store_categories` (N:N) fez `stores(count)` sem o FK explícito
+      // virar ambíguo pro PostgREST (2 caminhos entre `categories` e
+      // `stores`) e quebrava essa tela. Mesmo detalhe em `catalog.ts`.
+      supabase
+        .from('categories')
+        .select('id, name, icon_url, stores!stores_category_id_fkey(count)')
+        .order('name', { ascending: true }),
       supabase.from('store_categories').select('category_id'),
     ]).then(([{ data, error: fetchError }, { data: extraLinks, error: extraError }]) => {
       if (fetchError || extraError) {

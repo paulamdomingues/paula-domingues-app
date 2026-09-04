@@ -14,8 +14,23 @@ import type { Category, Story, StoreDetails, StoreWithCategory } from '../types'
 // `store_categories(category_id)`: categorias ADICIONAIS (04/09/2026,
 // Amanda) vinculadas pela tela Categorias do admin — ver `StoreWithCategory`
 // em `types/index.ts` e `CategoriaModal.tsx`.
+//
+// BUG CRÍTICO corrigido no mesmo dia (04/09/2026): criar a tabela
+// `store_categories` (FK pra `stores` E pra `categories`) fez o PostgREST
+// passar a enxergar DOIS caminhos de relação entre `stores` e `categories`
+// — o FK direto de sempre (`stores.category_id`) e um N:N implícito via
+// `store_categories` (é assim que o PostgREST detecta N:N sozinho: 2 FKs
+// numa tabela-ponte). Com 2 caminhos possíveis, `categories(name)` sem
+// especificar QUAL vira ambíguo — PostgREST devolve 300/PGRST201 e a
+// consulta INTEIRA falha (foi o "Não foi possível carregar as lojas"/loja
+// e categoria sumindo tanto no admin quanto no catálogo do cliente).
+// Correção: `categories!stores_category_id_fkey(name)` — o `!nome_do_fk`
+// diz explicitamente "quero o FK direto", nunca o caminho N:N. Precisa do
+// mesmo `!` em QUALQUER outro lugar do código que já embede
+// `categories(...)` a partir de `stores` (ou `stores(...)` a partir de
+// `categories`) — ver também `AdminLojas.tsx` e `AdminCategorias.tsx`.
 const STORE_COLUMNS =
-  'id, name, category_id, categories(name), store_categories(category_id), polo_location, tags, is_active, code_badge, whatsapp, instagram, storefront_image_url, gallery_images, address, working_hours, sizes_available, shipping_info, wholesale_rules, retail_rules, created_at';
+  'id, name, category_id, categories!stores_category_id_fkey(name), store_categories(category_id), polo_location, tags, is_active, code_badge, whatsapp, instagram, storefront_image_url, gallery_images, address, working_hours, sizes_available, shipping_info, wholesale_rules, retail_rules, created_at';
 
 interface StoreRow {
   id: number;
