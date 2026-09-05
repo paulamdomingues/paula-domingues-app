@@ -15,6 +15,16 @@ interface QuickAccessButtonProps {
 function QuickAccessButton({ icon, label, bgClassName, onClick, href }: QuickAccessButtonProps) {
   const content = (
     <>
+      {/* 06/09/2026 (Amanda): o ícone renderizava com uns 10/11px de altura
+          visível mesmo pedindo `size-[18px]` — os SVGs que a Amanda mandou
+          (`VideoPlayIcon`/`InfoCircleIcon`/`ChatDotsIcon`) têm um viewBox de
+          34x34 mas o desenho em si só ocupa uns ~20x20 dessa área (o resto é
+          espaço em branco em volta, de propósito, pro ícone "respirar"
+          dentro do círculo). `size-[18px]` encolhia a caixa toda, incluindo
+          esse espaço em branco, então o desenho ficava proporcionalmente
+          menor ainda (~18 × 20/34 ≈ 10.6px). Usando `size-[34px]` (mesmo
+          tamanho do círculo) o SVG renderiza no tamanho nativo em que foi
+          desenhado, com o ícone visível saindo nos ~20px que a Amanda pediu. */}
       <span className="flex size-[34px] items-center justify-center rounded-full bg-white/20 text-base-white">
         {icon}
       </span>
@@ -76,19 +86,19 @@ export default function AcessoRapidoSection() {
       </h2>
       <div className="flex w-full gap-2.5">
         <QuickAccessButton
-          icon={<VideoPlayIcon className="size-[18px]" />}
+          icon={<VideoPlayIcon className="size-[34px]" />}
           label={'Portal\nExclusivo'}
           bgClassName="bg-main-dark-700"
           onClick={() => setPortalModalOpen(true)}
         />
         <QuickAccessButton
-          icon={<InfoCircleIcon className="size-[18px]" />}
+          icon={<InfoCircleIcon className="size-[34px]" />}
           label={'Info dos\nPolos'}
           bgClassName="bg-main-red-600"
           onClick={() => setPolosModalOpen(true)}
         />
         <QuickAccessButton
-          icon={<ChatDotsIcon className="size-[18px]" />}
+          icon={<ChatDotsIcon className="size-[34px]" />}
           label={'Suporte\nTécnico'}
           bgClassName="bg-gray-700"
           href={WHATSAPP_SUPPORT_URL}
