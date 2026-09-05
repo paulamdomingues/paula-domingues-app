@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import TopBar from '../components/TopBar';
 import HighlightBanner from '../components/HighlightBanner';
 import WhatsappCommunityButton from '../components/WhatsappCommunityButton';
+import AcessoRapidoSection from '../components/AcessoRapidoSection';
 import CategoryGrid from '../components/CategoryGrid';
 import StoreCard from '../components/StoreCard';
 import StoryPlayerOverlay from '../components/StoryPlayerOverlay';
@@ -103,6 +104,14 @@ export default function Home() {
             ao Figma. */}
         <div className="lg:mx-auto lg:w-full lg:max-w-[640px]">
           <WhatsappCommunityButton href={WHATSAPP_GROUP_URL} />
+        </div>
+
+        {/* 05/09/2026 (Amanda): bloco "Acesso Rápido" — ver doc comment em
+            `AcessoRapidoSection.tsx` pro contexto completo (referência de
+            concorrente + rascunho no Figma). Mesma largura máxima do banner
+            do WhatsApp acima, pra ficar tudo alinhado no desktop. */}
+        <div className="lg:mx-auto lg:w-full lg:max-w-[640px]">
+          <AcessoRapidoSection />
         </div>
 
         <section className="flex w-full flex-col items-center gap-4">

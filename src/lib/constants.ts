@@ -18,6 +18,15 @@ export const WHATSAPP_SUPPORT_URL =
   'https://wa.me/5511934001020?text=Ol%C3%A1%2C%20vim%20do%20app%20preciso%20de%20ajuda!';
 
 /**
+ * 05/09/2026 (Amanda): link do botão "Portal Exclusivo" (bloco "Acesso
+ * Rápido" da Home) — a área de membros paga na Hubla, com vídeos mais
+ * completos sobre os polos (Brás, 25 de Março, Bom Retiro). Amanda pediu
+ * explicitamente pra deixar um PLACEHOLDER por enquanto ("depois vamos
+ * trocar tbm") — troca por esse link real assim que ela confirmar.
+ */
+export const HUBLA_PORTAL_URL = 'https://areademembros.hubla.com';
+
+/**
  * `true` quando o app está rodando em `admin.pauladomingues.com` (decisão
  * confirmada com a Amanda em 21/08/2026: painel admin em subdomínio próprio,
  * separado de `app.pauladomingues.com`). Usado só pra redirecionar a raiz
