@@ -58,9 +58,12 @@ export const BUNNY_AUTH_SHOWCASE_URL = `${BUNNY_CDN_BASE_URL}auth-showcase-2.png
  * 2 arquivos foram subidos de verdade no Bunny, e essa URL é case-sensitive
  * (bate exatamente com o nome do arquivo no storage, então "png" minúsculo
  * dava 404 mesmo o arquivo existindo).
+ *
+ * 05/09/2026 (Amanda): arte do banner do WhatsApp trocada de novo — arquivo
+ * "community-banner2" substitui o antigo "community-banner" no Bunny.
  */
 export const BUNNY_HOME_STORIES_BANNER_URL = `${BUNNY_CDN_BASE_URL}home-stories-banner.PNG`;
-export const BUNNY_COMMUNITY_BANNER_URL = `${BUNNY_CDN_BASE_URL}community-banner.PNG`;
+export const BUNNY_COMMUNITY_BANNER_URL = `${BUNNY_CDN_BASE_URL}community-banner2.PNG`;
 
 /**
  * Resolve um caminho de imagem salvo no Supabase (ex: `storefront_image_url`

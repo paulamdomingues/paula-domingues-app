@@ -23,8 +23,13 @@ export default function CategoryBubble({ category, onSelect }: CategoryBubblePro
        * tamanho fixo em px no mobile (era `aspect-square w-full` sobre um
        * botão de largura `clamp(72px,22vw,95px)` — variava com o viewport e,
        * às vezes, no site publicado, renderizava um círculo não-perfeito;
-       * fixo elimina isso de vez). Desktop continua 147px, sem mudança. */}
-      <span className="flex size-[78px] shrink-0 items-center justify-center rounded-full border-[1.15px] border-main-red-900 bg-main-red-50 lg:size-[147px]">
+       * fixo elimina isso de vez). Desktop continua 147px, sem mudança.
+       *
+       * 05/09/2026, pedido da Amanda: bolinha reduzida no mobile — a foto em
+       * si (`size-full` dentro do `border-box`) media 76px (78px do círculo
+       * menos os 1.15px de borda de cada lado); pra ela ficar em 66px,
+       * o círculo precisa ir a 68px (68 - 2×1.15 ≈ 66px de conteúdo). */}
+      <span className="flex size-[68px] shrink-0 items-center justify-center rounded-full border-[1.15px] border-main-red-900 bg-main-red-50 lg:size-[147px]">
         <ImagePlaceholder
           src={category.imageUrl}
           alt={category.label}
