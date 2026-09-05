@@ -244,17 +244,42 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
           <XCircleIcon className="size-10 lg:size-14" />
         </button>
 
-        {/* Zonas de navegação: metade esquerda volta, metade direita avança. */}
+        {/*
+          Zonas de navegação: esquerda volta, direita avança.
+
+          BUG corrigido em 05/09/2026 (Amanda — "nem clicando no play
+          resolve" no iPhone): antes cada zona cobria a METADE inteira da
+          tela (w-1/2), ou seja, as duas juntas tapavam o iframe da Bunny
+          por completo. Esses botões são `absolute` e são renderizados
+          DEPOIS do iframe no JSX — em CSS, um elemento posicionado (mesmo
+          com z-index 0) sempre pinta por CIMA de um elemento não-
+          posicionado dentro do mesmo contexto de empilhamento, então
+          qualquer toque no vídeo ia sempre pro botão invisível de
+          navegação, nunca pro botão de play da própria Bunny (que fica
+          centralizado no iframe). No Android isso passava despercebido
+          porque o autoplay geralmente "pegava" sozinho; no iPhone, quando
+          o autoplay falha (ver `muted`/`isIOSDevice` em `bunnyStream.ts`),
+          o usuário ficava sem nenhum jeito de iniciar o vídeo manualmente
+          — cada toque só alternava entre stories parados.
+
+          Correção: reduzido de 50% pra ~30% de cada lado, sobrando uma
+          faixa central livre (~40%) que deixa o toque passar direto pro
+          iframe. Mantém o gesto de "toca na lateral pra navegar" (as
+          bordas continuam cobrindo boa parte da tela) e ainda garante que
+          o centro do vídeo — onde ficam o play e os controles da Bunny —
+          continua alcançável como último recurso manual, caso o autoplay
+          silencioso ainda assim não funcione em algum aparelho.
+        */}
         <button
           type="button"
           onClick={goPrev}
-          className="absolute inset-y-0 left-0 z-0 h-full w-1/2 cursor-pointer"
+          className="absolute inset-y-0 left-0 z-0 h-full w-[30%] cursor-pointer"
           aria-label="Story anterior"
         />
         <button
           type="button"
           onClick={goNext}
-          className="absolute inset-y-0 right-0 z-0 h-full w-1/2 cursor-pointer"
+          className="absolute inset-y-0 right-0 z-0 h-full w-[30%] cursor-pointer"
           aria-label="Próximo story"
         />
 

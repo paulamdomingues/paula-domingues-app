@@ -11,13 +11,55 @@ import { supabase } from './supabaseClient';
 export const BUNNY_STREAM_LIBRARY_ID = '732490';
 
 /**
+ * Detecta iOS (iPhone/iPad/iPod — inclui iPadOS 13+, que se identifica como
+ * "Macintosh" no user agent mas tem tela sensível ao toque) só pra decidir
+ * se o embed precisa forçar `muted=true` — ver comentário em
+ * `getBunnyEmbedUrl` logo abaixo. `typeof navigator === 'undefined'` é só
+ * defensivo (mesmo padrão do `typeof window` em `ensurePlayerJsLoaded`
+ * abaixo); esse app é só client-side, então na prática sempre roda no
+ * navegador de verdade.
+ */
+function isIOSDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+/**
  * Monta a URL de embed (iframe) de um vídeo da Bunny Stream a partir do
  * `videoId` (guid) salvo em `stories.video_path`. `null`/`undefined` →
  * `null`, pra tela mostrar o estado de "vídeo ainda não disponível".
+ *
+ * BUG corrigido em 05/09/2026 (Amanda, relatado só no iPhone/Safari — no
+ * Android tocava normal): o autoplay silenciosamente falhava e o vídeo
+ * ficava parado, mostrando o play da própria Bunny. Causa: o WebKit (motor
+ * do Safari, usado em TODO navegador no iOS — inclusive Chrome/Firefox lá,
+ * que são só uma casca por cima do Safari) bloqueia autoplay de vídeo COM
+ * SOM sem um toque direto no elemento de mídia; autoplay MUDO, por outro
+ * lado, é sempre permitido. O Chrome no Android é mais permissivo com som,
+ * por isso funcionava sem esse ajuste lá.
+ *
+ * Correção: pede autoplay sem som (`muted=true`) só quando `isIOSDevice()`
+ * — assim o vídeo volta a tocar sozinho no iPhone (igual já acontecia no
+ * Android), sem mudar o comportamento COM som que já funciona no Android.
+ * `playsinline=true` fica sempre ligado (em qualquer aparelho): sem isso o
+ * iOS pode tentar abrir o vídeo no player nativo de tela cheia do sistema,
+ * que quebraria o layout vertical 9:16 do story. Os dois parâmetros são
+ * documentados oficialmente em https://bunny.net/docs/stream/embedding.
+ *
+ * Isso resolve o autoplay em si, mas não é a causa completa do relato da
+ * Amanda ("nem clicando no play resolve") — havia um segundo bug, corrigido
+ * em `StoryPlayerOverlay.tsx`, onde os botões invisíveis de navegação
+ * (avançar/voltar story) tapavam o iframe inteiro e engoliam qualquer toque
+ * que devia chegar no botão de play da própria Bunny.
  */
 export function getBunnyEmbedUrl(videoId?: string | null): string | null {
   if (!videoId) return null;
-  return `https://iframe.mediadelivery.net/embed/${BUNNY_STREAM_LIBRARY_ID}/${videoId}?autoplay=true`;
+  const params = new URLSearchParams({ autoplay: 'true', playsinline: 'true' });
+  if (isIOSDevice()) {
+    params.set('muted', 'true');
+  }
+  return `https://iframe.mediadelivery.net/embed/${BUNNY_STREAM_LIBRARY_ID}/${videoId}?${params.toString()}`;
 }
 
 /**
