@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PiVideoCameraSlash } from 'react-icons/pi';
+import { PiSpeakerHigh, PiSpeakerSlash, PiVideoCameraSlash } from 'react-icons/pi';
 import { XCircleIcon } from './icons';
 import { ensurePlayerJsLoaded, getBunnyEmbedUrl } from '../lib/bunnyStream';
+import type { PlayerJsPlayer } from '../lib/bunnyStream';
 import type { Story } from '../types';
 
 interface StoryPlayerOverlayProps {
@@ -66,6 +67,16 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
   );
   const [progress, setProgress] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  // 05/09/2026 (Amanda — cliente reportou "veio sem áudio" no iPhone):
+  // esperado, é o `muted=true` forçado só no iOS pra o autoplay funcionar
+  // (ver `getBunnyEmbedUrl` em `bunnyStream.ts`). Guarda a instância do
+  // Player.js pra dar pro botão de som (abaixo) chamar `mute()`/`unmute()`
+  // manualmente — não dá pra confiar só no ícone de volume que já vem
+  // dentro do player da própria Bunny porque ele pode cair debaixo das
+  // zonas invisíveis de navegação (`goPrev`/`goNext` mais abaixo).
+  const playerRef = useRef<PlayerJsPlayer | null>(null);
+  const [playerReady, setPlayerReady] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   const total = stories.length;
   const currentStory = stories[currentIndex];
@@ -159,6 +170,8 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
       .then(() => {
         if (cancelled || !iframeRef.current || !window.playerjs) return;
         const player = new window.playerjs.Player(iframeRef.current);
+        playerRef.current = player;
+        setPlayerReady(true);
         player.on('timeupdate', (data) => {
           sawPlayback = true;
           if (!data.duration) return;
@@ -178,8 +191,31 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
     return () => {
       cancelled = true;
       window.clearTimeout(failsafe);
+      playerRef.current = null;
+      setPlayerReady(false);
     };
   }, [currentIndex, embedUrl, goNext]);
+
+  // Reflete no botão de som o estado inicial real do embed a cada troca de
+  // story: `true` só quando `getBunnyEmbedUrl` decidiu forçar `muted=true`
+  // (iOS). Lido direto da própria URL em vez de perguntar pro Player.js
+  // (`getMuted`) pra não depender de um round-trip assíncrono — a gente
+  // mesmo já sabe o valor porque foi a gente que montou a URL.
+  useEffect(() => {
+    setIsMuted(embedUrl?.includes('muted=true') ?? false);
+  }, [currentIndex, embedUrl]);
+
+  const handleToggleMute = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (isMuted) {
+      player.unmute();
+      setIsMuted(false);
+    } else {
+      player.mute();
+      setIsMuted(true);
+    }
+  }, [isMuted]);
 
   if (total === 0) return null;
 
@@ -243,6 +279,37 @@ export default function StoryPlayerOverlay({ stories, initialIndex = 0, onClose 
         >
           <XCircleIcon className="size-10 lg:size-14" />
         </button>
+
+        {/*
+          Botão de som (05/09/2026, Amanda — cliente reportou "veio sem
+          áudio" no iPhone): esperado — é o `muted=true` forçado só no iOS
+          pra o autoplay funcionar (ver `getBunnyEmbedUrl` em
+          `bunnyStream.ts`). O player da própria Bunny já tem um ícone de
+          volume no controle dele, mas não dá pra garantir que ele fique
+          sempre alcançável (pode cair debaixo das zonas invisíveis de
+          navegação logo abaixo, ou ser pequeno demais numa tela de
+          celular) — esse botão dá um jeito garantido, sempre visível e
+          acima de qualquer outra camada (z-10), de ligar o som de volta.
+          Só aparece quando há vídeo real (`embedUrl`); fica desabilitado
+          até o Player.js terminar de carregar (`playerReady`), porque
+          `mute`/`unmute` (`bunnyStream.ts`) precisam de uma instância de
+          player já criada.
+        */}
+        {embedUrl && (
+          <button
+            type="button"
+            onClick={handleToggleMute}
+            disabled={!playerReady}
+            className="absolute right-4 top-16 z-10 text-base-white/90 transition-opacity hover:opacity-80 disabled:opacity-40 lg:right-10 lg:top-24"
+            aria-label={isMuted ? 'Ativar som do vídeo' : 'Desativar som do vídeo'}
+          >
+            {isMuted ? (
+              <PiSpeakerSlash className="size-8 lg:size-10" />
+            ) : (
+              <PiSpeakerHigh className="size-8 lg:size-10" />
+            )}
+          </button>
+        )}
 
         {/*
           Zonas de navegação: esquerda volta, direita avança.

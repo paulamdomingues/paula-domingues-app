@@ -174,10 +174,20 @@ export interface PlayerJsTimeUpdateData {
   duration: number;
 }
 
-/** Superfície mínima do Player.js que `StoryPlayerOverlay` usa. */
+/**
+ * Superfície mínima do Player.js que `StoryPlayerOverlay` usa.
+ *
+ * `mute`/`unmute` (05/09/2026): API documentada em
+ * https://bunny.net/docs/stream/playback-api — usada pelo botão de som do
+ * player pra desfazer manualmente o `muted=true` forçado no iOS (ver
+ * `getBunnyEmbedUrl` acima). Sem `setMuted`/toggle único na API da Bunny —
+ * só os dois métodos separados mesmo.
+ */
 export interface PlayerJsPlayer {
   on(event: 'ready' | 'ended', callback: () => void): void;
   on(event: 'timeupdate', callback: (data: PlayerJsTimeUpdateData) => void): void;
+  mute(): void;
+  unmute(): void;
 }
 
 declare global {
