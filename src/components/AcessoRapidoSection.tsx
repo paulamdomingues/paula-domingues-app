@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { LockIcon, MapPinIcon, PaperPlaneIcon } from './icons';
+import { VideoPlayIcon, InfoCircleIcon, ChatDotsIcon } from './icons';
 import { WHATSAPP_SUPPORT_URL } from '../lib/constants';
 import PolosInfoModal from './PolosInfoModal';
 import PortalExclusivoModal from './PortalExclusivoModal';
@@ -76,19 +76,19 @@ export default function AcessoRapidoSection() {
       </h2>
       <div className="flex w-full gap-2.5">
         <QuickAccessButton
-          icon={<LockIcon className="size-[18px]" />}
+          icon={<VideoPlayIcon className="size-[18px]" />}
           label={'Portal\nExclusivo'}
           bgClassName="bg-main-dark-700"
           onClick={() => setPortalModalOpen(true)}
         />
         <QuickAccessButton
-          icon={<MapPinIcon className="size-[18px]" />}
+          icon={<InfoCircleIcon className="size-[18px]" />}
           label={'Info dos\nPolos'}
           bgClassName="bg-main-red-600"
           onClick={() => setPolosModalOpen(true)}
         />
         <QuickAccessButton
-          icon={<PaperPlaneIcon className="size-[18px]" />}
+          icon={<ChatDotsIcon className="size-[18px]" />}
           label={'Suporte\nTécnico'}
           bgClassName="bg-gray-700"
           href={WHATSAPP_SUPPORT_URL}
