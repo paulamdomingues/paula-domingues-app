@@ -41,10 +41,16 @@ function QuickAccessButton({ icon, label, bgClassName, onClick, href }: QuickAcc
 }
 
 /**
- * 05/09/2026 (Amanda): bloco "Acesso Rápido" da Home — rascunho +/- desenhado
- * primeiro no Figma (page WireFrames, node 1552:7046 "novos ajustes") a
- * partir de uma referência de um app concorrente que a Amanda mandou (banner
- * WhatsApp + 3 botões + "Lojas Recentes"). Adaptado pro nosso contexto:
+ * 05/09/2026 (Amanda): bloco da Home com os 3 botões — rascunho +/-
+ * desenhado primeiro no Figma (page WireFrames, node 1552:7046 "novos
+ * ajustes") a partir de uma referência de um app concorrente que a Amanda
+ * mandou (banner WhatsApp + 3 botões + "Lojas Recentes"). Adaptado pro
+ * nosso contexto:
+ *
+ * - 06/09/2026: título do bloco trocado de "Acesso Rápido" pra "Atalhos" —
+ *   Amanda pediu pra não ficar igual ao termo usado na referência do
+ *   concorrente. Nome do arquivo/componente (`AcessoRapidoSection`) ficou
+ *   igual por enquanto, é só o texto visível na tela que mudou.
  *
  * - O botão do grupo do WhatsApp da referência virou redundante (a Home já
  *   tem o `WhatsappCommunityButton`/banner), então foi substituído pelo
@@ -66,7 +72,7 @@ export default function AcessoRapidoSection() {
   return (
     <section className="flex w-full flex-col items-center gap-3">
       <h2 className="w-full font-display font-bold text-[22px] tracking-[0.66px] text-main-dark-900">
-        Acesso Rápido
+        Atalhos
       </h2>
       <div className="flex w-full gap-2.5">
         <QuickAccessButton

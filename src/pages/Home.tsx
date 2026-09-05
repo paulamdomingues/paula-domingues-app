@@ -109,8 +109,16 @@ export default function Home() {
         {/* 05/09/2026 (Amanda): bloco "Acesso Rápido" — ver doc comment em
             `AcessoRapidoSection.tsx` pro contexto completo (referência de
             concorrente + rascunho no Figma). Mesma largura máxima do banner
-            do WhatsApp acima, pra ficar tudo alinhado no desktop. */}
-        <div className="lg:mx-auto lg:w-full lg:max-w-[640px]">
+            do WhatsApp acima, pra ficar tudo alinhado no desktop.
+            06/09/2026 (Amanda): faltava o `w-full` na base — sem ele essa
+            div (item de um flex `items-center`, ou seja, sem stretch
+            automático) encolhia pro tamanho mínimo do conteúdo em vez de
+            ocupar a largura toda disponível (respeitando os 24px de
+            padding da Home). O banner do WhatsApp ao lado não sofria disso
+            porque o `<img>` dentro dele tem dimensão intrínseca grande o
+            bastante pra forçar o esticamento; texto/botões não têm essa
+            "muleta", então precisam do `w-full` explícito aqui. */}
+        <div className="w-full lg:mx-auto lg:max-w-[640px]">
           <AcessoRapidoSection />
         </div>
 
