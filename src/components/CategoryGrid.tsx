@@ -21,7 +21,19 @@ export default function CategoryGrid({ categories, onSelectCategory }: CategoryG
   };
 
   return (
-    <div className="flex w-full items-center gap-4">
+    // 05/09/2026 (Amanda): a régua da esquerda continua respeitando os 24px
+    // de padding da Home (`px-6`, não mexemos no `margin-left`/posição
+    // normal) — só a direita sangra até a borda física da tela no mobile,
+    // pra o corte da bolinha (ver comentário mais abaixo) não parecer "seco"
+    // encostado na mesma margem do resto do conteúdo. Mesma técnica já usada
+    // em `HighlightBanner.tsx` (lá sangra os 2 lados; aqui só a direita):
+    // `width: calc(100% + 24px)` soma exatamente o tanto que o `margin-right:
+    // -24px` desconta, então a soma (margin-left 0 + width + margin-right)
+    // ainda fecha em 100% do espaço reservado pela `section` — não empurra
+    // nada além da tela nem quebra o alinhamento/scroll horizontal da
+    // página. Desktop volta ao `w-full`/sem margem normal (`lg:w-full
+    // lg:mr-0`), sem sangria — lá quem indica "tem mais" são as setas.
+    <div className="flex w-[calc(100%+24px)] mr-[-24px] items-center gap-4 lg:w-full lg:mr-0">
       {/* No desktop, as setas substituem a rolagem por toque do mobile. */}
       <button
         type="button"
