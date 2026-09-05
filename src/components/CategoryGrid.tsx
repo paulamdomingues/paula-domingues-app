@@ -39,14 +39,28 @@ export default function CategoryGrid({ categories, onSelectCategory }: CategoryG
         `no-scrollbar`: some com a barrinha de rolagem nativa nos dois breakpoints
         (mobile também rola horizontalmente quando há mais de 1 bloco de 6) —
         Amanda pediu pra remover, deixa o layout mais fluido (19/08/2026).
+
+        05/09/2026 (Amanda: em telas estreitas — ela testou 390px e 403px —
+        o bloco de 6 cabia inteiro e o começo do próximo bloco também
+        aparecia INTEIRO ao lado, sem nenhuma bolinha cortada na borda. Sem
+        nada cortado, não fica intuitivo que dá pra arrastar pra ver mais
+        categorias — parecia só mais uma grade estática). Reduzido o gap
+        interno do bloco (`gap-x-4 gap-y-4` → `gap-x-2 gap-y-2`) e o gap
+        ENTRE blocos (`gap-4` → `gap-2`, no wrapper `flex` logo abaixo): com
+        menos espaço "desperdiçado" nos respiros, a borda da tela passa a
+        cortar uma bolinha do próximo bloco no meio, em vez de terminar
+        exatamente numa folga — é esse corte que passa a sensação de "tem
+        mais pra arrastar". Vale a Amanda conferir ao vivo nos mesmos 390px/
+        403px e me pedir pra afinar mais (gap ainda menor) se o corte não
+        ficar visível o bastante.
       */}
       <div
         ref={scrollRef}
         className="no-scrollbar flex w-full gap-4 overflow-x-auto pb-1 scroll-smooth lg:w-[939px] lg:gap-0"
       >
-        <div className="flex shrink-0 gap-4 lg:hidden">
+        <div className="flex shrink-0 gap-2 lg:hidden">
           {Array.from({ length: Math.ceil(categories.length / 6) }, (_, blockIndex) => (
-            <div key={blockIndex} className="grid shrink-0 grid-cols-3 grid-rows-2 gap-x-4 gap-y-4">
+            <div key={blockIndex} className="grid shrink-0 grid-cols-3 grid-rows-2 gap-x-2 gap-y-2">
               {categories.slice(blockIndex * 6, blockIndex * 6 + 6).map((category) => (
                 <CategoryBubble key={category.id} category={category} onSelect={onSelectCategory} />
               ))}

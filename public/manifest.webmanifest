@@ -1,7 +1,7 @@
 {
-  "name": "Paula Domingues",
-  "short_name": "Paula Domingues",
-  "description": "Catálogo de lojas e fornecedores parceiros da Paula Domingues.",
+  "name": "Namoda",
+  "short_name": "Namoda",
+  "description": "Catálogo de lojas e fornecedores parceiros da Namoda.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
