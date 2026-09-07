@@ -300,9 +300,20 @@ export default function StoreDetail() {
               </div>
             )}
 
-            {details.tags && details.tags.length > 0 && (
+            {/* 07/09/2026, a pedido da Amanda (instruções finais): mostra o
+                polo da loja (Brás/25 de Março/Bom Retiro, ou o lugar
+                específico digitado no admin quando não é nenhum dos 3 fixos
+                — nunca a palavra literal "Outros", ver `normalizeOutroLocation`
+                em `neighborhoods.ts`) antes das tags, no mesmo bloco de pills. */}
+            {(store.neighborhood || (details.tags && details.tags.length > 0)) && (
               <div className="flex w-full flex-wrap justify-center gap-2">
-                {details.tags.map((tag) => (
+                {store.neighborhood && (
+                  <span className="flex items-center gap-1 rounded-full bg-main-red-700 px-3 py-1 font-body text-[13px] font-bold tracking-[0.65px] text-base-white">
+                    <MapPinIcon className="size-3.5" />
+                    {store.neighborhood}
+                  </span>
+                )}
+                {details.tags?.map((tag) => (
                   <span
                     key={tag}
                     className="rounded-full bg-gray-200 px-3 py-1 font-body text-[13px] tracking-[0.65px] text-main-dark-800"

@@ -56,6 +56,13 @@ interface HighlightBannerProps {
  * encostado na margem direita (`justify-end`, `px-8` = 32px) nos dois
  * tamanhos agora, já que não sobra mais nenhum texto ao lado dele pra
  * ocupar o espaço à esquerda.
+ *
+ * 07/09/2026 (Amanda, instruções finais: "no desktop, diminuir um pouco o
+ * mini player de stories pra caber dentro do banner"): reduzido de
+ * 262×320 para 230×280 (~12,5% menor, mesma proporção aproximada). A altura
+ * fixa do banner (`lg:h-[368px]`, calculada como player + `py-6` de respiro)
+ * acompanha a mudança e cai pra `lg:h-[328px]` (280 + 24 + 24), senão sobraria
+ * uma faixa vazia de banner abaixo do player.
  */
 export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBannerProps) {
   return (
@@ -65,7 +72,7 @@ export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBann
     // body inteiro (não só com os irmãos aqui dentro) e acabava atrás do
     // `background-color` opaco do `.app-shell`/body, sumindo por completo
     // mesmo carregando certinho. Mesmo truque já usado em `PreLogin.tsx`.
-    <div className="relative isolate -mx-6 aspect-[390/203] w-[calc(100%+3rem)] overflow-hidden lg:mx-0 lg:aspect-auto lg:h-[368px] lg:w-full lg:rounded-2xl">
+    <div className="relative isolate -mx-6 aspect-[390/203] w-[calc(100%+3rem)] overflow-hidden lg:mx-0 lg:aspect-auto lg:h-[328px] lg:w-full lg:rounded-2xl">
       <img
         src={BUNNY_HOME_STORIES_BANNER_URL}
         alt=""
@@ -77,7 +84,7 @@ export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBann
         <button
           type="button"
           onClick={onClick}
-          className="relative flex h-[178px] w-[100px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg p-0.5 shadow-[3px_4px_7.8px_2px_rgba(69,16,18,0.28)] lg:h-[320px] lg:w-[262px]"
+          className="relative flex h-[178px] w-[100px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg p-0.5 shadow-[3px_4px_7.8px_2px_rgba(69,16,18,0.28)] lg:h-[280px] lg:w-[230px]"
           aria-label="Ver stories de destaques"
         >
           <ImagePlaceholder src={thumbnailUrl} alt="Prévia de stories" className="absolute inset-0 size-full" />
@@ -85,8 +92,8 @@ export default function HighlightBanner({ onClick, thumbnailUrl }: HighlightBann
           <span className="absolute inset-0 rounded-lg bg-main-red-500/60" aria-hidden="true" />
           {/* Fundo circular atrás do play, pedido pela Amanda (20/08/2026) —
               antes era só o ícone branco flutuando direto sobre a imagem. */}
-          <span className="relative flex size-10 items-center justify-center rounded-full bg-rose-100 shadow-[0px_4px_4px_0px_rgba(255,255,255,0.25)] lg:size-14">
-            <PlayIcon className="size-5 text-rose-950 lg:size-7" />
+          <span className="relative flex size-10 items-center justify-center rounded-full bg-rose-100 shadow-[0px_4px_4px_0px_rgba(255,255,255,0.25)] lg:size-12">
+            <PlayIcon className="size-5 text-rose-950 lg:size-6" />
           </span>
         </button>
       </div>

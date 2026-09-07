@@ -124,8 +124,19 @@ export default function AdminLojas() {
 
   const filteredRows = useMemo(() => {
     if (!rows) return [];
+    // 07/09/2026, correção reportada pela Amanda: a busca só olhava
+    // `row.name` — apesar do placeholder do campo já dizer "Buscar por
+    // nome ou Id da loja...", buscar pelo código (`code_badge`, ex:
+    // "AL-0035") não retornava nada, nem digitando o prefixo de letras
+    // nem o número. Normaliza removendo "-", "#" e espaços dos dois lados
+    // da comparação, pra "AL0035", "al-35" ou "#AL-0035" também baterem.
+    const normalize = (value: string) => value.toLowerCase().replace(/[-#\s]/g, '');
+    const term = normalize(search.trim());
     return rows.filter((row) => {
-      const matchesSearch = row.name.toLowerCase().includes(search.trim().toLowerCase());
+      const matchesSearch =
+        term === '' ||
+        row.name.toLowerCase().includes(search.trim().toLowerCase()) ||
+        normalize(row.code_badge ?? '').includes(term);
       const matchesStatus =
         statusFilter === 'todos' ||
         (statusFilter === 'ativos' && row.is_active) ||

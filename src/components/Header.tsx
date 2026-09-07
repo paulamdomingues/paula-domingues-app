@@ -44,7 +44,11 @@ export default function Header() {
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <Logo className="h-10 w-auto" />
+        {/* 07/09/2026, a pedido da Amanda: clicar na logo sempre volta pro
+            Início (mesma correção feita na TopBar). */}
+        <button type="button" aria-label="Ir para o Início" onClick={() => navigate('/')}>
+          <Logo className="h-10 w-auto" />
+        </button>
         <button
           type="button"
           aria-label="Notificações"

@@ -9,13 +9,15 @@ export const EXTERNAL_PRIVACY_URL = 'https://pauladomingues.com/politica-de-priv
 
 /**
  * Links de WhatsApp usados no Perfil ("Entrar no grupo" / "Falar com o
- * Suporte"). O número de suporte foi confirmado pela Amanda (27/08/2026) —
- * já vem com mensagem pré-preenchida pra abrir a conversa direto no contexto
- * certo (mensagem atualizada em 05/09/2026, mesmo número).
+ * Suporte") e nos Atalhos da Início ("Suporte Técnico"). O número de suporte
+ * foi confirmado pela Amanda (27/08/2026) — já vem com mensagem pré-preenchida
+ * pra abrir a conversa direto no contexto certo (mensagem atualizada em
+ * 05/09/2026, mesmo número; NÚMERO trocado em 07/09/2026 — instruções de
+ * mudanças finais).
  */
 export const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/C8k4KPFSafZ4bE36wYkOyG';
 export const WHATSAPP_SUPPORT_URL =
-  'https://wa.me/5511934001020?text=Ol%C3%A1%2C%20vim%20do%20app%20preciso%20de%20ajuda!';
+  'https://wa.me/5511923749318?text=Ol%C3%A1%2C%20vim%20do%20app%20preciso%20de%20ajuda!';
 
 /**
  * 05/09/2026 (Amanda): link do botão "Portal Exclusivo" (bloco "Acesso

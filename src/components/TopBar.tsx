@@ -31,7 +31,12 @@ export default function TopBar() {
 
   return (
     <div className="flex h-[57px] w-full items-center justify-between border-b border-[rgba(169,169,169,0.42)] py-2 lg:h-[70px]">
-      <Logo className="h-auto w-[clamp(84px,18vw,106px)] lg:w-[90px]" />
+      {/* 07/09/2026, a pedido da Amanda: clicar na logo sempre volta pro Início,
+          em qualquer tela (a TopBar é reusada em quase todo o app, direto ou
+          via ScreenHeader). */}
+      <button type="button" aria-label="Ir para o Início" onClick={() => navigate('/')}>
+        <Logo className="h-auto w-[clamp(84px,18vw,106px)] lg:w-[90px]" />
+      </button>
 
       <nav className="hidden items-center gap-6 lg:flex">
         {navItems.map((item) => (
