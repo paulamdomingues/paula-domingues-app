@@ -31,6 +31,20 @@
 // da mensagem de WhatsApp enviada em seguida — antes esse módulo só
 // precisava confirmar `success`, agora ele carrega o link de verdade.
 //
+// 08/09/2026 (Amanda): o botão "Crie sua senha" no template do BotConversa
+// só aceita uma URL FIXA + uma variável colada no FINAL dela — não dá pra
+// colar o `actionLink` inteiro (o token dele fica no MEIO da query string:
+// `.../auth/v1/verify?token=...&type=recovery&redirect_to=...`). Por isso
+// essa função agora também devolve `hashedToken`
+// (`linkData.properties.hashed_token`, campo próprio que o `generateLink`
+// já retorna, correspondente ao `token_hash` do link) — é só esse valor,
+// puro, que entra na "Variável" do BotConversa. A URL fixa que a Amanda
+// cola no campo "URL do site" do botão, com os parâmetros reordenados pra
+// `token_hash` ficar por último, é:
+//   https://iuqpbozkumebumjdmqfc.supabase.co/auth/v1/verify?type=recovery&redirect_to=https%3A%2F%2Fapp.pauladomingues.com%2Fredefinir-senha&token_hash=
+// (ordem de query string não importa pro endpoint — só importa terminar em
+// `token_hash=` pra variável colar certo no final).
+//
 // O e-mail de "definir senha" NÃO foi removido do projeto — quem clicar em
 // "esqueci minha senha" na tela de login continua recebendo por e-mail
 // normalmente (`resetPasswordForEmail`, chamado ali, sem relação com esta
@@ -158,5 +172,15 @@ Deno.serve(async (req) => {
     );
   }
 
-  return jsonResponse({ success: true, actionLink: linkData.properties.action_link }, 200);
+  return jsonResponse(
+    {
+      success: true,
+      actionLink: linkData.properties.action_link,
+      // Valor puro do token (sem o resto da URL) — é o que entra na
+      // "Variável" do botão do BotConversa, colado no final da URL fixa
+      // (ver comentário acima, 08/09/2026).
+      hashedToken: linkData.properties.hashed_token,
+    },
+    200
+  );
 });
