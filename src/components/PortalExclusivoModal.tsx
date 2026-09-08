@@ -17,10 +17,10 @@ interface PortalExclusivoModalProps {
  * pra área de membros paga na Hubla, com vídeos mais completos sobre os
  * polos e outras informações.
  *
- * `HUBLA_PORTAL_URL` (ver `lib/constants.ts`) é um link PLACEHOLDER
- * (`areademembros.hubla.com`) — a Amanda pediu explicitamente pra deixar
- * assim por enquanto ("dps vamos trocar tbm"), antes do link real de
- * acesso à área de membros estar pronto.
+ * `HUBLA_PORTAL_URL` (ver `lib/constants.ts`) já é o link real da área de
+ * membros — 08/09/2026 (Amanda): removido também o aviso de "link
+ * provisório" abaixo do botão, que só fazia sentido enquanto era
+ * placeholder.
  */
 export default function PortalExclusivoModal({ onClose }: PortalExclusivoModalProps) {
   return (
@@ -53,9 +53,6 @@ export default function PortalExclusivoModal({ onClose }: PortalExclusivoModalPr
         >
           Acessar Portal
         </a>
-        <p className="w-full font-body text-[11px] text-gray-400">
-          Abre em uma nova aba. Link provisório — será atualizado.
-        </p>
       </div>
     </div>
   );
