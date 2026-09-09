@@ -9,6 +9,7 @@ import {
   HeartFillIcon,
   InstagramIcon,
   MapPinIcon,
+  PaperPlaneIcon,
   RulerIcon,
   ShoppingCartIcon,
   TeaBagIcon,
@@ -28,15 +29,23 @@ function InfoCard({
   title,
   headerAction,
   children,
+  className,
 }: {
   icon: ReactNode;
   title: string;
   /** Ação opcional alinhada ao título, na mesma linha (ex: "Copiar endereço" no card de Endereço). */
   headerAction?: ReactNode;
   children: ReactNode;
+  /**
+   * 09/09/2026: só usado no card de Endereço, pra tirar o arredondado de
+   * baixo e ele "grudar" no botão "Como Chegar" logo abaixo — os outros
+   * cards (Tamanhos, Horário etc) continuam com os 4 cantos arredondados
+   * de sempre, sem passar essa prop.
+   */
+  className?: string;
 }) {
   return (
-    <div className="flex w-full items-start gap-3 rounded-lg border border-[#B1B1B1] bg-base-white p-4 shadow-sm">
+    <div className={`flex w-full items-start gap-3 rounded-lg border border-[#B1B1B1] bg-base-white p-4 shadow-sm ${className ?? ''}`}>
       <div className="flex size-9 shrink-0 items-center justify-center text-main-red-700">{icon}</div>
       <div className="flex flex-1 flex-col gap-1">
         <div className="flex w-full items-center justify-between gap-2">
@@ -131,6 +140,19 @@ export default function StoreDetail() {
       // Clipboard indisponível (ex: sem permissão) — ignora silenciosamente.
     }
   };
+
+  // 09/09/2026, pedido da Amanda (frame "Como Chegar" no Figma, node
+  // 1600:7287): botão só no card de Endereço, abre o Google Maps já com a
+  // rota até lá. `/maps/dir/?api=1&destination=` não pede chave de API —
+  // só o endereço em texto (que é tudo que o cadastro da loja tem hoje,
+  // sem lat/lng). O Maps geocodifica o texto por conta própria; endereços
+  // bem escritos no admin (rua, número, bairro, cidade) devem funcionar
+  // bem, mas complementos tipo "(Próximo à Feirinha da Concórdia)" podem
+  // deixar a busca menos precisa em alguns casos — vale acompanhar depois
+  // de publicar.
+  const mapsUrl = details.address
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(details.address)}`
+    : undefined;
 
   // Loga o clique em Instagram/WhatsApp em `store_contact_clicks` (alimenta
   // "Cliques em Contatos"/"Top 5 Lojas" no Relatórios) — sem bloquear a
@@ -347,24 +369,42 @@ export default function StoreDetail() {
 
         <div className="flex w-full flex-col gap-3 lg:w-1/2">
           {details.address && (
-            <InfoCard
-              icon={<MapPinIcon className="size-6" />}
-              title="Endereço"
-              headerAction={
-                <button
-                  type="button"
-                  onClick={handleCopyAddress}
-                  className={`flex w-fit shrink-0 items-center gap-1 font-body text-[13px] tracking-[0.65px] underline ${
-                    copied ? 'text-success-800' : 'text-main-red-700'
-                  }`}
-                >
-                  {copied ? <CheckFatIcon className="size-4" /> : <CopyIcon className="size-4" />}
-                  {copied ? 'Endereço copiado!' : 'Copiar endereço'}
-                </button>
-              }
-            >
-              <p>{details.address}</p>
-            </InfoCard>
+            <div className="flex w-full flex-col">
+              <InfoCard
+                icon={<MapPinIcon className="size-6" />}
+                title="Endereço"
+                className="rounded-b-none"
+                headerAction={
+                  <button
+                    type="button"
+                    onClick={handleCopyAddress}
+                    className={`flex w-fit shrink-0 items-center gap-1 font-body text-[13px] tracking-[0.65px] underline ${
+                      copied ? 'text-success-800' : 'text-main-red-700'
+                    }`}
+                  >
+                    {copied ? <CheckFatIcon className="size-4" /> : <CopyIcon className="size-4" />}
+                    {copied ? 'Endereço copiado!' : 'Copiar endereço'}
+                  </button>
+                }
+              >
+                <p>{details.address}</p>
+              </InfoCard>
+
+              {/* "Como Chegar" — grudado embaixo do card de Endereço (sem
+                  borda de cima, cantos de baixo arredondados), abre a rota
+                  no Google Maps numa aba nova. */}
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-b-lg border border-t-0 border-[#B1B1B1] bg-base-black p-3"
+              >
+                <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">
+                  Como Chegar
+                </span>
+                <PaperPlaneIcon className="size-4 text-base-white" />
+              </a>
+            </div>
           )}
 
           {details.sizesLine && (

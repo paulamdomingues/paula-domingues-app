@@ -1,30 +1,52 @@
+import type { ReactNode } from 'react';
 import { XCircleIcon } from './icons';
 
 interface PolosInfoModalProps {
   onClose: () => void;
 }
 
-interface PoloBlockProps {
-  title: string;
-  items?: string[];
-  placeholder?: string;
+function PoloTitle({ children }: { children: ReactNode }) {
+  return (
+    <h3 className="w-full font-display font-bold text-[16px] tracking-[1px] text-main-red-700">
+      {children}
+    </h3>
+  );
 }
 
-function PoloBlock({ title, items, placeholder }: PoloBlockProps) {
+function PoloLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="flex w-full flex-col gap-1">
-      <h3 className="w-full font-display font-bold text-[16px] tracking-[1px] text-main-red-700">
-        {title.toUpperCase()}
-      </h3>
-      {placeholder ? (
-        <p className="w-full font-body text-[12px] text-gray-400">{placeholder}</p>
-      ) : (
-        items?.map((item) => (
-          <p key={item} className="w-full font-body text-[12px] text-main-dark-900">
-            {item}
-          </p>
-        ))
-      )}
+    <p className="w-full font-body text-[12px] font-bold text-main-dark-900">{children}</p>
+  );
+}
+
+function PoloText({ children }: { children: ReactNode }) {
+  return <p className="w-full font-body text-[12px] text-main-dark-900">{children}</p>;
+}
+
+function PoloList({ items }: { items: string[] }) {
+  return (
+    <ul className="flex w-full flex-col gap-0.5">
+      {items.map((item) => (
+        <li key={item} className="w-full font-body text-[12px] text-main-dark-900">
+          • {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Aviso (⚠️) — usa a rampa "error" (a mesma já usada no botão "Cancelar" do
+ * LogoutConfirmModal) porque é a única rampa de tom "atenção" que o app já
+ * tem — não existe uma rampa "warning"/amber separada no StyleGuide. */
+function PoloWarning({ children }: { children: ReactNode }) {
+  return <p className="w-full font-body text-[12px] font-bold text-error-700">{children}</p>;
+}
+
+function PoloBlock({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="flex w-full flex-col gap-1.5">
+      <PoloTitle>{title}</PoloTitle>
+      {children}
     </div>
   );
 }
@@ -32,18 +54,15 @@ function PoloBlock({ title, items, placeholder }: PoloBlockProps) {
 /**
  * 05/09/2026 (Amanda): modal do botão "Info dos Polos" do bloco "Acesso
  * Rápido" (Home) — rascunho aprovado no Figma (node 1552:6932, página
- * WireFrames). Substitui o antigo "Info do Brás" da referência que a
- * Amanda mandou: aqui cobre vários polos (não só o Brás), já que ela
- * trabalha com "vários polos", como ela mesma colocou.
+ * WireFrames). Cobre vários polos (não só o Brás), já que ela trabalha com
+ * "vários polos", como ela mesma colocou.
  *
- * Conteúdo do Brás vem direto da referência (concorrente) que ela mandou:
- * Feira da Madrugada, Total Brás, New Mall, Vautier Popular, Vautier
- * Premium. Os horários vieram marcados com "*" porque são estimativa/
- * exemplo — a Amanda ainda precisa confirmar os reais antes de publicar.
- *
- * 25 de Março e Bom Retiro ficam como "a definir" por instrução explícita
- * dela ("pode deixar o 'a definir....' dps ajustamos") — ainda não tem os
- * nomes dos shoppings/galerias nem horários desses 2 polos.
+ * 09/09/2026 (Amanda): texto revisado e definitivo pros 3 polos — substitui
+ * a lista provisória de horários "*estimativa" do Brás e os dois blocos
+ * "conteúdo a definir" (25 de Março e Bom Retiro) que existiam até então.
+ * Conteúdo colado literalmente do texto que ela passou, só reorganizado nos
+ * componentes de título/parágrafo/lista/aviso acima pra manter a hierarquia
+ * visual (⚠️ sempre em destaque, igual já era feito com o "*" do Brás).
  */
 export default function PolosInfoModal({ onClose }: PolosInfoModalProps) {
   return (
@@ -67,31 +86,56 @@ export default function PolosInfoModal({ onClose }: PolosInfoModalProps) {
           </p>
         </div>
 
-        <PoloBlock
-          title="Brás"
-          items={[
-            'Feira da Madrugada — seg-sáb, 20h–06h*',
-            'Total Brás — seg-sáb, 07h–19h*',
-            'New Mall — seg-sáb, 08h–18h*',
-            'Vautier Popular — seg-sáb, 07h–19h*',
-            'Vautier Premium — seg-sáb, 08h–18h*',
-          ]}
-        />
-        <p className="w-full font-body text-[10px] text-gray-400">
-          *horários de exemplo — confirmar os reais antes de publicar.
-        </p>
+        <PoloBlock title="📍 Brás — Horários de Funcionamento">
+          <PoloLabel>Melhores dias para compras no atacado:</PoloLabel>
+          <PoloText>
+            Segunda e terça-feira, quando os fornecedores costumam estar mais abastecidos e com
+            grades completas.
+          </PoloText>
+          <PoloLabel>Horários de referência:</PoloLabel>
+          <PoloList
+            items={[
+              'Feira da Madrugada: 00h às 5h30',
+              'Caldeirão da Juta: 2h às 10h',
+              'Bancas — Vautier, Canindé e região: 2h às 10h',
+              'Feira da Manhã: 7h30 às 10h30',
+              'Shoppings: em média 6h às 16h',
+              'Lojas de rua: em média 7h às 16h',
+            ]}
+          />
+          <PoloWarning>⚠️ Os horários podem variar de acordo com cada fornecedor.</PoloWarning>
+        </PoloBlock>
 
         <div className="h-px w-full bg-gray-200" />
-        <PoloBlock
-          title="25 de Março"
-          placeholder="Conteúdo a definir (nomes dos shoppings/galerias e horários)."
-        />
+        <PoloBlock title="📍 Bom Retiro - SP">
+          <PoloLabel>Funcionamento:</PoloLabel>
+          <PoloText>Segunda a sábado, em horário comercial. 8h às 17h</PoloText>
+          <PoloWarning>⚠️ Lojas 100% atacado normalmente não abrem aos sábados!</PoloWarning>
+          <PoloText>
+            Ideal para programar a visita durante o dia e conciliar com as compras nas demais
+            regiões do Brás.
+          </PoloText>
+          <PoloWarning>
+            ⚠️ Importante: o horário de funcionamento pode variar entre as lojas de atacado e
+            varejo
+          </PoloWarning>
+        </PoloBlock>
 
         <div className="h-px w-full bg-gray-200" />
-        <PoloBlock
-          title="Bom Retiro"
-          placeholder="Conteúdo a definir (nomes dos shoppings/galerias e horários)."
-        />
+        <PoloBlock title="📍 25 de Março">
+          <PoloLabel>Funcionamento geral:</PoloLabel>
+          <PoloList
+            items={[
+              'Segunda a sexta: horário comercial - 8h às 17h',
+              'Sábado: horário comercial, geralmente reduzido - 8h às 12h',
+              'Domingo: grande parte das lojas não abre',
+            ]}
+          />
+          <PoloWarning>
+            ⚠️ Na 25 de Março os horários variam bastante entre lojas, galerias e shoppings,
+            principalmente aos sábados.
+          </PoloWarning>
+        </PoloBlock>
       </div>
     </div>
   );
