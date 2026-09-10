@@ -146,6 +146,12 @@ export async function uploadVideoToBunny({
           'PATCH',
           uploadUrl,
           {
+            // 10/09/2026: BUG meu — faltava mandar de novo aqui a
+            // identificação/autorização (`commonHeaders`) que já ia certinho
+            // na criação da sessão (POST acima). Sem isso a Bunny recusa
+            // TODO pedaço com "status 400 library id missing or invalid",
+            // mesmo com a sessão de upload já criada com sucesso.
+            ...commonHeaders,
             'Tus-Resumable': '1.0.0',
             'Upload-Offset': String(chunkStartOffset),
             'Content-Type': 'application/offset+octet-stream',
