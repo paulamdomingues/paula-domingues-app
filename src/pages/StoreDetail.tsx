@@ -405,7 +405,7 @@ export default function StoreDetail() {
                 href={mapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-b-lg border border-t-0 border-[#B1B1B1] bg-base-black p-3"
+                className="flex w-full items-center justify-center gap-2 rounded-b-lg border border-t-0 border-[#B1B1B1] bg-main-red-800 p-3"
               >
                 <span className="font-body font-bold text-[14px] tracking-[0.7px] text-base-white">
                   Como Chegar
