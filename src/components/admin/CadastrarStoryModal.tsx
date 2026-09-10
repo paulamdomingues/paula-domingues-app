@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import { PiUploadSimple } from 'react-icons/pi';
 import { XCircleIcon } from '../icons';
 import { supabase } from '../../lib/supabaseClient';
+import { uploadVideoToBunny } from '../../lib/bunnyTusUpload';
 
 interface CadastrarStoryModalProps {
   onCancel: () => void;
@@ -18,15 +19,22 @@ const ACCEPTED_TYPES = ['video/mp4', 'video/quicktime']; // MP4, MOV
  * Amanda — "na modal prefiro titulo a nome") e "Cadastrado em", que é só
  * informativo (data/hora atual, não é um input).
  *
- * O envio do arquivo chama a Edge Function `bunny-video-upload`, que cria o
- * vídeo na Bunny Stream e sobe os bytes — a AccessKey da Bunny nunca passa
- * pelo navegador. O componente pai (`AdminStories`) só recebe de volta o
- * `videoId` já pronto e cria a linha em `stories`.
+ * O envio do vídeo (10/09/2026: reescrito pra upload direto pro Bunny via
+ * TUS, ver `src/lib/bunnyTusUpload.ts` — antes o arquivo passava inteiro
+ * pela Edge Function, o que deixava o envio lento e, em alguns casos,
+ * falhando de verdade) acontece em 2 passos: primeiro chama a Edge
+ * Function `bunny-video-upload`, que cria o vídeo na Bunny e devolve uma
+ * autorização de upload de curta duração; depois o navegador manda os
+ * bytes direto pra Bunny com essa autorização, em pedaços, com retentativa
+ * automática se algum pedaço falhar. A AccessKey da Bunny nunca passa pelo
+ * navegador nos dois casos. O componente pai (`AdminStories`) só recebe de
+ * volta o `videoId` já pronto e cria a linha em `stories`.
  */
 export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStoryModalProps) {
   const [title, setTitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,6 +68,7 @@ export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStor
     }
     setError(null);
     setSaving(true);
+    setUploadProgress(0);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
@@ -68,23 +77,46 @@ export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStor
         return;
       }
 
-      const body = new FormData();
-      body.append('title', title.trim());
-      body.append('file', file);
+      const trimmedTitle = title.trim();
 
+      // 1) Pede autorização de upload — a Edge Function cria o vídeo na
+      // Bunny e devolve uma assinatura de curta duração pra esse videoId.
       const { data, error: fnError } = await supabase.functions.invoke<{
         videoId?: string;
+        libraryId?: string;
+        authorizationSignature?: string;
+        authorizationExpire?: number;
+        tusEndpoint?: string;
         error?: string;
-      }>('bunny-video-upload', { body });
+      }>('bunny-video-upload', { body: { title: trimmedTitle } });
 
-      if (fnError || !data?.videoId) {
-        setError(data?.error || fnError?.message || 'Não foi possível enviar o vídeo. Tente novamente.');
+      if (
+        fnError ||
+        !data?.videoId ||
+        !data.libraryId ||
+        !data.authorizationSignature ||
+        !data.authorizationExpire ||
+        !data.tusEndpoint
+      ) {
+        setError(data?.error || fnError?.message || 'Não foi possível iniciar o envio. Tente novamente.');
         return;
       }
 
-      onSaved({ title: title.trim(), videoId: data.videoId });
-    } catch {
-      setError('Não foi possível enviar o vídeo. Tente novamente.');
+      // 2) Manda os bytes direto pra Bunny (fora da nossa Edge Function).
+      await uploadVideoToBunny({
+        file,
+        title: trimmedTitle,
+        tusEndpoint: data.tusEndpoint,
+        libraryId: data.libraryId,
+        videoId: data.videoId,
+        authorizationSignature: data.authorizationSignature,
+        authorizationExpire: data.authorizationExpire,
+        onProgress: setUploadProgress,
+      });
+
+      onSaved({ title: trimmedTitle, videoId: data.videoId });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível enviar o vídeo. Tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -156,7 +188,7 @@ export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStor
             onClick={handleSave}
             className="flex h-[50px] flex-1 items-center justify-center rounded-lg bg-main-red-600 font-body text-[15px] font-bold tracking-[0.75px] text-base-white transition-opacity disabled:opacity-60"
           >
-            {saving ? 'Enviando...' : 'Salvar'}
+            {saving ? `Enviando... ${Math.round(uploadProgress * 100)}%` : 'Salvar'}
           </button>
         </div>
       </div>
