@@ -119,7 +119,9 @@ export async function uploadVideoToBunny({
   }, null);
 
   if (createRes.status < 200 || createRes.status >= 300) {
-    throw new Error(`Bunny recusou iniciar o upload (${createRes.status}).`);
+    throw new Error(
+      `Bunny recusou iniciar o upload (status ${createRes.status}): ${createRes.responseText.slice(0, 300)}`
+    );
   }
 
   const location = createRes.getResponseHeader('Location');
@@ -136,6 +138,7 @@ export async function uploadVideoToBunny({
     const chunkStartOffset = offset;
 
     let attempt = 0;
+    let lastErrorDetail = '';
     // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
@@ -154,7 +157,13 @@ export async function uploadVideoToBunny({
         );
 
         if (patchRes.status < 200 || patchRes.status >= 300) {
-          throw new Error(`Bunny recusou um pedaço do vídeo (${patchRes.status}).`);
+          // 10/09/2026: inclui o corpo da resposta no erro — sem isso a
+          // Amanda só via "não foi possível enviar depois de várias
+          // tentativas", sem nenhuma pista de POR QUE (código da Bunny,
+          // CORS, etc.), impossível de diagnosticar à distância.
+          throw new Error(
+            `Bunny recusou um pedaço do vídeo (status ${patchRes.status}): ${patchRes.responseText.slice(0, 300)}`
+          );
         }
 
         const newOffsetHeader = patchRes.getResponseHeader('Upload-Offset');
@@ -162,10 +171,16 @@ export async function uploadVideoToBunny({
         onProgress?.(offset / file.size);
         break; // pedaço enviado com sucesso, sai do loop de retentativa
       } catch (err) {
+        // Se o `xhr.onerror` disparar (status 0 — bloqueio de CORS ou
+        // queda de conexão de verdade, o navegador não distingue os dois),
+        // `xhrRequest` rejeita com "Falha de rede durante o upload." — bem
+        // diferente de um status HTTP de verdade tipo 401/403. Guardamos
+        // qual dos dois foi pra mostrar no erro final.
+        lastErrorDetail = err instanceof Error ? err.message : String(err);
         attempt += 1;
         if (attempt > MAX_RETRIES_PER_CHUNK) {
           throw new Error(
-            'Não foi possível enviar o vídeo depois de várias tentativas — confira sua conexão e tente de novo.'
+            `Não foi possível enviar o vídeo depois de ${MAX_RETRIES_PER_CHUNK} tentativas. Último erro: ${lastErrorDetail}`
           );
         }
         await sleep(RETRY_DELAYS_MS[Math.min(attempt - 1, RETRY_DELAYS_MS.length - 1)]);
