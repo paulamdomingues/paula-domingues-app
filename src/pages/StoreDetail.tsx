@@ -360,14 +360,22 @@ export default function StoreDetail() {
         {/* `object-top` (24/08/2026, pedido da Amanda): quando a foto é
             maior que a moldura, o corte do `object-cover` deve sempre
             "puxar" pra cima (topo/centro), não cortar pelo meio — assim o
-            topo da fachada não some. */}
-        <ImagePlaceholder
-          src={details.facadeImageUrl}
-          alt={`Fachada da loja — ${store.name}`}
-          className="aspect-[4/3] w-full object-top lg:aspect-[4/5] lg:h-auto lg:w-1/2"
-        />
+            topo da fachada não some.
 
-        <div className="flex w-full flex-col gap-3 lg:w-1/2">
+            10/09/2026, pedido da Amanda: sem foto de fachada cadastrada no
+            admin, esse bloco não reserva mais o espaço da foto (antes
+            ficava um vão vazio grande acima do card de Endereço) — some
+            completamente e a coluna de informação ocupa a largura toda no
+            lugar dela. */}
+        {details.facadeImageUrl && (
+          <ImagePlaceholder
+            src={details.facadeImageUrl}
+            alt={`Fachada da loja — ${store.name}`}
+            className="aspect-[4/3] w-full object-top lg:aspect-[4/5] lg:h-auto lg:w-1/2"
+          />
+        )}
+
+        <div className={`flex w-full flex-col gap-3 ${details.facadeImageUrl ? 'lg:w-1/2' : ''}`}>
           {details.address && (
             <div className="flex w-full flex-col">
               <InfoCard
