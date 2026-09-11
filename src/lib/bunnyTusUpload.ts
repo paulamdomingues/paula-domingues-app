@@ -14,16 +14,46 @@
  * em uploads reais). Agora o navegador manda os bytes direto pra Bunny; a
  * Edge Function só autoriza o upload (ver comentário lá em cima daquele
  * arquivo) — a AccessKey da Bunny nunca chega no navegador.
+ *
+ * 11/09/2026: endurecido pra conexão de celular ruim de verdade (relato da
+ * Amanda: a equipe sobe vídeo do Brás com sinal bem precário, bem diferente
+ * do teste dela — cabo, SP, sinal bom, 45MB instantâneo). Três mudanças:
+ *   1. Pedaço menor (6MB em vez de 20MB) — em conexão ruim, um pedaço menor
+ *      termina mais rápido e arrisca menos dado por falha.
+ *   2. Timeout explícito por requisição — antes, se a conexão simplesmente
+ *      MORRESSE no meio (comum em local com sinal fraco), o XHR podia ficar
+ *      pendurado pra sempre (nem `onload` nem `onerror` disparam nesse
+ *      caso), travando o upload sem nem cair na retentativa.
+ *   3. Mais tentativas, com espera mais longa, e — se o navegador reportar
+ *      que ficou OFFLINE de verdade — espera a conexão voltar (evento
+ *      `online`) antes de tentar de novo, em vez de ficar batendo toda hora
+ *      sem sinal nenhum.
  */
 
-/** Tamanho de cada pedaço enviado — 20MB. Pequeno o suficiente pra uma
- * falha de rede custar só reenviar um pedaço (não o vídeo inteiro), grande
- * o suficiente pra não gerar requisição demais em vídeos maiores. */
-const CHUNK_SIZE_BYTES = 20 * 1024 * 1024;
+/** Tamanho de cada pedaço enviado. Pequeno o suficiente pra uma falha de
+ * rede custar só reenviar um pedaço (não o vídeo inteiro) e pra cada
+ * requisição terminar rápido mesmo num sinal ruim; grande o suficiente pra
+ * não virar requisição demais em vídeos maiores. 6MB (era 20MB até
+ * 11/09/2026 — reduzido depois do relato de upload em conexão bem
+ * instável, no Brás, pelo celular). */
+const CHUNK_SIZE_BYTES = 6 * 1024 * 1024;
 
-/** Quantas vezes tenta de novo o MESMO pedaço antes de desistir de vez. */
-const MAX_RETRIES_PER_CHUNK = 4;
-const RETRY_DELAYS_MS = [1000, 3000, 6000, 12000];
+/** Quantas vezes tenta de novo o MESMO pedaço (contando a partir da última
+ * vez que um pedaço foi enviado com sucesso) antes de desistir de vez. */
+const MAX_RETRIES_PER_CHUNK = 6;
+const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 15000, 25000];
+
+/** Tempo máximo pra uma requisição de pedaço (PATCH) ou de checagem (HEAD)
+ * antes de considerar que travou e desistir dela — sem isso, numa conexão
+ * que simplesmente morre no meio (muito comum em sinal fraco de celular),
+ * o XHR fica pendurado pra sempre: nem `onload` nem `onerror` disparam, e o
+ * upload trava sem nunca cair na retentativa. */
+const REQUEST_TIMEOUT_MS = 120_000;
+
+/** Quanto tempo esperar o navegador reportar `online` de novo antes de
+ * desistir de esperar e tentar mesmo assim (melhor tentar e falhar rápido
+ * do que ficar parado pra sempre se o navegador errar o status). */
+const MAX_OFFLINE_WAIT_MS = 60_000;
 
 export interface BunnyTusUploadAuth {
   tusEndpoint: string;
@@ -33,11 +63,20 @@ export interface BunnyTusUploadAuth {
   authorizationExpire: number;
 }
 
+export type BunnyTusUploadStatus =
+  | { phase: 'uploading' }
+  | { phase: 'waiting_for_connection' }
+  | { phase: 'retrying'; attempt: number; maxAttempts: number };
+
 export interface BunnyTusUploadOptions extends BunnyTusUploadAuth {
   file: File;
   title: string;
   /** Chamado a cada pedaço enviado com sucesso, com o progresso de 0 a 1. */
   onProgress?: (fraction: number) => void;
+  /** Chamado quando o upload muda de fase (mandando bytes, esperando a
+   * conexão voltar, tentando de novo) — pra UI poder mostrar algo mais
+   * claro que só a porcentagem "voltando pra trás" sem explicação. */
+  onStatus?: (status: BunnyTusUploadStatus) => void;
 }
 
 function base64Utf8(value: string): string {
@@ -50,8 +89,34 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/** Se o navegador reportar que está offline de verdade, espera o evento
+ * `online` (ou o tempo máximo abaixo, o que vier primeiro) antes de voltar
+ * — assim a gente não fica batendo tentativa atrás de tentativa sem sinal
+ * nenhum, só pra falhar de novo em segundos. Se `navigator.onLine` não
+ * existir ou já disser que tá online, retorna na hora. */
+function waitForConnectionIfOffline(onStatus?: (status: BunnyTusUploadStatus) => void): Promise<void> {
+  if (typeof navigator === 'undefined' || navigator.onLine !== false || typeof window === 'undefined') {
+    return Promise.resolve();
+  }
+  onStatus?.({ phase: 'waiting_for_connection' });
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener('online', onOnline);
+      clearTimeout(timer);
+      resolve();
+    };
+    const onOnline = () => finish();
+    window.addEventListener('online', onOnline);
+    const timer = setTimeout(finish, MAX_OFFLINE_WAIT_MS);
+  });
+}
+
 /** Faz uma requisição via XHR (em vez de fetch) só pra ganhar o evento de
- * progresso de upload (`xhr.upload.onprogress`) — fetch não expõe isso. */
+ * progresso de upload (`xhr.upload.onprogress`) e um timeout de verdade —
+ * fetch não expõe nem um nem o outro de forma simples. */
 function xhrRequest(
   method: string,
   url: string,
@@ -62,6 +127,7 @@ function xhrRequest(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
+    xhr.timeout = REQUEST_TIMEOUT_MS;
     for (const [key, value] of Object.entries(headers)) {
       xhr.setRequestHeader(key, value);
     }
@@ -78,6 +144,10 @@ function xhrRequest(
       });
     };
     xhr.onerror = () => reject(new Error('Falha de rede durante o upload.'));
+    // 11/09/2026: sem isso, uma conexão que morre no meio (sinal fraco)
+    // deixava o XHR pendurado pra sempre — nem `onload` nem `onerror`
+    // disparam nesse caso, só `ontimeout` (com `xhr.timeout` definido).
+    xhr.ontimeout = () => reject(new Error('Tempo esgotado — conexão muito lenta ou instável.'));
     xhr.send(body ?? undefined);
   });
 }
@@ -97,6 +167,7 @@ export async function uploadVideoToBunny({
   authorizationSignature,
   authorizationExpire,
   onProgress,
+  onStatus,
 }: BunnyTusUploadOptions): Promise<void> {
   const commonHeaders = {
     AuthorizationSignature: authorizationSignature,
@@ -138,6 +209,8 @@ export async function uploadVideoToBunny({
   let attempt = 0;
   let lastErrorDetail = '';
 
+  onStatus?.({ phase: 'uploading' });
+
   while (offset < file.size) {
     const chunkStartOffset = offset;
     const chunk = file.slice(chunkStartOffset, Math.min(chunkStartOffset + CHUNK_SIZE_BYTES, file.size));
@@ -177,6 +250,7 @@ export async function uploadVideoToBunny({
       offset = newOffsetHeader ? Number(newOffsetHeader) : chunkStartOffset + chunk.size;
       onProgress?.(offset / file.size);
       attempt = 0; // progresso de verdade — zera o contador de tentativas
+      onStatus?.({ phase: 'uploading' });
     } catch (err) {
       // 11/09/2026: BUG relatado pela Amanda — upload "carrega até 100% e
       // volta pro 0, não envia de jeito nenhum". Erro real visto: "Bunny
@@ -205,7 +279,14 @@ export async function uploadVideoToBunny({
           `Não foi possível enviar o vídeo depois de ${MAX_RETRIES_PER_CHUNK} tentativas. Último erro: ${lastErrorDetail}`
         );
       }
+      onStatus?.({ phase: 'retrying', attempt, maxAttempts: MAX_RETRIES_PER_CHUNK });
       await sleep(RETRY_DELAYS_MS[Math.min(attempt - 1, RETRY_DELAYS_MS.length - 1)]);
+
+      // 11/09/2026: se o navegador disser que ficou de fato SEM conexão
+      // (comum no Brás, sinal indo e voltando), espera o sinal voltar em
+      // vez de ficar tentando de novo a cada poucos segundos sem chance
+      // nenhuma de dar certo.
+      await waitForConnectionIfOffline(onStatus);
 
       // Antes de tentar de novo, confere com a Bunny (HEAD, protocolo TUS)
       // qual é o offset de verdade no servidor — se o pedaço anterior já
@@ -235,6 +316,7 @@ export async function uploadVideoToBunny({
         // HEAD falhou também — segue com o offset que já tínhamos, melhor
         // tentar de novo do que travar aqui.
       }
+      onStatus?.({ phase: 'uploading' });
       // volta pro while(offset < file.size) — reconstrói o próximo pedaço a
       // partir do offset (possivelmente atualizado acima)
     }

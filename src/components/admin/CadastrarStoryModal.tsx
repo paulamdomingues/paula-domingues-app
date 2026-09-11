@@ -2,7 +2,7 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import { PiUploadSimple } from 'react-icons/pi';
 import { XCircleIcon } from '../icons';
 import { supabase } from '../../lib/supabaseClient';
-import { uploadVideoToBunny } from '../../lib/bunnyTusUpload';
+import { uploadVideoToBunny, type BunnyTusUploadStatus } from '../../lib/bunnyTusUpload';
 
 interface CadastrarStoryModalProps {
   onCancel: () => void;
@@ -35,6 +35,10 @@ export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStor
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  // 11/09/2026: pra deixar claro pra quem tá subindo o vídeo (a partir de
+  // uma conexão ruim, ex. Brás) que a barra "voltar um pouco" não é
+  // travamento — é retentativa automática ou espera o sinal voltar.
+  const [uploadStatus, setUploadStatus] = useState<BunnyTusUploadStatus>({ phase: 'uploading' });
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -69,6 +73,7 @@ export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStor
     setError(null);
     setSaving(true);
     setUploadProgress(0);
+    setUploadStatus({ phase: 'uploading' });
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
@@ -112,6 +117,7 @@ export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStor
         authorizationSignature: data.authorizationSignature,
         authorizationExpire: data.authorizationExpire,
         onProgress: setUploadProgress,
+        onStatus: setUploadStatus,
       });
 
       onSaved({ title: trimmedTitle, videoId: data.videoId });
@@ -171,6 +177,15 @@ export default function CadastrarStoryModal({ onCancel, onSaved }: CadastrarStor
             <span className="font-body text-[14px] text-gray-500">{now} (automático)</span>
           </div>
         </div>
+
+        {saving && uploadStatus.phase === 'waiting_for_connection' && (
+          <p className="font-body text-[13px] text-gray-500">Sem conexão no momento — aguardando o sinal voltar…</p>
+        )}
+        {saving && uploadStatus.phase === 'retrying' && (
+          <p className="font-body text-[13px] text-gray-500">
+            Conexão instável, tentando de novo (tentativa {uploadStatus.attempt} de {uploadStatus.maxAttempts})…
+          </p>
+        )}
 
         {error && <p className="font-body text-[13px] text-main-red-800">{error}</p>}
 
