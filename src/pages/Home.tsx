@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import TopBar from '../components/TopBar';
 import HighlightBanner from '../components/HighlightBanner';
@@ -20,8 +20,10 @@ const NO_STORIES_MESSAGE = 'Não há vídeos disponíveis no momento.';
 
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [storyPlayerOpen, setStoryPlayerOpen] = useState(false);
+  const [openStoryIndex, setOpenStoryIndex] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentStores, setRecentStores] = useState<StoreWithCategory[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
@@ -50,6 +52,29 @@ export default function Home() {
       cancelled = true;
     };
   }, []);
+
+  // 11/09/2026 (Amanda): clique em notificação de "story novo" (ver
+  // `Notificacoes.tsx`) chega aqui via `navigate('/', { state: {
+  // openStoryId } })` — assim que os stories carregam, acha o índice
+  // correspondente e força a abertura do player nesse story específico
+  // (em vez de só cair na Início, o que pareceria erro/clique sem
+  // efeito). Se o story não for encontrado (ex: expirou), ignora
+  // silenciosamente e a Home segue normal. O estado de navegação é
+  // consumido (substituído por `null`) logo em seguida pra não reabrir o
+  // player num back/refresh.
+  useEffect(() => {
+    const openStoryId = (location.state as { openStoryId?: string | number } | null)?.openStoryId;
+    if (openStoryId === undefined || stories.length === 0) return;
+
+    const index = stories.findIndex((story) => String(story.id) === String(openStoryId));
+    if (index !== -1) {
+      setOpenStoryIndex(index);
+      setStoryPlayerOpen(true);
+    }
+
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stories, location.state]);
 
   const handleSelectCategory = (category: Category) => {
     navigate(`/categoria/${category.id}`);
@@ -139,7 +164,11 @@ export default function Home() {
       </div>
 
       {storyPlayerOpen && (
-        <StoryPlayerOverlay stories={stories} onClose={() => setStoryPlayerOpen(false)} />
+        <StoryPlayerOverlay
+          stories={stories}
+          initialIndex={openStoryIndex}
+          onClose={() => setStoryPlayerOpen(false)}
+        />
       )}
 
       <Toast

@@ -28,14 +28,40 @@
       usa esse tom (branco, o fundo do próprio ícone, ficaria sem graça na
       barra de status/endereço).
     -->
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#D91A20" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" id="pwa-manifest" />
+    <meta name="theme-color" content="#D91A20" id="pwa-theme-color" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" id="pwa-apple-icon" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <!-- 05/09/2026 (Amanda): nome do atalho ("Instalar aplicativo"/"Adicionar
          à Tela de Início") trocado pra "Namoda" — ficou desatualizado desde
          que a marca virou "namoda" (ver `manifest.webmanifest`, mesma troca). -->
-    <meta name="apple-mobile-web-app-title" content="Namoda" />
+    <meta name="apple-mobile-web-app-title" content="Namoda" id="pwa-apple-title" />
+
+    <!--
+      PWA do admin com ícone/nome próprios (11/09/2026, Amanda, Figma node
+      1360:9483) — `app.pauladomingues.com` e `admin.pauladomingues.com/admin`
+      são o MESMO build (mesmo index.html, mesmo manifest.webmanifest por
+      padrão), então instalavam como o mesmo ícone/nome "Namoda" — impossível
+      diferenciar os 2 atalhos na tela inicial do celular (Amanda mandou
+      print mostrando os 2 ícones idênticos). Como são subdomínios
+      diferentes (origens diferentes pro navegador), cada um pode ter uma
+      identidade de instalação própria: este script roda cedo, ANTES do
+      navegador avaliar a instalação da PWA, e troca manifest/ícone/nome
+      quando o host é o do admin. `public/manifest-admin.webmanifest` e
+      `public/icons/admin/` têm os arquivos próprios do admin (mesma logo,
+      mas com fundo preto ao invés do branco usado no ícone do app normal —
+      ajuda a diferenciar de relance mesmo antes de ler o nome).
+    -->
+    <script>
+      (function () {
+        if (window.location.hostname !== 'admin.pauladomingues.com') return;
+        document.getElementById('pwa-manifest').setAttribute('href', '/manifest-admin.webmanifest');
+        document.getElementById('pwa-apple-icon').setAttribute('href', '/icons/admin/apple-touch-icon.png');
+        document.getElementById('pwa-apple-title').setAttribute('content', 'ADM-Nm');
+        document.getElementById('pwa-theme-color').setAttribute('content', '#060303');
+        document.title = 'ADM-Nm';
+      })();
+    </script>
 
     <!-- Fontes usadas no design do Figma -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

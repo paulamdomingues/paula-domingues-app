@@ -11,6 +11,7 @@ export interface NotificationItem {
   description: string;
   timeAgo: string;
   read: boolean;
+  targetId: number | null;
 }
 
 interface NotificationsContextValue {
@@ -28,6 +29,7 @@ interface NotificationRow {
   title: string;
   description: string;
   created_at: string;
+  target_id: number | null;
 }
 
 /**
@@ -68,7 +70,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     Promise.all([
-      supabase.from('notifications').select('id, type, title, description, created_at').order('created_at', { ascending: false }).limit(50),
+      supabase.from('notifications').select('id, type, title, description, created_at, target_id').order('created_at', { ascending: false }).limit(50),
       supabase.from('notification_reads').select('last_read_at').eq('user_id', userId).maybeSingle(),
     ])
       .then(([notificationsRes, readsRes]) => {
@@ -94,6 +96,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         description: row.description,
         timeAgo: timeAgo(row.created_at),
         read: lastReadAt !== null && new Date(row.created_at).getTime() <= new Date(lastReadAt).getTime(),
+        targetId: row.target_id,
       })),
     [rows, lastReadAt]
   );
