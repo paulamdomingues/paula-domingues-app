@@ -25,6 +25,13 @@ interface UsuarioModalProps {
   /** `null` = cadastro manual novo. Um objeto = ver/editar um usuário existente. */
   user: AllowedUserRow | null;
   canManage: boolean;
+  /**
+   * 12/09/2026, pedido da Amanda: `last_sign_in_at` (vindo da RPC
+   * `get_users_login_status` em `AdminUsuarios.tsx`, que é quem de fato
+   * consegue ler `auth.users` — este modal não busca isso sozinho). `null`
+   * = nunca logou (ou é cadastro manual novo, `user === null`).
+   */
+  lastSignInAt?: string | null;
   onCancel: () => void;
   onSaved: () => void;
 }
@@ -43,7 +50,7 @@ function formatCentsToBRL(cents: number | null): string {
  * compra), essa seção nem aparece — mostrar 4 campos vazios seria
  * confuso.
  */
-export default function UsuarioModal({ user, canManage, onCancel, onSaved }: UsuarioModalProps) {
+export default function UsuarioModal({ user, canManage, lastSignInAt = null, onCancel, onSaved }: UsuarioModalProps) {
   const isEdit = Boolean(user);
   const [editingBasico, setEditingBasico] = useState(!isEdit);
   const [name, setName] = useState(user?.full_name ?? '');
@@ -195,6 +202,16 @@ export default function UsuarioModal({ user, canManage, onCancel, onSaved }: Usu
                     : '—'
                 }
               />
+              {isEdit && (
+                <ReadField
+                  label="Já entrou no app?"
+                  value={
+                    lastSignInAt
+                      ? `Sim — último acesso em ${new Date(lastSignInAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`
+                      : 'Ainda não'
+                  }
+                />
+              )}
             </div>
           )}
         </div>

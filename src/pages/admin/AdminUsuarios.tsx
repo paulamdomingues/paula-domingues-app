@@ -39,9 +39,17 @@ export default function AdminUsuarios() {
   const [planFilter, setPlanFilter] = useState<PlanFilter>('todos');
   const [page, setPage] = useState(0);
   const [modalUser, setModalUser] = useState<AllowedUserRow | null | undefined>(undefined);
+  // 12/09/2026, pedido da Amanda: "tem como saber se os usuarios ja
+  // entraram ao menos 1 vez no app?" — só nesta tela (Usuários), não no
+  // Resumo. `null` no map = ainda não temos a resposta da RPC (loading);
+  // string | null dentro do map = `last_sign_in_at` de fato (null = nunca
+  // logou). Ver RPC `get_users_login_status` (SECURITY DEFINER — só ela lê
+  // `auth.users`, esse client nunca acessa esse schema direto).
+  const [loginStatus, setLoginStatus] = useState<Record<number, string | null> | null>(null);
 
   useEffect(() => {
     fetchUsers();
+    fetchLoginStatus();
   }, []);
 
   function fetchUsers() {
@@ -57,6 +65,19 @@ export default function AdminUsuarios() {
           return;
         }
         setRows(data ?? []);
+      });
+  }
+
+  function fetchLoginStatus() {
+    supabase
+      .rpc('get_users_login_status')
+      .then(({ data, error: fetchError }) => {
+        if (fetchError) return;
+        const map: Record<number, string | null> = {};
+        for (const row of (data ?? []) as { allowed_user_id: number; last_sign_in_at: string | null }[]) {
+          map[row.allowed_user_id] = row.last_sign_in_at;
+        }
+        setLoginStatus(map);
       });
   }
 
@@ -167,6 +188,7 @@ export default function AdminUsuarios() {
                 <th className="px-3 font-normal">Email</th>
                 <th className="px-3 font-normal">WhatsApp</th>
                 <th className="px-3 font-normal">Plano</th>
+                <th className="px-3 font-normal">Acesso</th>
                 <th className="px-3 font-normal">Membro desde</th>
                 <th className="px-3 font-normal text-right">Ações</th>
               </tr>
@@ -185,6 +207,9 @@ export default function AdminUsuarios() {
                         : row.plan === 'anual'
                           ? 'Anual'
                           : '—'}</td>
+                  <td className="px-3 py-3">
+                    <LoginStatusBadge lastSignInAt={loginStatus?.[row.id] ?? null} loaded={loginStatus !== null} />
+                  </td>
                   <td className="px-3 py-3">
                     {new Date(row.purchased_at).toLocaleDateString('pt-BR')}
                   </td>
@@ -230,6 +255,7 @@ export default function AdminUsuarios() {
                       {new Date(row.purchased_at).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
+                  <LoginStatusBadge lastSignInAt={loginStatus?.[row.id] ?? null} loaded={loginStatus !== null} />
                 </div>
                 <button
                   type="button"
@@ -279,6 +305,7 @@ export default function AdminUsuarios() {
         <UsuarioModal
           user={modalUser}
           canManage={canManage}
+          lastSignInAt={modalUser ? (loginStatus?.[modalUser.id] ?? null) : null}
           onCancel={() => setModalUser(undefined)}
           onSaved={() => {
             setModalUser(undefined);
@@ -298,5 +325,27 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
         {value}
       </p>
     </div>
+  );
+}
+
+// 12/09/2026: "—" enquanto a RPC `get_users_login_status` ainda não
+// respondeu (evita mostrar "Nunca entrou" por um instante pra todo mundo
+// só porque o fetch ainda tá em andamento — ver `loginStatus === null`
+// em `AdminUsuarios.tsx`).
+function LoginStatusBadge({ lastSignInAt, loaded }: { lastSignInAt: string | null; loaded: boolean }) {
+  if (!loaded) {
+    return <span className="font-body text-[13px] text-gray-400">—</span>;
+  }
+  if (lastSignInAt) {
+    return (
+      <span className="inline-flex items-center justify-center rounded-full bg-success-100 px-2 py-1 font-body text-[12px] font-bold tracking-[0.6px] text-success-800">
+        Já entrou
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center justify-center rounded-full bg-gray-100 px-2 py-1 font-body text-[12px] font-bold tracking-[0.6px] text-gray-600">
+      Nunca entrou
+    </span>
   );
 }
