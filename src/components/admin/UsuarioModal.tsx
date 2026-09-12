@@ -13,7 +13,7 @@ export interface AllowedUserRow {
   email: string;
   full_name: string | null;
   whatsapp: string | null;
-  plan: 'trimestral' | 'anual' | null;
+  plan: 'trimestral' | 'semestral' | 'anual' | null;
   is_active: boolean;
   purchased_at: string;
   hubla_transaction_id: string | null;
@@ -49,7 +49,7 @@ export default function UsuarioModal({ user, canManage, onCancel, onSaved }: Usu
   const [name, setName] = useState(user?.full_name ?? '');
   const [whatsapp, setWhatsapp] = useState(user?.whatsapp ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [plan, setPlan] = useState<'trimestral' | 'anual' | ''>(user?.plan ?? '');
+  const [plan, setPlan] = useState<'trimestral' | 'semestral' | 'anual' | ''>(user?.plan ?? '');
   const [isActive, setIsActive] = useState(user?.is_active ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -166,12 +166,13 @@ export default function UsuarioModal({ user, canManage, onCancel, onSaved }: Usu
                 <span className="font-body text-[13px] tracking-[0.65px] text-gray-500">Plano</span>
                 <AdminSelect
                   value={plan}
-                  onChange={(v) => setPlan(v as 'trimestral' | 'anual' | '')}
+                  onChange={(v) => setPlan(v as 'trimestral' | 'semestral' | 'anual' | '')}
                   disabled={!canManage}
                   triggerClassName="flex h-[50px] w-full items-center gap-2 rounded-lg border border-gray-200 pl-4 pr-3 font-body text-[14px] text-gray-900 disabled:opacity-60"
                   options={[
                     { value: '', label: 'Escolha aqui' },
                     { value: 'trimestral', label: 'Trimestral' },
+                    { value: 'semestral', label: 'Semestral' },
                     { value: 'anual', label: 'Anual' },
                   ]}
                 />
@@ -182,7 +183,18 @@ export default function UsuarioModal({ user, canManage, onCancel, onSaved }: Usu
               <ReadField label="Nome" value={name || '—'} />
               <ReadField label="WhatsApp" value={whatsapp || '—'} />
               <ReadField label="Email" value={email} />
-              <ReadField label="Plano" value={plan ? (plan === 'trimestral' ? 'Trimestral' : 'Anual') : '—'} />
+              <ReadField
+                label="Plano"
+                value={
+                  plan
+                    ? plan === 'trimestral'
+                      ? 'Trimestral'
+                      : plan === 'semestral'
+                        ? 'Semestral'
+                        : 'Anual'
+                    : '—'
+                }
+              />
             </div>
           )}
         </div>
@@ -193,7 +205,18 @@ export default function UsuarioModal({ user, canManage, onCancel, onSaved }: Usu
             {hasHublaData ? (
               <div className="flex flex-col gap-4">
                 <ReadField label="ID da Transação" value={user!.hubla_transaction_id || '—'} />
-                <ReadField label="Plano Contratado" value={user!.plan === 'trimestral' ? 'Trimestral' : user!.plan === 'anual' ? 'Anual' : '—'} />
+                <ReadField
+                  label="Plano Contratado"
+                  value={
+                    user!.plan === 'trimestral'
+                      ? 'Trimestral'
+                      : user!.plan === 'semestral'
+                        ? 'Semestral'
+                        : user!.plan === 'anual'
+                          ? 'Anual'
+                          : '—'
+                  }
+                />
                 <ReadField label="Forma de Pagamento" value={user!.hubla_payment_method || '—'} />
                 <ReadField label="Valor da Compra" value={formatCentsToBRL(user!.hubla_amount_cents)} />
               </div>

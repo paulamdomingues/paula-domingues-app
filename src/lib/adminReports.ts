@@ -17,7 +17,7 @@ export interface AllowedUserLite {
   short_id: string | null;
   full_name: string | null;
   email: string;
-  plan: 'trimestral' | 'anual' | null;
+  plan: 'trimestral' | 'semestral' | 'anual' | null;
   is_active: boolean;
   purchased_at: string;
 }
@@ -52,9 +52,38 @@ interface StoryLite {
 }
 
 export const CHART_COLORS = ['#A21919', '#67383D', '#D97706', '#928E8E', '#4EB362', '#C16565', '#B54747'];
-const PLAN_DAYS: Record<'trimestral' | 'anual', number> = { trimestral: 90, anual: 365 };
+// 12/09/2026: BUG corrigido — a Hubla passou a vender o plano 'semestral'
+// (banco já liberado, ver migration `allow_semestral_plan_in_allowed_users`),
+// mas esse mapa continuava só com 'trimestral'/'anual'. Pra qualquer
+// usuária com plano 'semestral', `PLAN_DAYS[u.plan]` devolvia `undefined` e
+// o cálculo de "Vencimentos Próximo" virava `NaN` silenciosamente (a
+// comparação `expiryTime <= in30Days` nunca é verdadeira com NaN) — ou
+// seja, quem comprou o semestral nunca aparecia nesse card. 180 dias (~6
+// meses), mesmo critério de "trimestral"=90 (~3 meses) e "anual"=365 (12
+// meses).
+const PLAN_DAYS: Record<'trimestral' | 'semestral' | 'anual', number> = { trimestral: 90, semestral: 180, anual: 365 };
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Compara se `dateStr` (timestamp ISO vindo do banco, sempre em UTC) cai no
+ * MESMO DIA-CALENDÁRIO LOCAL que `reference` — usa os getters locais do
+ * `Date` (getFullYear/getMonth/getDate), não `toISOString().slice(0, 10)`
+ * nem `getUTCFullYear` etc, que dariam o dia em UTC. Isso importa pra
+ * compras perto da meia-noite: alguém que comprou às 23h de Brasília já
+ * está no dia seguinte em UTC, e um comparador em UTC contaria isso no dia
+ * errado. Como o app roda no fuso do próprio navegador de quem tá vendo
+ * (sempre Brasil, nesse caso), os getters locais já dão o dia certo sem
+ * precisar fixar 'America/Sao_Paulo' na mão.
+ */
+function isSameLocalDay(dateStr: string, reference: Date): boolean {
+  const d = new Date(dateStr);
+  return (
+    d.getFullYear() === reference.getFullYear() &&
+    d.getMonth() === reference.getMonth() &&
+    d.getDate() === reference.getDate()
+  );
+}
 
 export function countSince(dates: string[], days: number): number {
   const threshold = Date.now() - days * DAY_MS;
@@ -203,6 +232,7 @@ export function useAdminReportsData(period?: ReportPeriod) {
     const withPlan = users.filter((u) => u.plan);
     return [
       { label: 'Trimestral', value: withPlan.filter((u) => u.plan === 'trimestral').length, color: CHART_COLORS[0] },
+      { label: 'Semestral', value: withPlan.filter((u) => u.plan === 'semestral').length, color: CHART_COLORS[2] },
       { label: 'Anual', value: withPlan.filter((u) => u.plan === 'anual').length, color: CHART_COLORS[1] },
     ];
   }, [users]);
@@ -219,6 +249,17 @@ export function useAdminReportsData(period?: ReportPeriod) {
   }, [users]);
 
   const activeUsersCount = users?.filter((u) => u.is_active).length ?? 0;
+  // 12/09/2026: BUG corrigido — o card "Alunas Novas" do Resumo
+  // (`AdminDashboard.tsx`) mostrava `activeUsersCount` (o TOTAL de usuárias
+  // ativas de sempre), não só quem comprou HOJE, apesar do rótulo dizer
+  // "novas". Confirmado com a Amanda: o número grande do card deve refletir
+  // só o dia. `isSameLocalDay` acima garante que isso bate com o dia local
+  // de quem tá vendo (Brasil), não o dia em UTC.
+  const newUsersTodayCount = useMemo(() => {
+    if (!users) return 0;
+    const today = new Date();
+    return users.filter((u) => isSameLocalDay(u.purchased_at, today)).length;
+  }, [users]);
   const visibleStoresCount = stores?.filter((s) => s.is_active).length ?? 0;
   const clicksCount = clicks?.length ?? 0;
   // "Stories Ativos" (card exclusivo do Resumo/Dashboard, não usado no
@@ -369,6 +410,7 @@ export function useAdminReportsData(period?: ReportPeriod) {
     const withPlan = periodUsers.filter((u) => u.plan);
     return [
       { label: 'Trimestral', value: withPlan.filter((u) => u.plan === 'trimestral').length, color: CHART_COLORS[0] },
+      { label: 'Semestral', value: withPlan.filter((u) => u.plan === 'semestral').length, color: CHART_COLORS[2] },
       { label: 'Anual', value: withPlan.filter((u) => u.plan === 'anual').length, color: CHART_COLORS[1] },
     ];
   }, [periodUsers]);
@@ -382,6 +424,7 @@ export function useAdminReportsData(period?: ReportPeriod) {
     clicks,
     searches,
     activeUsersCount,
+    newUsersTodayCount,
     visibleStoresCount,
     clicksCount,
     activeStoriesCount,

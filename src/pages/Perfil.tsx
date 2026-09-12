@@ -72,7 +72,7 @@ export default function Perfil() {
   const { session, signOut, firstName } = useAuth();
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [shortId, setShortId] = useState<string>('—');
-  const [plan, setPlan] = useState<'trimestral' | 'anual' | null>(null);
+  const [plan, setPlan] = useState<'trimestral' | 'semestral' | 'anual' | null>(null);
 
   const email = session?.user.email ?? 'amanda@exemplo.com';
 
@@ -98,11 +98,17 @@ export default function Perfil() {
     if (!userId) return;
     supabase
       .rpc('get_my_plan')
-      .then(({ data }) => setPlan((data as 'trimestral' | 'anual' | null) ?? null));
+      .then(({ data }) => setPlan((data as 'trimestral' | 'semestral' | 'anual' | null) ?? null));
   }, [session?.user.id]);
 
   const planLabel =
-    plan === 'trimestral' ? 'Meu Plano - Trimestral' : plan === 'anual' ? 'Meu Plano - Anual' : 'Meu Plano';
+    plan === 'trimestral'
+      ? 'Meu Plano - Trimestral'
+      : plan === 'semestral'
+        ? 'Meu Plano - Semestral'
+        : plan === 'anual'
+          ? 'Meu Plano - Anual'
+          : 'Meu Plano';
 
   const handleConfirmLogout = async () => {
     await signOut();

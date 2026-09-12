@@ -122,7 +122,13 @@ export default function AdminRelatorios() {
                     <p className="w-36 shrink-0 truncate font-body text-[13px] font-medium text-gray-900">{u.full_name || '—'}</p>
                     <p className="flex-1 truncate font-body text-[12px] text-gray-600">{u.email}</p>
                     <p className="w-20 shrink-0 font-body text-[13px] font-medium text-gray-500">
-                      {u.plan === 'trimestral' ? 'Trimestral' : u.plan === 'anual' ? 'Anual' : '—'}
+                      {u.plan === 'trimestral'
+                        ? 'Trimestral'
+                        : u.plan === 'semestral'
+                          ? 'Semestral'
+                          : u.plan === 'anual'
+                            ? 'Anual'
+                            : '—'}
                     </p>
                     <p className="w-24 shrink-0 text-right font-body text-[12px] text-gray-400">
                       {new Date(u.purchased_at).toLocaleDateString('pt-BR')}

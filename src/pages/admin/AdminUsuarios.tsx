@@ -6,7 +6,7 @@ import AdminSelect from '../../components/admin/AdminSelect';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 
-type PlanFilter = 'todos' | 'trimestral' | 'anual';
+type PlanFilter = 'todos' | 'trimestral' | 'semestral' | 'anual';
 
 const PAGE_SIZE = 10;
 
@@ -81,6 +81,7 @@ export default function AdminUsuarios() {
 
   const totalCount = rows?.length ?? 0;
   const trimestralCount = rows?.filter((r) => r.plan === 'trimestral').length ?? 0;
+  const semestralCount = rows?.filter((r) => r.plan === 'semestral').length ?? 0;
   const anualCount = rows?.filter((r) => r.plan === 'anual').length ?? 0;
 
   const pageCount = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
@@ -120,9 +121,10 @@ export default function AdminUsuarios() {
         Cadastrar Usuário
       </button>
 
-      <div className="mx-auto grid w-full max-w-[640px] grid-cols-3 gap-3 lg:gap-4">
+      <div className="mx-auto grid w-full max-w-[860px] grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <SummaryCard label="Total" value={totalCount} />
         <SummaryCard label="Trimestral" value={trimestralCount} />
+        <SummaryCard label="Semestral" value={semestralCount} />
         <SummaryCard label="Anual" value={anualCount} />
       </div>
 
@@ -143,6 +145,7 @@ export default function AdminUsuarios() {
             options={[
               { value: 'todos', label: 'Planos' },
               { value: 'trimestral', label: 'Trimestral' },
+              { value: 'semestral', label: 'Semestral' },
               { value: 'anual', label: 'Anual' },
             ]}
           />
@@ -175,7 +178,13 @@ export default function AdminUsuarios() {
                   <td className="px-3 py-3">{row.full_name ?? '—'}</td>
                   <td className="px-3 py-3">{row.email}</td>
                   <td className="px-3 py-3">{row.whatsapp ?? '—'}</td>
-                  <td className="px-3 py-3">{row.plan === 'trimestral' ? 'Trimestral' : row.plan === 'anual' ? 'Anual' : '—'}</td>
+                  <td className="px-3 py-3">{row.plan === 'trimestral'
+                      ? 'Trimestral'
+                      : row.plan === 'semestral'
+                        ? 'Semestral'
+                        : row.plan === 'anual'
+                          ? 'Anual'
+                          : '—'}</td>
                   <td className="px-3 py-3">
                     {new Date(row.purchased_at).toLocaleDateString('pt-BR')}
                   </td>
@@ -209,7 +218,13 @@ export default function AdminUsuarios() {
                       #{row.short_id}
                     </p>
                     <span className="flex shrink-0 items-center justify-center rounded-lg bg-main-dark-800 px-2 py-1 font-body text-[14px] font-bold tracking-[0.65px] text-main-red-50">
-                      {row.plan === 'trimestral' ? 'Trimestral' : row.plan === 'anual' ? 'Anual' : '—'}
+                      {row.plan === 'trimestral'
+                      ? 'Trimestral'
+                      : row.plan === 'semestral'
+                        ? 'Semestral'
+                        : row.plan === 'anual'
+                          ? 'Anual'
+                          : '—'}
                     </span>
                     <p className="truncate font-body text-[14px] text-gray-500">
                       {new Date(row.purchased_at).toLocaleDateString('pt-BR')}
