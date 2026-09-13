@@ -2,6 +2,56 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+
+    <!--
+      13/09/2026, BUG apontado pela Amanda ("entra em admin.pauladomingues.com/admin
+      e fica tudo em branco, só resolve com F5 — e no atalho da tela de início do
+      iPhone fica travado pra sempre porque não dá pra dar F5 lá"): quando uma
+      publicação nova troca o nome dos arquivos de código (ex: index-abc123.js vira
+      index-xyz789.js) e o navegador (ou uma camada de cache no meio do caminho)
+      ainda está com uma cópia antiga deste index.html guardada, ele tenta baixar um
+      arquivo que já não existe mais no servidor — a busca falha, e como o app
+      inteiro depende desse UM arquivo pra se desenhar, nada aparece na tela (só o
+      cinza de fundo do `body` em index.css, exatamente o que a Amanda via no print).
+      A causa raiz foi corrigida no `vercel.json` (o HTML agora nunca fica em cache,
+      só os arquivos de código em si, que já mudam de nome sozinhos a cada
+      publicação) — mas isso aqui é uma segunda camada de proteção: se esse tipo de
+      falha acontecer de novo por QUALQUER outro motivo (rede instável, CDN, etc),
+      a própria página percebe sozinha e recarrega uma vez, em vez de ficar travada
+      em branco pro resto da visita (o pior cenário: alguém abrindo pelo atalho do
+      iPhone, que não tem botão de recarregar).
+      Precisa rodar ANTES de qualquer outro <script>/<link> da página, por isso fica
+      logo no topo do <head> — só assim os listeners de erro já estão prontos antes
+      dos outros arquivos começarem a ser baixados. Guarda de `sessionStorage` evita
+      um loop infinito de recarregar (só tenta 1 vez por aba; a própria abertura bem
+      sucedida do app limpa essa marca de novo, ver `main.tsx`).
+    -->
+    <script>
+      (function () {
+        var RELOAD_FLAG = 'pd-reload-once-on-load-failure';
+        function reloadOnce() {
+          if (sessionStorage.getItem(RELOAD_FLAG)) return;
+          sessionStorage.setItem(RELOAD_FLAG, '1');
+          window.location.reload();
+        }
+        // Falha ao carregar um <script>/<link> da própria página (o sintoma
+        // clássico de HTML em cache apontando pra um arquivo de build que já
+        // não existe mais depois de uma publicação nova).
+        window.addEventListener(
+          'error',
+          function (event) {
+            var target = event.target;
+            if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+              reloadOnce();
+            }
+          },
+          true
+        );
+        // Falha ao carregar um "pedaço" (chunk) importado dinamicamente pelo Vite.
+        window.addEventListener('vite:preloadError', reloadOnce);
+      })();
+    </script>
+
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

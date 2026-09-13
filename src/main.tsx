@@ -33,3 +33,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// 13/09/2026: limpa a marca de "já tentei recarregar uma vez" (ver script no
+// topo do <head> em `index.html`) assim que o app conseguir montar de
+// verdade — senão essa marca ficaria presa no sessionStorage da aba e uma
+// falha de carregamento genuína numa visita futura (mesma aba) não
+// conseguiria mais disparar o recarregamento automático.
+sessionStorage.removeItem('pd-reload-once-on-load-failure');
