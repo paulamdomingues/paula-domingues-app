@@ -101,15 +101,10 @@ function AppShell() {
 }
 
 export default function App() {
-  // Em `admin.pauladomingues.com`, a raiz "/" deve cair direto no painel
-  // admin em vez da home do app cliente. Feito como um retorno antecipado
-  // (em vez de uma <Route path="/" .../> concorrente lá embaixo) de
-  // propósito: uma rota "/" explícita no nível de cima sempre venceria o
-  // "/*" do app cliente no ranking do React Router, quebrando a home em
-  // `app.pauladomingues.com` — aqui o desvio só acontece nesse domínio
-  // específico, sem tocar em nada da árvore de rotas do cliente.
+  // CORREÇÃO: No subdomínio admin, ao acessar a raiz "/", mandamos direto para o login ("/admin/login")
+  // em vez de cair na rota protegida "/admin", evitando o travamento de tela em branco no PWA do iOS.
   if (isAdminHost() && window.location.pathname === '/') {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   return (
