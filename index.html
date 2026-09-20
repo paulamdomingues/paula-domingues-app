@@ -4,6 +4,23 @@
     <meta charset="UTF-8" />
 
     <!--
+      20/09/2026, CORREÇÃO DE BUG DO PWA NO iOS: redirecionamento nativo
+      imediato para o login do admin. Quando o usuário abria o PWA pelo atalho
+      do iPhone na raiz (admin.pauladomingues.com/), o React Router engasgava
+      na transição assíncrona e empacava em uma tela branca (exigindo um F5
+      impossível no app instalado). Este script roda no primeiro milissegundo
+      do carregamento do HTML e força o navegador a ir direto para /admin/login
+      antes mesmo de iniciar o motor do React, resolvendo a tela em branco.
+    -->
+    <script>
+      (function () {
+        if (window.location.hostname === 'admin.pauladomingues.com' && window.location.pathname === '/') {
+          window.location.replace('/admin/login');
+        }
+      })();
+    </script>
+
+    <!--
       13/09/2026, BUG apontado pela Amanda ("entra em admin.pauladomingues.com/admin
       e fica tudo em branco, só resolve com F5 — e no atalho da tela de início do
       iPhone fica travado pra sempre porque não dá pra dar F5 lá"): quando uma
