@@ -47,13 +47,19 @@ export default function Busca() {
   const trimmedQuery = query.trim().toLowerCase();
   const hasQuery = trimmedQuery.length > 0;
 
+  // Criamos uma versão da busca sem hífens para encontrar o código independente do traço
+  const cleanQuery = trimmedQuery.replace(/-/g, '');
+
   const results = useMemo(() => {
     if (!hasQuery) return [];
-    const matches = stores.filter(
-      (store) =>
+    const matches = stores.filter((store) => {
+      const storeCodeClean = store.code.toLowerCase().replace(/-/g, '');
+
+      return (
         store.name.toLowerCase().includes(trimmedQuery) ||
         store.categoryLabel.toLowerCase().includes(trimmedQuery) ||
         store.code.toLowerCase().includes(trimmedQuery) ||
+        storeCodeClean.includes(cleanQuery) || // <--- Aqui busca o código ignorando o hífen
         // 22/08/2026: as tags cadastradas na loja também entram na busca —
         // antes só nome/categoria/código eram considerados.
         // BUG corrigido em 22/08/2026: `store.details` é opcional
@@ -61,9 +67,11 @@ export default function Busca() {
         // (TS18048) porque isso aqui acessava `.tags` sem checar se
         // `details` existia primeiro. Faltava o `?.`, não só o `?? []`.
         (store.details?.tags ?? []).some((tag) => tag.toLowerCase().includes(trimmedQuery))
-    );
+      );
+    });
     return sortStores(matches, sort);
-  }, [hasQuery, trimmedQuery, sort, stores]);
+  }, [hasQuery, trimmedQuery, cleanQuery, sort, stores]);
+
   const {
     visibleItems: visibleResults,
     hasMore,
