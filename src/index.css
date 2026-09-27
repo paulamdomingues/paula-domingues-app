@@ -6,6 +6,15 @@
   box-sizing: border-box;
 }
 
+html {
+  /* 27/09/2026: parte da correção do zoom errado no app instalado do
+     iPhone (ver comentário grande no index.html) — impede o WebKit de
+     aumentar o tamanho do texto sozinho (um recurso pensado pra site
+     "de computador" visto no celular, que só atrapalha aqui, num layout
+     que já é 100% pensado pra mobile). */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background-color: #e5e5e5;
@@ -40,6 +49,33 @@ body {
 @media (min-width: 1024px) {
   .app-shell {
     max-width: 1440px;
+  }
+}
+
+/* 27/09/2026, primeiro passo da preparação pro app nativo (pedido da
+   Amanda): quando o site é aberto como app "instalado" — atalho
+   "Adicionar à Tela de Início" no iPhone, ou "Instalar aplicativo" no
+   Android/Chrome — ele deixa de ser uma aba de navegador comum. Nessa
+   hora a moldura de "mockup de celular" (max-width 430px) e a margem
+   cinza ao redor deixam de fazer sentido: um app de verdade ocupa a
+   tela inteira do aparelho. `display-mode: standalone` é como o CSS
+   enxerga esse modo instalado (também vale pro app nativo feito com
+   Capacitor mais pra frente — reconferir quando isso for integrado,
+   porque o WebView dele pode não reportar esse media feature sozinho).
+   Continua tudo igual pra quem só visita o site pelo navegador normal. */
+@media (display-mode: standalone) {
+  body {
+    background-color: #f7f3f3;
+  }
+
+  .app-shell {
+    max-width: none;
+    /* Respiro de segurança pro notch/ilha dinâmica e pra barra de
+       gestos de baixo — sem isso o conteúdo fica embaixo dessas áreas
+       do sistema (por isso o index.html também precisa do
+       `viewport-fit=cover`, sem ele esses valores ficam sempre 0). */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 

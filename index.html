@@ -71,7 +71,27 @@
 
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      27/09/2026, BUG apontado pela Amanda ("o atalho no iPhone abre com um
+      zoom, não se baseia no tamanho da tela do usuário"): um site normal
+      aberto numa aba do Safari ganha um ajuste automático de escala que o
+      Safari aplica sozinho; o app "instalado" (atalho na Tela de Início)
+      roda numa janela própria (WKWebView) que NÃO faz esse ajuste — sem
+      `maximum-scale`/`user-scalable` travando a escala em 1, cada iPhone
+      podia renderizar a página com um zoom diferente, sempre errado.
+      `viewport-fit=cover` também entra aqui: é o que permite a página ir
+      atrás do notch/ilha dinâmica de propósito, pra puxar o respiro de
+      segurança sozinha via `env(safe-area-inset-*)` no CSS (ver
+      `index.css`), em vez de deixar uma barra branca ali.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <!-- Reforça o modo "instalado" (sem barra de endereço) em versões do
+         iOS que ainda não confiam só no `"display": "standalone"` do
+         manifest — funciona junto com ele, nunca no lugar. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Paula Domingues | App</title>
 
     <!--
