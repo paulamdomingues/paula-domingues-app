@@ -50,16 +50,30 @@ export default function Busca() {
   // Criamos uma versão da busca sem hífens para encontrar o código independente do traço
   const cleanQuery = trimmedQuery.replace(/-/g, '');
 
+  // 28/09/2026, BUG corrigido (Amanda apontou que buscar pelo código "curto",
+  // tipo "AL33" em vez de "AL-0033", não achava a loja): a limpeza acima só
+  // tirava o traço, nunca os zeros à esquerda do número — "al0033" (código
+  // sem traço) não contém "al33" como substring (sobram os dois "0" no
+  // meio). `stripLeadingZeros` remove só os zeros colados depois das letras
+  // do prefixo (ex: "al0033" -> "al33", "al0004" -> "al4"), sem mexer em
+  // dígitos que não sejam zero à esquerda. Aplicado dos dois lados da
+  // comparação (código da loja E o que a pessoa digitou), então as 3 formas
+  // — "AL-0033", "AL0033", "AL33" — todas acham a mesma loja agora.
+  const stripLeadingZeros = (value: string) => value.replace(/^([a-z]+)0+/, '$1');
+  const cleanQueryNoZeros = stripLeadingZeros(cleanQuery);
+
   const results = useMemo(() => {
     if (!hasQuery) return [];
     const matches = stores.filter((store) => {
       const storeCodeClean = store.code.toLowerCase().replace(/-/g, '');
+      const storeCodeNoZeros = stripLeadingZeros(storeCodeClean);
 
       return (
         store.name.toLowerCase().includes(trimmedQuery) ||
         store.categoryLabel.toLowerCase().includes(trimmedQuery) ||
         store.code.toLowerCase().includes(trimmedQuery) ||
         storeCodeClean.includes(cleanQuery) || // <--- Aqui busca o código ignorando o hífen
+        storeCodeNoZeros.includes(cleanQueryNoZeros) || // <--- Aqui ignora hífen E zeros à esquerda (ex: "AL33")
         // 22/08/2026: as tags cadastradas na loja também entram na busca —
         // antes só nome/categoria/código eram considerados.
         // BUG corrigido em 22/08/2026: `store.details` é opcional
@@ -70,7 +84,7 @@ export default function Busca() {
       );
     });
     return sortStores(matches, sort);
-  }, [hasQuery, trimmedQuery, cleanQuery, sort, stores]);
+  }, [hasQuery, trimmedQuery, cleanQuery, cleanQueryNoZeros, sort, stores]);
 
   const {
     visibleItems: visibleResults,
