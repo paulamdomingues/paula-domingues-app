@@ -25,6 +25,16 @@ export const WHATSAPP_SUPPORT_URL =
   'https://wa.me/5511923749318?text=Ol%C3%A1%2C%20vim%20do%20app%20preciso%20de%20ajuda!';
 
 /**
+ * 28/09/2026 (Amanda): mensagem pré-pronta que já vem digitada quando
+ * alguém clica no botão de WhatsApp da PÁGINA DE UMA LOJA (perfil do
+ * fornecedor, `StoreDetail.tsx`) — ver `buildWhatsappUrl` em `catalog.ts`.
+ * Diferente do `WHATSAPP_SUPPORT_URL` acima, que é pro suporte do próprio
+ * app, não pra falar com um fornecedor.
+ */
+export const WHATSAPP_STORE_CONTACT_MESSAGE =
+  'Oii, vim do app da Paula Domingues, gostaria de mais informações';
+
+/**
  * Link do botão "Portal Exclusivo" (bloco "Acesso Rápido" da Home) — a área
  * de membros paga na Hubla, com vídeos mais completos sobre os polos (Brás,
  * 25 de Março, Bom Retiro).

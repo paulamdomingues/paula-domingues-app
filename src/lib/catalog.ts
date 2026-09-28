@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { WHATSAPP_STORE_CONTACT_MESSAGE } from './constants';
 import type { Category, Story, StoreDetails, StoreWithCategory } from '../types';
 
 /**
@@ -76,13 +77,19 @@ interface CategoryRow {
  * diferente). Números locais brasileiros sempre têm 10 (fixo, DDD + 8
  * dígitos) ou 11 (celular, DDD + 9 dígitos) dígitos — só nesses casos falta
  * o 55. Se já vier com 12/13 dígitos, presume que o 55 já está incluso.
+ *
+ * 28/09/2026 (Amanda): a conversa agora já abre com uma mensagem pré-pronta
+ * digitada (`?text=`, `WHATSAPP_STORE_CONTACT_MESSAGE` em `constants.ts`) —
+ * mesmo padrão que o `WHATSAPP_SUPPORT_URL` já usava, só que aqui é genérica
+ * pra qualquer loja (não menciona o nome do fornecedor). `encodeURIComponent`
+ * garante que acentos/espaços da mensagem virem um `%XX` válido na URL.
  */
 export function buildWhatsappUrl(raw?: string | null): string | undefined {
   if (!raw) return undefined;
   const digits = raw.replace(/\D/g, '');
   if (!digits) return undefined;
   const withCountryCode = digits.length <= 11 ? `55${digits}` : digits;
-  return `https://wa.me/${withCountryCode}`;
+  return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(WHATSAPP_STORE_CONTACT_MESSAGE)}`;
 }
 
 /**
