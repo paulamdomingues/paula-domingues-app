@@ -216,10 +216,20 @@ export default function Home() {
 
         {weeklyRanking.length > 0 && (
           <section className="flex w-full flex-col items-start gap-4">
-            <h2 className="w-full font-display text-[26px] font-bold tracking-[0.78px] text-main-dark-900 lg:mx-auto lg:max-w-[1128px]">
+            <h2 className="w-full font-display text-[26px] font-bold leading-none tracking-[0.78px] text-main-dark-900 lg:mx-auto lg:max-w-[1128px]">
               Mais Procuradas da Semana !
             </h2>
-            <div className="w-full overflow-x-auto">
+            {/* 13/10/2026 (Amanda): `w-[calc(100%-40px)]` no lugar de `w-full`
+                — reserva uns 40px sempre "cortados" no fim da fileira, pra
+                sempre sobrar um pedacinho visível do próximo card (sinal de
+                "dá pra arrastar mais") em QUALQUER largura de tela. Sem isso,
+                dependendo da largura, os cards cabiam quase exatinho e
+                cortava direto pra borda, sem nenhum pedaço do próximo
+                aparecendo. `no-scrollbar` esconde a barrinha de rolagem
+                nativa que aparecia ao arrastar (mesmo recurso já usado no
+                carrossel de Categorias, ver index.css) — tira esse elemento
+                de navegador também pensando no app nativo. */}
+            <div className="w-[calc(100%-40px)] overflow-x-auto no-scrollbar">
               <div className="flex w-fit items-start gap-4 lg:mx-auto lg:max-w-[1128px]">
                 {weeklyRanking.map((store) => (
                   <RankedStoreCard key={store.id} store={store} rank={store.rank} />

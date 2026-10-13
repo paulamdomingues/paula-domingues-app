@@ -26,7 +26,11 @@ export default function RankedStoreCard({ store, rank }: RankedStoreCardProps) {
       onKeyDown={(e) => {
         if (e.key === 'Enter') navigate(`/loja/${store.id}`);
       }}
-      className="flex w-[160px] shrink-0 cursor-pointer flex-col items-center gap-1 py-2"
+      // 13/10/2026 (Amanda): tirado o `pt-2` (só ficou `pb-2`) — esse
+      // respiro no topo do card somava com o `gap-4` da seção na Home
+      // (ver Home.tsx) e deixava o espaço entre o título "Mais Procuradas
+      // da Semana !" e os cards maior do que devia.
+      className="flex w-[160px] shrink-0 cursor-pointer flex-col items-center gap-1 pb-2"
     >
       <div className="relative size-[160px] overflow-hidden rounded-lg">
         <ImagePlaceholder src={store.imageUrl} alt={store.name} className="size-full" />
