@@ -244,9 +244,21 @@ export async function listActiveStories(): Promise<Story[]> {
  * garantido por um trigger no banco, `trg_enforce_single_featured_store`).
  * Se nenhuma estiver marcada ainda, cai no fallback automático combinado
  * originalmente com a Amanda: loja com mais favoritos, empate por mais
- * recente (`created_at`), empate nisso por ordem alfabética. Calculado no
- * cliente (não um SQL view) porque o volume de dados é pequeno (~280 lojas,
- * poucas dezenas de favoritos) — revisitar se isso crescer muito.
+ * recente (`created_at`), empate nisso por ordem alfabética.
+ *
+ * 13/10/2026 (Amanda perguntou o critério do fallback — ao conferir, achei
+ * um BUG): a versão antiga contava favoritos lendo a tabela `favorites`
+ * direto do cliente (`supabase.from('favorites').select('store_id')`), mas
+ * a RLS dela (`favorites_select_own`) só deixa cada usuária enxergar OS
+ * PRÓPRIOS favoritos — nunca os de todo mundo. Na prática, cada pessoa via
+ * uma "loja com mais favoritos" calculada só em cima do que ELA MESMA
+ * favoritou (ou caía direto no desempate por recência/nome, se ela não
+ * tivesse favoritado nada ainda) — nunca o total real do app inteiro.
+ * Corrigido: a contagem agora roda dentro do banco, numa função
+ * `get_most_favorited_store_id()` (SECURITY DEFINER, mesmo padrão de
+ * `recompute_weekly_rankings()`) que enxerga a tabela `favorites` inteira,
+ * sem passar pela RLS — devolve só o ID da loja vencedora, já com o mesmo
+ * critério de empate de sempre.
  */
 export async function getFeaturedStore(): Promise<StoreWithCategory | null> {
   const { data: manual, error: manualError } = await supabase
@@ -258,29 +270,13 @@ export async function getFeaturedStore(): Promise<StoreWithCategory | null> {
   if (manualError) throw manualError;
   if (manual) return mapStore(manual as unknown as StoreRow);
 
-  const [stores, favoritesResult] = await Promise.all([
-    listStores(),
-    supabase.from('favorites').select('store_id'),
-  ]);
-  if (favoritesResult.error) throw favoritesResult.error;
+  const { data: fallbackStoreId, error: fallbackError } = await supabase.rpc(
+    'get_most_favorited_store_id'
+  );
+  if (fallbackError) throw fallbackError;
+  if (fallbackStoreId == null) return null;
 
-  const favoriteCounts = new Map<string, number>();
-  for (const row of favoritesResult.data ?? []) {
-    const key = String(row.store_id);
-    favoriteCounts.set(key, (favoriteCounts.get(key) ?? 0) + 1);
-  }
-
-  const [top] = [...stores].sort((a, b) => {
-    const countA = favoriteCounts.get(a.id) ?? 0;
-    const countB = favoriteCounts.get(b.id) ?? 0;
-    if (countB !== countA) return countB - countA;
-    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    if (dateB !== dateA) return dateB - dateA;
-    return a.name.localeCompare(b.name, 'pt-BR');
-  });
-
-  return top ?? null;
+  return getStoreById(String(fallbackStoreId));
 }
 
 export interface RankedStore extends StoreWithCategory {
