@@ -219,23 +219,23 @@ export default function Home() {
             <h2 className="w-full font-display text-[26px] font-bold leading-none tracking-[0.78px] text-main-dark-900 lg:mx-auto lg:max-w-[1128px]">
               Mais Procuradas da Semana !
             </h2>
-            {/* 13/10/2026 (Amanda): primeira tentativa foi encolher a
-                largura (`calc(100%-40px)`), mas isso só deixou MENOS
-                espaço visível e acabou cortando o 2º card — o que a Amanda
-                queria era mais espaço, não menos. Correção: `-mr-6`
-                (`lg:mr-0` no desktop, que não precisa disso — ver nota
-                acima sobre a caixa de 1128px) faz a fileira "vazar" pra
-                fora do respiro lateral de 24px do restante da página (
-                `px-6` no container raiz), só do lado direito — mesmo
-                padrão de "vazamento" já usado na `TopBar` do desktop logo
-                acima (`lg:-mx-[156px] ... lg:px-[156px]`). Com isso sobra
-                espaço de verdade pro 3º card aparecer cortado (em vez do
-                2º), sem precisar respeitar essa margem nesse lado — a
-                esquerda continua alinhada com o título e o resto da
-                página. `no-scrollbar` esconde a barrinha de rolagem nativa
-                que aparecia ao arrastar (mesmo recurso do carrossel de
-                Categorias, ver index.css). */}
-            <div className="-mr-6 w-full overflow-x-auto no-scrollbar lg:mr-0">
+            {/* 13/10/2026 (Amanda): duas tentativas anteriores não
+                funcionaram de verdade — `calc(100%-40px)` encolhia a
+                largura (cortava o 2º card, o oposto do pedido), e depois
+                `-mr-6` não fazia NADA na prática: com `w-full` (largura
+                travada em 100%), margem negativa não estica a caixa, ela só
+                afeta o que vem DEPOIS do elemento — e aqui não tem nada
+                depois. `width: calc(100% + 24px)` é a forma que realmente
+                estica a caixa 24px pra além do respiro lateral da página
+                (`px-6` no container raiz), só do lado direito, deixando um
+                pedaço de verdade do próximo card sempre cortado na borda —
+                testado nas larguras 393px e 440px que a Amanda mandou.
+                `lg:w-full` desfaz isso no desktop (lá não precisa, a
+                fileira inteira já cabe sem cortar nada). `no-scrollbar`
+                esconde a barrinha de rolagem nativa que aparecia ao
+                arrastar (mesmo recurso do carrossel de Categorias, ver
+                index.css). */}
+            <div className="w-[calc(100%+24px)] overflow-x-auto no-scrollbar lg:w-full">
               <div className="flex w-fit items-start gap-4 lg:mx-auto lg:max-w-[1128px]">
                 {weeklyRanking.map((store) => (
                   <RankedStoreCard key={store.id} store={store} rank={store.rank} />
