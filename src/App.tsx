@@ -4,6 +4,7 @@ import Busca from './pages/Busca';
 import CategoryScreen from './pages/CategoryScreen';
 import Lojas from './pages/Lojas';
 import Favoritos from './pages/Favoritos';
+import Ranking from './pages/Ranking';
 import StoreDetail from './pages/StoreDetail';
 import Perfil from './pages/Perfil';
 import PerfilDuvidas from './pages/PerfilDuvidas';
@@ -87,6 +88,7 @@ function AppShell() {
           <Route path="/categoria/:categoryId" element={<CategoryScreen />} />
           <Route path="/lojas" element={<Lojas />} />
           <Route path="/favoritos" element={<Favoritos />} />
+          <Route path="/ranking" element={<Ranking />} />
           <Route path="/loja/:storeId" element={<StoreDetail />} />
           <Route path="/perfil" element={<Perfil />} />
           <Route path="/perfil/duvidas" element={<PerfilDuvidas />} />

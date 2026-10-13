@@ -239,6 +239,112 @@ export async function listActiveStories(): Promise<Story[]> {
 }
 
 /**
+ * 08/10/2026 (Amanda): "Fornecedor Destaque" da Home. Primeiro tenta achar a
+ * loja marcada manualmente no admin (`stores.is_featured`, só 1 por vez —
+ * garantido por um trigger no banco, `trg_enforce_single_featured_store`).
+ * Se nenhuma estiver marcada ainda, cai no fallback automático combinado
+ * originalmente com a Amanda: loja com mais favoritos, empate por mais
+ * recente (`created_at`), empate nisso por ordem alfabética. Calculado no
+ * cliente (não um SQL view) porque o volume de dados é pequeno (~280 lojas,
+ * poucas dezenas de favoritos) — revisitar se isso crescer muito.
+ */
+export async function getFeaturedStore(): Promise<StoreWithCategory | null> {
+  const { data: manual, error: manualError } = await supabase
+    .from('stores')
+    .select(STORE_COLUMNS)
+    .eq('is_active', true)
+    .eq('is_featured', true)
+    .maybeSingle();
+  if (manualError) throw manualError;
+  if (manual) return mapStore(manual as unknown as StoreRow);
+
+  const [stores, favoritesResult] = await Promise.all([
+    listStores(),
+    supabase.from('favorites').select('store_id'),
+  ]);
+  if (favoritesResult.error) throw favoritesResult.error;
+
+  const favoriteCounts = new Map<string, number>();
+  for (const row of favoritesResult.data ?? []) {
+    const key = String(row.store_id);
+    favoriteCounts.set(key, (favoriteCounts.get(key) ?? 0) + 1);
+  }
+
+  const [top] = [...stores].sort((a, b) => {
+    const countA = favoriteCounts.get(a.id) ?? 0;
+    const countB = favoriteCounts.get(b.id) ?? 0;
+    if (countB !== countA) return countB - countA;
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (dateB !== dateA) return dateB - dateA;
+    return a.name.localeCompare(b.name, 'pt-BR');
+  });
+
+  return top ?? null;
+}
+
+export interface RankedStore extends StoreWithCategory {
+  rank: number;
+  viewCount: number;
+}
+
+/**
+ * Top N do ranking "Mais Procuradas da Semana" — lê direto de
+ * `store_weekly_rankings` (resultado já pronto, recalculado a cada 24h por
+ * `recompute_weekly_rankings()` via pg_cron), nunca agrega `store_views` na
+ * hora. `limit` corta quantas entradas vêm (Home mostra 5, a tela de
+ * Ranking completo pede até 10).
+ */
+export async function getWeeklyRanking(limit = 10): Promise<RankedStore[]> {
+  const { data: rankingRows, error: rankingError } = await supabase
+    .from('store_weekly_rankings')
+    .select('rank, store_id, view_count')
+    .order('rank', { ascending: true })
+    .limit(limit);
+  if (rankingError) throw rankingError;
+  if (!rankingRows || rankingRows.length === 0) return [];
+
+  const storeIds = rankingRows.map((r) => r.store_id);
+  const { data: storeRows, error: storesError } = await supabase
+    .from('stores')
+    .select(STORE_COLUMNS)
+    .in('id', storeIds)
+    .eq('is_active', true);
+  if (storesError) throw storesError;
+
+  const storesById = new Map(
+    ((storeRows ?? []) as unknown as StoreRow[]).map((row) => [row.id, mapStore(row)])
+  );
+
+  return rankingRows
+    .map((r) => {
+      const store = storesById.get(r.store_id);
+      if (!store) return null;
+      return { ...store, rank: r.rank, viewCount: r.view_count };
+    })
+    .filter((s): s is RankedStore => s !== null);
+}
+
+/**
+ * Registra 1 visita à página da loja (StoreDetail.tsx) — alimenta
+ * `store_views`/`store_weekly_rankings`. Conta visitas repetidas da mesma
+ * pessoa (não deduplica), por pedido explícito da Amanda. Falha silenciosa:
+ * visualizar a loja não pode travar por causa de log (mesmo padrão do
+ * logging de busca em `Busca.tsx`). Sem usuário logado, não loga nada.
+ */
+export function logStoreView(storeId: string, userId?: string | null): void {
+  if (!userId) return;
+  const numericId = Number(storeId);
+  if (!Number.isFinite(numericId)) return;
+  supabase
+    .from('store_views')
+    .insert({ store_id: numericId, user_id: userId })
+    .then(() => {
+      // Sem tratamento de erro de propósito.
+    });
+}
+
+/**
  * Tenta casar um termo de busca com o nome de uma categoria, pra logar em
  * `search_queries.category_id` quando fizer sentido (ex: buscar "jeans"
  * associa à categoria "Jeans"). Casamento simples por substring — não

@@ -18,7 +18,7 @@ import {
 } from '../components/icons';
 import TopBar from '../components/TopBar';
 import ImagePlaceholder from '../components/ImagePlaceholder';
-import { getStoreById } from '../lib/catalog';
+import { getStoreById, logStoreView } from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -98,6 +98,16 @@ export default function StoreDetail() {
   useEffect(() => {
     setActiveImageIndex(0);
   }, [store?.id]);
+
+  // 08/10/2026 (Amanda): registra 1 visualização pro ranking "Mais
+  // Procuradas da Semana" toda vez que a página da loja carrega — inclusive
+  // quando a mesma pessoa entra de novo na mesma loja (não deduplica, por
+  // pedido dela). Só loga depois que a loja realmente carregou (evita contar
+  // um `storeId` inválido) e só se tiver usuário logado.
+  useEffect(() => {
+    if (!store?.id) return;
+    logStoreView(store.id, session?.user.id);
+  }, [store?.id, session?.user.id]);
 
   // `undefined` = ainda buscando (não redireciona ainda); `null` = buscou e
   // não achou (aí sim redireciona pra Lojas).

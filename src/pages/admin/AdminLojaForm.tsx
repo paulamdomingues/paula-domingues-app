@@ -47,6 +47,7 @@ interface StoreRow {
   polo_location: string | null;
   tags: string[] | null;
   is_active: boolean;
+  is_featured: boolean;
   code_badge: string | null;
   whatsapp: string | null;
   instagram: string | null;
@@ -67,6 +68,7 @@ interface FormState {
   polo_location: string;
   tags: string[];
   is_active: boolean;
+  is_featured: boolean;
   code_badge: string;
   whatsapp: string;
   instagram: string;
@@ -86,6 +88,7 @@ const EMPTY_FORM: FormState = {
   polo_location: '',
   tags: [],
   is_active: false,
+  is_featured: false,
   code_badge: '',
   whatsapp: '',
   instagram: '',
@@ -106,6 +109,7 @@ function rowToForm(row: StoreRow): FormState {
     polo_location: row.polo_location ?? '',
     tags: row.tags ?? [],
     is_active: row.is_active,
+    is_featured: row.is_featured,
     code_badge: row.code_badge ?? '',
     whatsapp: row.whatsapp ?? '',
     instagram: row.instagram ?? '',
@@ -209,7 +213,7 @@ export default function AdminLojaForm() {
     supabase
       .from('stores')
       .select(
-        'id, name, category_id, polo_location, tags, is_active, code_badge, whatsapp, instagram, storefront_image_url, gallery_images, address, working_hours, sizes_available, shipping_info, wholesale_rules, retail_rules, created_at'
+        'id, name, category_id, polo_location, tags, is_active, is_featured, code_badge, whatsapp, instagram, storefront_image_url, gallery_images, address, working_hours, sizes_available, shipping_info, wholesale_rules, retail_rules, created_at'
       )
       .eq('id', storeId)
       .maybeSingle()
@@ -374,6 +378,7 @@ export default function AdminLojaForm() {
           polo_location: form.polo_location,
           tags: form.tags,
           is_active: form.is_active,
+          is_featured: form.is_featured,
           code_badge: codeBadge,
           whatsapp: form.whatsapp || null,
           instagram: form.instagram || null,
@@ -579,6 +584,28 @@ export default function AdminLojaForm() {
               }`}
             >
               {form.is_active ? 'ativo' : 'inativo'}
+            </button>
+          </div>
+
+          {/* 08/10/2026 (Amanda): "Fornecedor Destaque" da Home deixou de ser
+              calculado por favoritos e virou seleção manual — só 1 loja pode
+              estar marcada por vez (garantido por um trigger no banco,
+              `trg_enforce_single_featured_store`: marcar uma aqui desmarca
+              automaticamente a loja que estava marcada antes). Se nenhuma
+              loja estiver marcada, a Home cai no fallback por favoritos (ver
+              `getFeaturedStore` em `catalog.ts`). */}
+          <div className="flex flex-col gap-3">
+            <p className="font-body text-[13px] tracking-[0.65px] text-gray-500">Fornecedor Destaque</p>
+            <button
+              type="button"
+              disabled={!canManage}
+              onClick={() => persist({ is_featured: !form.is_featured }, { is_featured: !form.is_featured })}
+              title="Só uma loja pode ficar marcada como destaque — marcar essa desmarca a anterior."
+              className={`flex w-fit items-center gap-2 rounded-full px-3 py-1.5 font-body text-[13px] font-bold tracking-[0.65px] transition-opacity disabled:opacity-60 ${
+                form.is_featured ? 'bg-success-100 text-success-800' : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {form.is_featured ? 'em destaque' : 'marcar como destaque'}
             </button>
           </div>
 

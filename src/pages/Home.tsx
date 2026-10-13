@@ -3,17 +3,32 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import TopBar from '../components/TopBar';
 import HighlightBanner from '../components/HighlightBanner';
+import ImagePlaceholder from '../components/ImagePlaceholder';
+import { ArrowLeftIcon } from '../components/icons';
 import WhatsappCommunityButton from '../components/WhatsappCommunityButton';
 import AcessoRapidoSection from '../components/AcessoRapidoSection';
 import CategoryGrid from '../components/CategoryGrid';
 import StoreCard from '../components/StoreCard';
+import RankedStoreCard from '../components/RankedStoreCard';
 import StoryPlayerOverlay from '../components/StoryPlayerOverlay';
 import Toast from '../components/Toast';
-import { listActiveStories, listCategories, listRecentStores } from '../lib/catalog';
+import {
+  getFeaturedStore,
+  getWeeklyRanking,
+  listActiveStories,
+  listCategories,
+  listRecentStores,
+  type RankedStore,
+} from '../lib/catalog';
 import { useFavorites } from '../context/FavoritesContext';
 import { getBunnyThumbnailUrl } from '../lib/bunnyStream';
 import { WHATSAPP_GROUP_URL } from '../lib/constants';
 import type { Category, Story, StoreWithCategory } from '../types';
+
+/** Quantas lojas do ranking semanal aparecem na prévia da Home (Figma node
+ * 1815:5840: 5 cards + o card "Ver ranking completo"). A tela cheia
+ * (`Ranking.tsx`) mostra até 10. */
+const WEEKLY_RANKING_PREVIEW_SIZE = 5;
 
 /** Mensagem do toast de "sem stories" — ver `handleOpenStoryPlayer` abaixo. */
 const NO_STORIES_MESSAGE = 'Não há vídeos disponíveis no momento.';
@@ -27,6 +42,8 @@ export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentStores, setRecentStores] = useState<StoreWithCategory[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [featuredStore, setFeaturedStore] = useState<StoreWithCategory | null>(null);
+  const [weeklyRanking, setWeeklyRanking] = useState<RankedStore[]>([]);
   // Toast de "sem stories" (21/08/2026, a pedido da Amanda): o mini-player
   // continua sempre visível na Home (ver `HighlightBanner` abaixo) mesmo sem
   // nenhum story ativo no momento — em vez de simplesmente não responder ao
@@ -47,6 +64,28 @@ export default function Home() {
       })
       .catch(() => {
         // Falha silenciosa: as seções ficam vazias em vez de quebrar a Home.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 08/10/2026 (Amanda): as 2 seções novas (Fornecedor Destaque + Mais
+  // Procuradas da Semana) — buscadas à parte do efeito acima pra uma falha
+  // aqui não derrubar categorias/stories nem vice-versa. Se não houver
+  // nenhuma loja em destaque nem nenhuma visualização ainda (semana sem
+  // dado), as seções simplesmente não aparecem (ver JSX abaixo) em vez de
+  // mostrar um estado vazio/placeholder.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getFeaturedStore(), getWeeklyRanking(WEEKLY_RANKING_PREVIEW_SIZE)])
+      .then(([featured, ranking]) => {
+        if (cancelled) return;
+        setFeaturedStore(featured);
+        setWeeklyRanking(ranking);
+      })
+      .catch(() => {
+        // Falha silenciosa, mesmo padrão do efeito acima.
       });
     return () => {
       cancelled = true;
@@ -122,6 +161,83 @@ export default function Home() {
           </h2>
           <CategoryGrid categories={categories} onSelectCategory={handleSelectCategory} />
         </section>
+
+        {/* 08/10/2026 (Amanda, Figma node 1815:5840 "teste novo - 02"): 2
+            seções novas, nessa ordem — logo depois de Categorias, antes do
+            banner do WhatsApp (posição confirmada com ela). Cada uma só
+            aparece se tiver dado de verdade pra mostrar. */}
+        {featuredStore && (
+          <section className="flex w-full flex-col items-start gap-4 lg:mx-auto lg:max-w-[640px]">
+            <h2 className="font-display text-[26px] font-bold tracking-[0.78px] text-main-dark-900">
+              Fornecedor Destaque
+            </h2>
+            <div
+              role="link"
+              tabIndex={0}
+              onClick={() => navigate(`/loja/${featuredStore.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') navigate(`/loja/${featuredStore.id}`);
+              }}
+              className="flex w-full cursor-pointer items-start gap-4 rounded-3xl border border-success-400 p-2"
+            >
+              <div className="relative size-[160px] shrink-0 overflow-hidden rounded-2xl">
+                <ImagePlaceholder src={featuredStore.imageUrl} alt={featuredStore.name} className="size-full" />
+                <div className="absolute bottom-0 right-0 flex h-6 w-[68px] items-center justify-end rounded-tl-2xl rounded-br-lg bg-main-red-800 p-1">
+                  <span className="font-body text-[12px] leading-[1.35] tracking-[0.36px] text-base-white">
+                    {featuredStore.code}
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-1 flex-col gap-3 py-1">
+                <div className="flex flex-col items-start">
+                  <p className="w-full font-display text-[22px] font-bold leading-[1.2] tracking-[0.66px] text-black">
+                    {featuredStore.name}
+                  </p>
+                  <p className="w-full font-body text-[14px] leading-[1.35] tracking-[0.7px] text-[#706f6f]">
+                    {featuredStore.categoryLabel}
+                  </p>
+                </div>
+                {(featuredStore.details?.tags ?? []).length > 0 && (
+                  <div className="flex flex-col items-start gap-1.5">
+                    {(featuredStore.details?.tags ?? []).slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-main-dark-50 px-2.5 py-1 font-body text-[12px] text-main-dark-500"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {weeklyRanking.length > 0 && (
+          <section className="flex w-full flex-col items-start gap-4">
+            <h2 className="w-full font-display text-[26px] font-bold tracking-[0.78px] text-main-dark-900 lg:mx-auto lg:max-w-[1128px]">
+              Mais Procuradas da Semana !
+            </h2>
+            <div className="w-full overflow-x-auto">
+              <div className="flex w-fit items-start gap-4 lg:mx-auto lg:max-w-[1128px]">
+                {weeklyRanking.map((store) => (
+                  <RankedStoreCard key={store.id} store={store} rank={store.rank} />
+                ))}
+                <button
+                  type="button"
+                  onClick={() => navigate('/ranking')}
+                  className="flex h-[240px] w-[160px] shrink-0 flex-col items-center justify-center gap-2 rounded-2xl bg-main-red-700 p-4 text-center"
+                >
+                  <span className="font-body text-[16px] tracking-[0.8px] text-base-white">
+                    Ver ranking completo
+                  </span>
+                  <ArrowLeftIcon className="size-[30px] rotate-180 text-base-white" />
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* 03/09/2026 (Amanda, Figma node 113:7556): o banner da comunidade
             no WhatsApp mudou de posição — antes ficava colado no
