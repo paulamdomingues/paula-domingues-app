@@ -19,6 +19,7 @@ import {
 import TopBar from '../components/TopBar';
 import ImagePlaceholder from '../components/ImagePlaceholder';
 import { getStoreById, logStoreView } from '../lib/catalog';
+import { cacheFavoriteStore, getCachedFavoriteStore, isNativeApp } from '../lib/offlineFavoritesCache';
 import { useFavorites } from '../context/FavoritesContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -87,8 +88,16 @@ export default function StoreDetail() {
       .then((data) => {
         if (!cancelled) setStore(data);
       })
-      .catch(() => {
-        if (!cancelled) setStore(null);
+      .catch(async () => {
+        if (cancelled) return;
+        // Sem internet: se essa loja é favorita e já foi aberta antes com
+        // internet, abre a versão salva localmente em vez de mandar pra
+        // "Lojas" — 15/10/2026, pedido da Amanda pra dar pra abrir a página
+        // de detalhes do fornecedor favoritado mesmo sem internet. No PWA
+        // `isNativeApp()` é sempre `false` e o comportamento não muda (cai
+        // direto no `setStore(null)` de antes).
+        const cached = isNativeApp() ? await getCachedFavoriteStore(storeId) : null;
+        if (!cancelled) setStore(cached);
       });
     return () => {
       cancelled = true;
@@ -98,6 +107,17 @@ export default function StoreDetail() {
   useEffect(() => {
     setActiveImageIndex(0);
   }, [store?.id]);
+
+  // Guarda os dados + fotos dessa loja localmente sempre que a página
+  // carrega com sucesso (online) e ela já está favoritada — assim, da
+  // próxima vez que a pessoa abrir esse mesmo favorito, mesmo sem internet,
+  // a página de detalhes aparece com a última versão vista. Best-effort e
+  // silencioso; no PWA é um no-op (ver `cacheFavoriteStore`).
+  useEffect(() => {
+    if (!store) return;
+    if (!isFavorite(store.id)) return;
+    cacheFavoriteStore(store);
+  }, [store, isFavorite]);
 
   // 08/10/2026 (Amanda): registra 1 visualização pro ranking "Mais
   // Procuradas da Semana" toda vez que a página da loja carrega — inclusive

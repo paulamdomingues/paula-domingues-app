@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Toast from '../components/Toast';
 import { supabase } from '../lib/supabaseClient';
+import { cacheFavoritesIds, getCachedFavoritesIds, removeCachedFavoriteStore } from '../lib/offlineFavoritesCache';
 import { useAuth } from './AuthContext';
 
 interface FavoritesContextValue {
@@ -53,19 +54,35 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       .select('store_id, created_at')
       .eq('user_id', userId)
       .then(({ data, error }) => {
-        if (cancelled || error || !data) return;
-        setFavorites(
-          new Map(
-            data
-              .filter((row) => row.store_id != null)
-              .map((row) => [String(row.store_id), row.created_at as string])
-          )
+        if (cancelled) return;
+        if (error || !data) {
+          // Sem internet (ou outro erro): no app nativo, tenta usar o
+          // último backup local de favoritos salvo — 15/10/2026, pedido da
+          // Amanda pra abrir a aba Favoritos mesmo sem internet. No PWA
+          // `getCachedFavoritesIds` sempre devolve `null` e nada muda aqui.
+          getCachedFavoritesIds().then((cached) => {
+            if (!cancelled && cached) setFavorites(cached);
+          });
+          return;
+        }
+        const map = new Map(
+          data
+            .filter((row) => row.store_id != null)
+            .map((row) => [String(row.store_id), row.created_at as string])
         );
+        setFavorites(map);
       });
     return () => {
       cancelled = true;
     };
   }, [userId]);
+
+  // Mantém o backup local (id -> data) sempre em dia com o estado real —
+  // tanto depois de carregar do Supabase quanto depois de cada toggle
+  // otimista. No PWA isso é um no-op (ver `cacheFavoritesIds`).
+  useEffect(() => {
+    cacheFavoritesIds(favorites);
+  }, [favorites]);
 
   // Toast de favoritar/desfavoritar: fica aqui no Provider (em vez de em
   // cada tela) porque `toggleFavorite` é chamado de vários lugares
@@ -114,7 +131,12 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           : supabase.from('favorites').insert({ user_id: userId, store_id: numericStoreId });
 
         persist.then(({ error }) => {
-          if (!error) return;
+          if (!error) {
+            // Desfavoritou com sucesso: limpa o cache completo (dados+fotos)
+            // dessa loja, pra não ficar ocupando espaço à toa no aparelho.
+            if (wasFavorite) removeCachedFavoriteStore(storeId);
+            return;
+          }
           setFavorites((prev) => {
             const next = new Map(prev);
             if (wasFavorite) {

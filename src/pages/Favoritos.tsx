@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ScreenHeader from '../components/ScreenHeader';
 import FavoriteListCard from '../components/FavoriteListCard';
 import { listStores } from '../lib/catalog';
+import { isNativeApp, listCachedFavoriteStores } from '../lib/offlineFavoritesCache';
 import { useFavorites } from '../context/FavoritesContext';
 import type { StoreWithCategory } from '../types';
 
@@ -15,8 +16,14 @@ export default function Favoritos() {
       .then((data) => {
         if (!cancelled) setStores(data);
       })
-      .catch(() => {
-        // Falha silenciosa: a lista fica vazia em vez de quebrar a tela.
+      .catch(async () => {
+        if (cancelled) return;
+        // Sem internet: no app nativo, mostra as lojas favoritas que já
+        // ficaram salvas localmente (dados + fotos) em vez de uma lista
+        // vazia — 15/10/2026, pedido da Amanda. No PWA isso continua vazio,
+        // igual antes.
+        const cached = isNativeApp() ? await listCachedFavoriteStores() : [];
+        if (!cancelled) setStores(cached);
       });
     return () => {
       cancelled = true;

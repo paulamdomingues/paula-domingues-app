@@ -11,6 +11,35 @@ interface ImagePlaceholderProps {
   alt: string;
   className?: string;
   rounded?: string;
+  /**
+   * Largura (px) que essa instância realmente ocupa na tela — usada só pra
+   * pedir do Supabase uma versão já redimensionada da foto, em vez da foto
+   * original inteira (15/10/2026: pedido da Amanda pra carregar mais rápido
+   * em conexão fraca, não só economizar espaço no Storage). Opcional: sem
+   * informar, usa um tamanho padrão que já é bem mais leve que o original.
+   * Só afeta fotos de loja (Supabase); imagens fixas do Bunny (logo,
+   * banners) não são tocadas por esse parâmetro.
+   */
+  width?: number;
+}
+
+const SUPABASE_PUBLIC_OBJECT_MARKER = '/storage/v1/object/public/';
+const SUPABASE_RENDER_IMAGE_MARKER = '/storage/v1/render/image/public/';
+const DEFAULT_TRANSFORM_WIDTH = 960;
+const TRANSFORM_QUALITY = 75;
+
+/**
+ * Troca a URL pública "crua" do Supabase Storage pelo endpoint de Image
+ * Transformation (recurso do plano Pro) — devolve a foto já redimensionada
+ * e comprimida sob demanda, sem precisar reprocessar nenhuma das fotos já
+ * existentes das 300 lojas. Se a URL não for do Supabase Storage (ex: Bunny,
+ * usado pras imagens fixas de marca), devolve sem mexer.
+ */
+function withResponsiveTransform(url: string, width: number): string {
+  if (!url.includes(SUPABASE_PUBLIC_OBJECT_MARKER)) return url;
+  const transformed = url.replace(SUPABASE_PUBLIC_OBJECT_MARKER, SUPABASE_RENDER_IMAGE_MARKER);
+  const separator = transformed.includes('?') ? '&' : '?';
+  return `${transformed}${separator}width=${width}&quality=${TRANSFORM_QUALITY}&resize=cover`;
 }
 
 /**
@@ -36,13 +65,15 @@ export default function ImagePlaceholder({
   alt,
   className = '',
   rounded = 'rounded-lg',
+  width,
 }: ImagePlaceholderProps) {
   const resolvedSrc = resolveBunnyImageUrl(src);
 
   if (resolvedSrc) {
+    const finalSrc = withResponsiveTransform(resolvedSrc, width ?? DEFAULT_TRANSFORM_WIDTH);
     return (
       <img
-        src={resolvedSrc}
+        src={finalSrc}
         alt={alt}
         loading="lazy"
         className={`${className} ${rounded} object-cover`}
