@@ -14,8 +14,10 @@ import {
 } from '../components/icons';
 import TopBar from '../components/TopBar';
 import LogoutConfirmModal from '../components/LogoutConfirmModal';
+import DeleteAccountConfirmModal from '../components/DeleteAccountConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { clearAllOfflineCache } from '../lib/offlineFavoritesCache';
 import { EXTERNAL_PRIVACY_URL, EXTERNAL_TERMS_URL, WHATSAPP_GROUP_URL, WHATSAPP_SUPPORT_URL } from '../lib/constants';
 
 interface ProfileMenuItemProps {
@@ -69,10 +71,13 @@ function ProfileMenuItem({ icon, label, onClick, href, disabled, iconClassName }
  */
 export default function Perfil() {
   const navigate = useNavigate();
-  const { session, signOut, firstName } = useAuth();
+  const { session, signOut, firstName, deleteAccount } = useAuth();
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [shortId, setShortId] = useState<string>('—');
   const [plan, setPlan] = useState<'trimestral' | 'semestral' | 'anual' | null>(null);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const email = session?.user.email ?? 'amanda@exemplo.com';
 
@@ -114,6 +119,32 @@ export default function Perfil() {
     await signOut();
     // 02/09/2026: a tela de Pre-Login saiu — depois de sair, vai direto pro
     // Login de verdade.
+    navigate('/login', { replace: true });
+  };
+
+  /**
+   * Exclusão de conta (16/10/2026, pedido da Amanda — exigência da Apple
+   * 5.1.1(v) e do Google Play de ter um caminho DENTRO do app). Ordem:
+   * 1) Edge Function `delete-account` apaga os dados no Supabase e remove
+   *    o login de `auth.users` de verdade; 2) se deu certo, limpa o cache
+   *    offline nativo (no-op no PWA, ver `offlineFavoritesCache.ts`); 3)
+   *    `signOut()` local + manda pro Login, igual o logout normal.
+   * Em erro, mantém o modal aberto mostrando a mensagem pra pessoa poder
+   * tentar de novo (ex: sem internet no momento).
+   */
+  const handleConfirmDeleteAccount = async () => {
+    setDeleteLoading(true);
+    setDeleteError(null);
+
+    const { error } = await deleteAccount();
+    if (error) {
+      setDeleteLoading(false);
+      setDeleteError(error);
+      return;
+    }
+
+    await clearAllOfflineCache();
+    await signOut();
     navigate('/login', { replace: true });
   };
 
@@ -218,8 +249,44 @@ export default function Perfil() {
         </section>
       </div>
 
+      {/*
+        Zona de exclusão de conta — DE PROPÓSITO fora do card "Configurações"
+        (onde fica "Sair da Conta") e separada dele pelo `gap-10` que esse
+        container já herda do pai, mais um respiro próprio aqui embaixo
+        (`pt-6`). Pedido explícito da Amanda: espaçamento considerável pra
+        ninguém confundir com "Sair da Conta" e tocar sem querer — por isso
+        também não é um `ProfileMenuItem` do card (sem ícone, texto pequeno,
+        discreto), só ganha destaque de verdade dentro do pop-up de
+        confirmação, que exige um segundo toque explícito pra acontecer.
+      */}
+      <div className="flex w-full flex-col items-center gap-1.5 pt-6 lg:mx-auto lg:max-w-[584px]">
+        <button
+          type="button"
+          onClick={() => setDeleteAccountOpen(true)}
+          className="font-body text-[13px] font-medium tracking-[0.65px] text-error-700 underline-offset-4 hover:underline"
+        >
+          Excluir minha conta
+        </button>
+        <p className="max-w-[280px] text-center font-body text-[11px] leading-[1.4] tracking-[0.55px] text-gray-400">
+          Apaga seus dados permanentemente e encerra o acesso ao catálogo.
+        </p>
+      </div>
+
       {logoutOpen && (
         <LogoutConfirmModal onCancel={() => setLogoutOpen(false)} onConfirm={handleConfirmLogout} />
+      )}
+
+      {deleteAccountOpen && (
+        <DeleteAccountConfirmModal
+          loading={deleteLoading}
+          errorMessage={deleteError}
+          onCancel={() => {
+            if (deleteLoading) return;
+            setDeleteAccountOpen(false);
+            setDeleteError(null);
+          }}
+          onConfirm={handleConfirmDeleteAccount}
+        />
       )}
     </div>
   );

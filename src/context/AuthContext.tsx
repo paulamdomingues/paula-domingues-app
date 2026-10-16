@@ -88,6 +88,16 @@ interface AuthContextValue {
    * "estar logado" no app).
    */
   completePasswordReset: (newPassword: string) => Promise<{ error: string | null }>;
+  /**
+   * Exclusão de conta pelo próprio usuário (tela Perfil, 16/10/2026) —
+   * chama a Edge Function `delete-account`, que roda com a service_role
+   * key (nunca disponível aqui no front) pra apagar os dados pessoais no
+   * Supabase e remover o login de `auth.users` de verdade. Não faz
+   * `signOut()` sozinha nem mexe no cache offline nativo — quem chama
+   * (`Perfil.tsx`) cuida dessa limpeza depois de confirmar sucesso, igual
+   * já faz com `signOut` hoje.
+   */
+  deleteAccount: () => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -272,6 +282,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
+  // `supabase.functions.invoke` já manda o Authorization da sessão atual
+  // sozinho — não precisa pegar o access_token na mão. Em erro, tenta ler
+  // a mensagem amigável que a function devolveu no corpo da resposta
+  // (`FunctionsHttpError.context` é o `Response` cru); se não der, cai
+  // numa mensagem genérica.
+  const deleteAccount: AuthContextValue['deleteAccount'] = async () => {
+    const { error } = await supabase.functions.invoke('delete-account');
+    if (!error) return { error: null };
+
+    let message = 'Não foi possível excluir a conta. Tente novamente ou fale com o suporte.';
+    try {
+      const context = (error as { context?: Response }).context;
+      if (context) {
+        const body = (await context.json()) as { error?: string };
+        if (body?.error) message = body.error;
+      }
+    } catch {
+      // Mantém a mensagem genérica.
+    }
+    return { error: message };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -289,6 +321,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         requestPasswordReset,
         updatePassword,
         completePasswordReset,
+        deleteAccount,
       }}
     >
       {children}

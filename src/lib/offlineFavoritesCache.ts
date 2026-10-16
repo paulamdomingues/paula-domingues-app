@@ -189,3 +189,24 @@ export async function getCachedFavoritesIds(): Promise<Map<string, string> | nul
     return null;
   }
 }
+
+/**
+ * Apaga TODO o cache offline de favoritos (índice + cada loja salva + a
+ * pasta de fotos no disco do aparelho) — 16/10/2026, chamado por
+ * `Perfil.tsx` quando a conta é excluída, pra não deixar nenhum dado
+ * pessoal (nome, endereço, fotos de fornecedores favoritados) salvo
+ * localmente depois que o login já deixou de existir no Supabase.
+ * No PWA é sempre no-op, igual todo o resto deste arquivo.
+ */
+export async function clearAllOfflineCache(): Promise<void> {
+  if (!isNativeApp()) return;
+  try {
+    const index = await readFullCacheIndex();
+    await Promise.all(index.map((id) => Preferences.remove({ key: fullStoreKey(id) })));
+    await Preferences.remove({ key: FULL_CACHE_INDEX_KEY });
+    await Preferences.remove({ key: FAVORITES_IDS_KEY });
+    await Filesystem.rmdir({ path: FAVORITES_DIR, directory: Directory.Data, recursive: true });
+  } catch {
+    // Melhor esforço — se a pasta nem existir (nunca cacheou nada), ignora.
+  }
+}
