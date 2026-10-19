@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { XCircleIcon } from '../icons';
 import { supabase } from '../../lib/supabaseClient';
 import AdminSelect from './AdminSelect';
@@ -60,6 +60,13 @@ export default function UsuarioModal({ user, canManage, lastSignInAt = null, onC
   const [isActive, setIsActive] = useState(user?.is_active ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 19/10/2026, pedido da Amanda: o cadastro manual passou a também criar a
+  // conta de login + mandar o email de acesso (`admin-invite-user`), não só
+  // gravar em `allowed_users`. Esse ref marca que o insert em `allowed_users`
+  // já aconteceu nesta sessão do modal, pra que, se o passo do convite falhar
+  // e ela clicar em "Salvar" de novo, a gente só tente reenviar o convite —
+  // sem tentar inserir de novo (o que falharia com "email já cadastrado").
+  const allowedUserCreatedRef = useRef(false);
 
   const hasHublaData = Boolean(user?.hubla_transaction_id || user?.hubla_payment_method || user?.hubla_amount_cents);
 
@@ -98,13 +105,34 @@ export default function UsuarioModal({ user, canManage, lastSignInAt = null, onC
         setEditingBasico(false);
         onSaved();
       } else {
-        const { error: insertError } = await supabase
-          .from('allowed_users')
-          .insert({ ...payload, is_active: true, purchased_at: new Date().toISOString() });
-        if (insertError) {
-          setError('Não foi possível criar o usuário — confira se o email já não está cadastrado.');
+        if (!allowedUserCreatedRef.current) {
+          const { error: insertError } = await supabase
+            .from('allowed_users')
+            .insert({ ...payload, is_active: true, purchased_at: new Date().toISOString() });
+          if (insertError) {
+            setError('Não foi possível criar o usuário — confira se o email já não está cadastrado.');
+            return;
+          }
+          allowedUserCreatedRef.current = true;
+        }
+
+        // Além de liberar o acesso (allowed_users acima), cria a conta de
+        // login de verdade e manda o email pra pessoa definir a senha —
+        // mesma coisa que a compra via Hubla já faz sozinha (`invite-purchaser`),
+        // só que aqui é o admin disparando manualmente pelo painel.
+        const { data: inviteData, error: inviteError } = await supabase.functions.invoke('admin-invite-user', {
+          body: { email: payload.email, fullName: payload.full_name },
+        });
+
+        if (inviteError || inviteData?.error) {
+          setError(
+            `Usuário criado e acesso liberado, mas não foi possível enviar o email de acesso automaticamente (${
+              inviteData?.error ?? inviteError?.message ?? 'erro desconhecido'
+            }). Clique em Salvar novamente para tentar reenviar, ou avise o suporte.`
+          );
           return;
         }
+
         onSaved();
       }
     } finally {
